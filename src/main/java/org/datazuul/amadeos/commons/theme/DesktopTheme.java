@@ -9,6 +9,12 @@ import java.util.Objects;
  * every application.
  */
 public final class DesktopTheme {
+    /**
+     * The icon theme used unless a theme or {@code icon_theme.conf} names another: the NsCDE theme
+     * (package {@code nscde-icon-theme}, {@code /usr/share/icons/NsCDE}), which the amadeOS image installs.
+     */
+    public static final String DEFAULT_ICON_THEME = "NsCDE";
+
     private final String id;
     private final String name;
     private final Color base;
@@ -50,14 +56,14 @@ public final class DesktopTheme {
         this.inactiveTitleBg = inactiveTitleBg != null ? inactiveTitleBg : deriveInactive(base);
         this.textActive = textActive != null ? textActive : (isDark(base) ? Color.WHITE : Color.BLACK);
         this.textInactive = textInactive != null ? textInactive : (isDark(base) ? new Color(0xAA, 0xAA, 0xAA) : new Color(0x70, 0x70, 0x70));
-        this.iconTheme = iconTheme != null ? iconTheme : "classic";
+        this.iconTheme = iconTheme != null && !iconTheme.isBlank() ? iconTheme : DEFAULT_ICON_THEME;
         this.panelFrameBg = panelFrameBg != null ? panelFrameBg : derivePanelFrameBg(base, shadow);
         this.panelFrameHighlight = panelFrameHighlight != null ? panelFrameHighlight : derivePanelFrameHighlight(this.panelFrameBg);
         this.panelFrameShadow = panelFrameShadow != null ? panelFrameShadow : derivePanelFrameShadow(this.panelFrameBg);
     }
 
     public static DesktopTheme fromBase(String id, String name, Color base) {
-        return new DesktopTheme(id, name, base, null, null, null, null, null, null, null, null, null, "classic");
+        return new DesktopTheme(id, name, base, null, null, null, null, null, null, null, null, null, DEFAULT_ICON_THEME);
     }
 
     public DesktopTheme withIconTheme(String newIconTheme) {
@@ -79,7 +85,7 @@ public final class DesktopTheme {
             new Color(0xBF, 0xB6, 0xAF),
             Color.BLACK,
             new Color(0x75, 0x6E, 0x68),
-            "classic",
+            DEFAULT_ICON_THEME,
             new Color(0x99, 0x99, 0x99), // Authentic CDE neutral gray frame
             new Color(0xD1, 0xD1, 0xD2),
             new Color(0x4E, 0x4E, 0x4E)
@@ -97,7 +103,7 @@ public final class DesktopTheme {
             new Color(0x5C, 0x73, 0x8A),
             Color.WHITE,
             new Color(0xCA, 0xD6, 0xE2),
-            "classic",
+            DEFAULT_ICON_THEME,
             new Color(0x4E, 0x5F, 0x70), // Darker slate-blue frame
             new Color(0x76, 0x8C, 0xA1),
             new Color(0x27, 0x33, 0x3D)
@@ -115,7 +121,7 @@ public final class DesktopTheme {
             new Color(0xA8, 0x8D, 0x65),
             Color.BLACK,
             new Color(0x59, 0x44, 0x2C),
-            "classic",
+            DEFAULT_ICON_THEME,
             new Color(0x8A, 0x70, 0x4D), // Amber shadow frame
             new Color(0xB8, 0x9C, 0x73),
             new Color(0x4A, 0x3B, 0x26)
@@ -133,7 +139,7 @@ public final class DesktopTheme {
             new Color(0xAF, 0xAF, 0xAF),
             Color.BLACK,
             new Color(0x60, 0x60, 0x60),
-            "classic",
+            DEFAULT_ICON_THEME,
             new Color(0x99, 0x99, 0x99),
             new Color(0xD1, 0xD1, 0xD2),
             new Color(0x4E, 0x4E, 0x4E)
@@ -151,7 +157,7 @@ public final class DesktopTheme {
             new Color(0x30, 0x35, 0x3F),
             new Color(0xE6, 0xE9, 0xF0),
             new Color(0x8E, 0x95, 0xA5),
-            "classic",
+            DEFAULT_ICON_THEME,
             new Color(0x24, 0x28, 0x30), // Dark charcoal frame
             new Color(0x47, 0x4E, 0x5D),
             new Color(0x13, 0x15, 0x1A)

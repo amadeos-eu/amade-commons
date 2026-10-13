@@ -58,7 +58,7 @@ class ThemeTest {
         assertEquals("Midnight", theme.name());
         assertEquals(new Color(0x2B, 0x3A, 0x55), theme.base());
         assertNotNull(theme.shadow());
-        assertEquals("midnight", theme.iconTheme());
+        assertEquals(DesktopTheme.DEFAULT_ICON_THEME, theme.iconTheme());
         assertTrue(registry.find("broken").isEmpty());
         assertEquals(6, registry.all().size());
     }
@@ -67,6 +67,7 @@ class ThemeTest {
     void storeReadsThemeAndIconThemeAndFallsBack() throws Exception {
         ThemeStore store = new ThemeStore(dir, new ThemeRegistry());
         assertEquals(DesktopTheme.WARM_MOTIF, store.current());
+        assertEquals("NsCDE", store.current().iconTheme(), "NsCDE is the default icon theme");
 
         Files.writeString(dir.resolve(ThemeStore.THEME_FILE), "cde-brocade\n");
         Files.writeString(dir.resolve(ThemeStore.ICON_THEME_FILE), "NsCDE");

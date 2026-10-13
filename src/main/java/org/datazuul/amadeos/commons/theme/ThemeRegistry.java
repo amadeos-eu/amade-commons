@@ -28,7 +28,8 @@ import java.util.Properties;
  * iconTheme=NsCDE
  * </pre>
  *
- * Only {@code base} is required; every other colour is derived from it when missing.
+ * Only {@code base} is required; every other colour is derived from it when missing, and the icon theme
+ * defaults to {@link DesktopTheme#DEFAULT_ICON_THEME}.
  */
 public final class ThemeRegistry {
     private static final Logger LOG = LoggerFactory.getLogger(ThemeRegistry.class);
@@ -93,7 +94,7 @@ public final class ThemeRegistry {
                 Color.decode(p.getProperty("base", "#CEC2BB").strip()),
                 color(p, "highlight"), color(p, "softHighlight"), color(p, "shadow"), color(p, "darkShadow"),
                 color(p, "sunkenBg"), color(p, "activeTitleBg"), color(p, "inactiveTitleBg"),
-                color(p, "textActive"), color(p, "textInactive"), p.getProperty("iconTheme", id).strip(),
+                color(p, "textActive"), color(p, "textInactive"), p.getProperty("iconTheme", DesktopTheme.DEFAULT_ICON_THEME).strip(),
                 color(p, "panelFrameBg"), color(p, "panelFrameHighlight"), color(p, "panelFrameShadow"));
     }
 
