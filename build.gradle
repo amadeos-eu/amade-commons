@@ -1,0 +1,68 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+}
+
+// JitPack publishes under com.github.<owner>; using the same coordinates locally lets an app's
+// composite build (includeBuild '../amade-commons') replace the JitPack dependency automatically.
+group = 'com.github.datazuul'
+version = '0.1.0'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+    withSourcesJar()
+    withJavadocJar()
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    api 'com.google.inject:guice:7.0.0'
+    api 'org.slf4j:slf4j-api:2.0.17'
+
+    testImplementation platform('org.junit:junit-bom:5.10.2')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.withType(Javadoc).configureEach {
+    options.addStringOption('Xdoclint:none', '-quiet')
+}
+
+test {
+    useJUnitPlatform()
+}
+
+jar {
+    manifest {
+        attributes(
+            'Implementation-Title': 'amade-commons',
+            'Implementation-Version': project.version,
+            'Automatic-Module-Name': 'org.datazuul.amadeos.commons'
+        )
+    }
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            artifactId = 'amade-commons'
+            from components.java
+            pom {
+                name = 'amade-commons'
+                description = 'Shared theme, Motif look and application infrastructure for amadeOS Swing applications'
+                url = 'https://github.com/datazuul/amade-commons'
+                licenses {
+                    license {
+                        name = 'EUPL-1.2'
+                        url = 'https://interoperable-europe.ec.europa.eu/collection/eupl/eupl-text-eupl-12'
+                    }
+                }
+            }
+        }
+    }
+}
