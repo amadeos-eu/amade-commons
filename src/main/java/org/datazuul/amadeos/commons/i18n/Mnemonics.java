@@ -8,9 +8,9 @@ import java.awt.event.KeyEvent;
  * Mnemonics inside translated texts: {@code &File}, {@code &Datei}, {@code &Fichier} mark the letter after
  * {@code &}, so that every language chooses its own. {@code &&} is a literal ampersand.
  *
- * <pre>
+ * <pre>{@code
  * Mnemonics.apply(new JMenu(), msg.get("menu.file"));   // menu.file=&File
- * </pre>
+ * }</pre>
  */
 public final class Mnemonics {
     private Mnemonics() {
