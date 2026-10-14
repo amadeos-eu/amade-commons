@@ -15,7 +15,8 @@ same start-up code everywhere.
 | `theme` | `DesktopTheme` with the built-in themes *Warm Motif*, *CDE Brocade*, *CDE Desert*, *Classic Gray*, *Dark Slate*; `ThemeRegistry` (custom themes from `/etc/amadeos/themes` and `~/.config/amadeos/themes`); `ThemeStore` (reads `theme.conf` / `icon_theme.conf` and follows changes) |
 | `swing` | `AmadeUI` (Motif bevels, buttons, check boxes, radio buttons, menus, and theme colours for every standard component), `EdtExecutor` |
 | `app` | `AmadeApplication.launch(...)`, `AppInfo`, `CommonsModule` (Guice) |
-| `config` | `XdgDirectories`, `AppDirectories` (`~/.config/amadeos/<app>`), `PropertiesFile` (atomic, owner-only) |
+| `i18n` | `Language` (English, Deutsch, Français, Español, Italiano), `LocaleStore` (desktop language in `locale.conf`), `LocaleSettings` / `LocaleResolution` (which language an application uses), `Messages` (UTF-8 `.properties` texts), `Mnemonics` (`&Datei`), `LanguageChooser`, `TranslationCheck` |
+| `config` | `XdgDirectories`, `AppDirectories` (`~/.config/amadeos/<app>`), `PropertiesFile` (atomic, owner-only), `ConfigWatcher` |
 | `desktop` | `DesktopLauncher` (`xdg-open`, refuses attachments that could run code), `PasswordStore` / `SecretToolPasswordStore` (freedesktop Secret Service via `secret-tool`) |
 
 ## Themes follow the desktop
@@ -34,6 +35,51 @@ Do not pass theme colours to `setBackground` directly; they would stay after a t
 Text fields, lists, tables and trees use `fieldBackground()` / `fieldText()`, which are white/black in
 light themes and dark/light in dark themes (*Dark Slate*).
 
+## Languages
+
+amadeOS and its applications speak English, German, French, Spanish and Italian. `AmadeApplication`
+decides the language before the first window opens, in this order:
+
+1. the application's own setting, `~/.config/amadeos/<app>/language.conf` (`desktop` or `de`, `fr`, ...),
+   written by its *Settings* dialog;
+2. the desktop language, `~/.config/amadeos/locale.conf` (e.g. `de_DE.UTF-8`), written by amadeOS;
+3. the environment as gettext reads it: `LANGUAGE`, `LC_ALL`, `LC_MESSAGES`, `LANG`, so that an
+   application started outside amadeOS uses the language of that desktop;
+4. English.
+
+A setting in a language without translation is skipped. The region is kept (`de_AT` formats dates
+the Austrian way). The result becomes `Locale.getDefault()` and Swing's default locale, so the JDK's own
+dialog buttons and file chooser are translated too; `CommonsModule` binds `LocaleSettings` and the
+`Locale`. A changed language takes effect at the next start of the application.
+
+Texts live in `messages.properties` (English, the fallback for every missing key) and
+`messages_de.properties`, `_fr`, `_es`, `_it`, all in UTF-8:
+
+```properties
+# messages.properties                      # messages_fr.properties
+menu.file=&File                            menu.file=&Fichier
+player.tracks={0,number} tracks            player.tracks={0,number} titres
+radio.recording=Recording to {0}           radio.recording=Enregistrement dans l'album {0}
+```
+
+```java
+Messages msg = Messages.load(MainWindow.class, "org.datazuul.amadeos.audio.messages");
+Mnemonics.apply(new JMenu(), msg.get("menu.file"));
+status.setText(msg.format("player.tracks", count));
+```
+
+`&` marks the mnemonic letter, so each language picks its own (`&&` is a literal ampersand).
+Apostrophes are plain characters, unlike in raw `MessageFormat`. Add a test so that no translation
+falls behind:
+
+```java
+assertEquals(Map.of(), TranslationCheck.problems(MainWindow.class, "org.datazuul.amadeos.audio.messages"));
+```
+
+The *Settings* dialog of an application offers `LanguageChooser` ("Desktop setting (Deutsch)", then
+the five languages) and stores the choice with `LocaleSettings.setApplicationLanguage(...)`. When
+`restartRequired()` is true, it says so with the `language.restart` text from `Messages.commons(locale)`.
+
 ## Usage
 
 ```java
@@ -45,8 +91,8 @@ public static void main(String[] args) {
 ```
 
 `CommonsModule` binds `AppInfo`, `AppDirectories`, an `ExecutorService` on virtual threads,
-`EdtExecutor`, `ThemeStore`, `DesktopLauncher` and a `PasswordStore` whose keyring entries carry
-`service=<app id>`.
+`EdtExecutor`, `ThemeStore`, `DesktopLauncher`, a `PasswordStore` whose keyring entries carry
+`service=<app id>`, `LocaleSettings`, `LocaleStore` and the application's `Locale`.
 
 ### Gradle
 

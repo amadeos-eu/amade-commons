@@ -1,18 +1,14 @@
 package org.datazuul.amadeos.commons.theme;
 
+import org.datazuul.amadeos.commons.config.ConfigWatcher;
 import org.datazuul.amadeos.commons.config.XdgDirectories;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.ClosedWatchServiceException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardWatchEventKinds;
-import java.nio.file.WatchEvent;
-import java.nio.file.WatchKey;
-import java.nio.file.WatchService;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -35,8 +31,7 @@ public final class ThemeStore implements AutoCloseable {
     private final ThemeRegistry registry;
     private final List<Consumer<DesktopTheme>> listeners = new CopyOnWriteArrayList<>();
     private volatile DesktopTheme current;
-    private WatchService watchService;
-    private Thread watcher;
+    private ConfigWatcher watcher;
 
     /**
      * @param configDirectory {@code ~/.config/amadeos}
@@ -109,52 +104,15 @@ public final class ThemeStore implements AutoCloseable {
 
     /** Starts following the theme files in a daemon thread. Calling it again has no effect. */
     public synchronized void watch() {
-        if (watcher != null) return;
-        try {
-            Files.createDirectories(configDirectory);
-            watchService = configDirectory.getFileSystem().newWatchService();
-            configDirectory.register(watchService, StandardWatchEventKinds.ENTRY_CREATE,
-                    StandardWatchEventKinds.ENTRY_MODIFY, StandardWatchEventKinds.ENTRY_DELETE);
-        } catch (IOException | UnsupportedOperationException e) {
-            LOG.warn("Theme changes will not be followed: {}", e.toString());
-            return;
+        if (watcher == null) {
+            watcher = new ConfigWatcher(configDirectory, WATCHED, "amade-theme-watcher", this::reload);
         }
-        WatchService service = watchService;
-        watcher = Thread.ofPlatform().daemon().name("amade-theme-watcher").start(() -> loop(service));
-    }
-
-    private void loop(WatchService service) {
-        try {
-            while (true) {
-                WatchKey key = service.take();
-                boolean relevant = false;
-                for (WatchEvent<?> event : key.pollEvents()) {
-                    Object context = event.context();
-                    relevant |= event.kind() == StandardWatchEventKinds.OVERFLOW
-                            || (context instanceof Path p && WATCHED.contains(p.getFileName().toString()));
-                }
-                key.reset();
-                if (relevant) {
-                    Thread.sleep(150); // the desktop writes the file non-atomically; let it finish
-                    reload();
-                }
-            }
-        } catch (InterruptedException | ClosedWatchServiceException e) {
-            // stopped
-        }
+        watcher.start();
     }
 
     @Override
     public synchronized void close() {
-        if (watcher != null) watcher.interrupt();
-        if (watchService != null) {
-            try {
-                watchService.close();
-            } catch (IOException e) {
-                LOG.debug("Closing watch service failed", e);
-            }
-        }
+        if (watcher != null) watcher.close();
         watcher = null;
-        watchService = null;
     }
 }
