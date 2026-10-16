@@ -1,3 +1,5 @@
+# JitPack starts Gradle with this JDK; the build itself compiles with the Java 25 toolchain from
+# build.gradle, which the foojay resolver in settings.gradle downloads.
 jdk:
   - openjdk21
 install:

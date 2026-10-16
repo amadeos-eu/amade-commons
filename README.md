@@ -6,7 +6,7 @@ applications ([amade-mail](https://github.com/datazuul/amade-mail),
 same start-up code everywhere.
 
 ![License](https://img.shields.io/badge/license-EUPL--1.2-blue)
-![Java](https://img.shields.io/badge/Java-21-orange)
+![Java](https://img.shields.io/badge/Java-25-orange)
 
 ## Contents
 
