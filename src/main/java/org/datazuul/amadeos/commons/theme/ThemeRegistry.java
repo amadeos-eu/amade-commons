@@ -25,11 +25,14 @@ import java.util.Properties;
  * name=Midnight
  * base=#2B3A55
  * activeTitleBg=#C08040
+ * workspace1=#8998AA
+ * workspace3=#4992A7
  * iconTheme=NsCDE
  * </pre>
  *
  * Only {@code base} is required; every other colour is derived from it when missing, and the icon theme
- * defaults to {@link DesktopTheme#DEFAULT_ICON_THEME}.
+ * defaults to {@link DesktopTheme#DEFAULT_ICON_THEME}. {@code workspace1} to {@code workspace4} colour the
+ * four workspaces (switch buttons and backdrops), like the workspace colour sets of a CDE palette.
  */
 public final class ThemeRegistry {
     private static final Logger LOG = LoggerFactory.getLogger(ThemeRegistry.class);
@@ -95,7 +98,14 @@ public final class ThemeRegistry {
                 color(p, "highlight"), color(p, "softHighlight"), color(p, "shadow"), color(p, "darkShadow"),
                 color(p, "sunkenBg"), color(p, "activeTitleBg"), color(p, "inactiveTitleBg"),
                 color(p, "textActive"), color(p, "textInactive"), p.getProperty("iconTheme", DesktopTheme.DEFAULT_ICON_THEME).strip(),
-                color(p, "panelFrameBg"), color(p, "panelFrameHighlight"), color(p, "panelFrameShadow"));
+                color(p, "panelFrameBg"), color(p, "panelFrameHighlight"), color(p, "panelFrameShadow"),
+                workspaceColors(p));
+    }
+
+    private static List<Color> workspaceColors(Properties p) {
+        List<Color> colors = new ArrayList<>();
+        for (int i = 1; i <= DesktopTheme.WORKSPACE_COLORS; i++) colors.add(color(p, "workspace" + i));
+        return colors;
     }
 
     private static Color color(Properties p, String key) {

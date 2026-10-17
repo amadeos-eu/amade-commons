@@ -1,6 +1,7 @@
 package org.datazuul.amadeos.commons.theme;
 
 import java.awt.Color;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -31,6 +32,10 @@ public final class DesktopTheme {
     private final Color panelFrameBg;
     private final Color panelFrameHighlight;
     private final Color panelFrameShadow;
+    private final List<Color> workspaceColors;
+
+    /** Number of workspace colours in a theme: CDE's palettes colour four workspaces, then repeat. */
+    public static final int WORKSPACE_COLORS = 4;
 
     public DesktopTheme(String id, String name, Color base, Color highlight, Color softHighlight,
                         Color shadow, Color darkShadow, Color sunkenBg, Color activeTitleBg,
@@ -44,6 +49,21 @@ public final class DesktopTheme {
                         Color shadow, Color darkShadow, Color sunkenBg, Color activeTitleBg,
                         Color inactiveTitleBg, Color textActive, Color textInactive, String iconTheme,
                         Color panelFrameBg, Color panelFrameHighlight, Color panelFrameShadow) {
+        this(id, name, base, highlight, softHighlight, shadow, darkShadow, sunkenBg,
+                activeTitleBg, inactiveTitleBg, textActive, textInactive, iconTheme,
+                panelFrameBg, panelFrameHighlight, panelFrameShadow, null);
+    }
+
+    /**
+     * @param workspaceColors the colours of the four workspaces (the front panel's switch buttons and the
+     *                        backdrop colour of each workspace, as in CDE's palettes); {@code null} entries
+     *                        and a {@code null} list are derived from the other colours
+     */
+    public DesktopTheme(String id, String name, Color base, Color highlight, Color softHighlight,
+                        Color shadow, Color darkShadow, Color sunkenBg, Color activeTitleBg,
+                        Color inactiveTitleBg, Color textActive, Color textInactive, String iconTheme,
+                        Color panelFrameBg, Color panelFrameHighlight, Color panelFrameShadow,
+                        List<Color> workspaceColors) {
         this.id = Objects.requireNonNull(id, "id");
         this.name = Objects.requireNonNull(name, "name");
         this.base = Objects.requireNonNull(base, "base");
@@ -60,6 +80,22 @@ public final class DesktopTheme {
         this.panelFrameBg = panelFrameBg != null ? panelFrameBg : derivePanelFrameBg(base, shadow);
         this.panelFrameHighlight = panelFrameHighlight != null ? panelFrameHighlight : derivePanelFrameHighlight(this.panelFrameBg);
         this.panelFrameShadow = panelFrameShadow != null ? panelFrameShadow : derivePanelFrameShadow(this.panelFrameBg);
+        this.workspaceColors = deriveWorkspaceColors(workspaceColors);
+    }
+
+    /**
+     * Fills in missing workspace colours: workspace 1 takes the active title colour, workspace 2 the base
+     * (CDE's default palette gives workspace Two the dialog colour), workspace 3 a darker base tone and
+     * workspace 4 the inactive title colour.
+     */
+    private List<Color> deriveWorkspaceColors(List<Color> given) {
+        Color[] fallback = {activeTitleBg, base, mix(base, darkShadow, 0.35), inactiveTitleBg};
+        Color[] result = new Color[WORKSPACE_COLORS];
+        for (int i = 0; i < WORKSPACE_COLORS; i++) {
+            Color c = given != null && i < given.size() ? given.get(i) : null;
+            result[i] = c != null ? c : fallback[i];
+        }
+        return List.of(result);
     }
 
     public static DesktopTheme fromBase(String id, String name, Color base) {
@@ -69,7 +105,7 @@ public final class DesktopTheme {
     public DesktopTheme withIconTheme(String newIconTheme) {
         return new DesktopTheme(id, name, base, highlight, softHighlight, shadow, darkShadow, sunkenBg,
                 activeTitleBg, inactiveTitleBg, textActive, textInactive, newIconTheme,
-                panelFrameBg, panelFrameHighlight, panelFrameShadow);
+                panelFrameBg, panelFrameHighlight, panelFrameShadow, workspaceColors);
     }
 
     // Built-in theme definitions
@@ -88,7 +124,8 @@ public final class DesktopTheme {
             DEFAULT_ICON_THEME,
             new Color(0x99, 0x99, 0x99), // Authentic CDE neutral gray frame
             new Color(0xD1, 0xD1, 0xD2),
-            new Color(0x4E, 0x4E, 0x4E)
+            new Color(0x4E, 0x4E, 0x4E),
+            List.of(new Color(0x89, 0x98, 0xAA), new Color(0xCE, 0xC2, 0xBB), new Color(0x49, 0x92, 0xA7), new Color(0xB7, 0x87, 0x8D)) // workspaces One..Four
     );
 
     public static final DesktopTheme CDE_BROCADE = new DesktopTheme(
@@ -106,7 +143,8 @@ public final class DesktopTheme {
             DEFAULT_ICON_THEME,
             new Color(0x4E, 0x5F, 0x70), // Darker slate-blue frame
             new Color(0x76, 0x8C, 0xA1),
-            new Color(0x27, 0x33, 0x3D)
+            new Color(0x27, 0x33, 0x3D),
+            List.of(new Color(0x7A, 0x96, 0xB0), new Color(0x66, 0x80, 0x99), new Color(0x4E, 0x7D, 0x96), new Color(0x8A, 0x7A, 0x96)) // workspaces One..Four
     );
 
     public static final DesktopTheme CDE_DESERT = new DesktopTheme(
@@ -124,7 +162,8 @@ public final class DesktopTheme {
             DEFAULT_ICON_THEME,
             new Color(0x8A, 0x70, 0x4D), // Amber shadow frame
             new Color(0xB8, 0x9C, 0x73),
-            new Color(0x4A, 0x3B, 0x26)
+            new Color(0x4A, 0x3B, 0x26),
+            List.of(new Color(0xA8, 0x70, 0x5A), new Color(0xC4, 0xA6, 0x7A), new Color(0x7A, 0x8F, 0x6A), new Color(0x9C, 0x6B, 0x4F)) // workspaces One..Four
     );
 
     public static final DesktopTheme CLASSIC_GRAY = new DesktopTheme(
@@ -142,7 +181,8 @@ public final class DesktopTheme {
             DEFAULT_ICON_THEME,
             new Color(0x99, 0x99, 0x99),
             new Color(0xD1, 0xD1, 0xD2),
-            new Color(0x4E, 0x4E, 0x4E)
+            new Color(0x4E, 0x4E, 0x4E),
+            List.of(new Color(0x7A, 0x8C, 0xA3), new Color(0xC0, 0xC0, 0xC0), new Color(0x5F, 0x8A, 0x8A), new Color(0xA0, 0x80, 0x80)) // workspaces One..Four
     );
 
     public static final DesktopTheme DARK_SLATE = new DesktopTheme(
@@ -160,7 +200,8 @@ public final class DesktopTheme {
             DEFAULT_ICON_THEME,
             new Color(0x24, 0x28, 0x30), // Dark charcoal frame
             new Color(0x47, 0x4E, 0x5D),
-            new Color(0x13, 0x15, 0x1A)
+            new Color(0x13, 0x15, 0x1A),
+            List.of(new Color(0x4A, 0x5D, 0x7A), new Color(0x38, 0x3E, 0x4A), new Color(0x3C, 0x64, 0x70), new Color(0x6A, 0x4A, 0x5A)) // workspaces One..Four
     );
 
     public String id() { return id; }
@@ -179,6 +220,17 @@ public final class DesktopTheme {
     public Color panelFrameBg() { return panelFrameBg; }
     public Color panelFrameHighlight() { return panelFrameHighlight; }
     public Color panelFrameShadow() { return panelFrameShadow; }
+
+    /**
+     * The colours of the four workspaces, as CDE's palettes assign them: the front panel shows each
+     * workspace's switch button in its colour, and the symbolic backdrops take it as their background.
+     */
+    public List<Color> workspaceColors() { return workspaceColors; }
+
+    /** The colour of workspace {@code index} (0-based); workspaces beyond the fourth repeat the four. */
+    public Color workspaceColor(int index) {
+        return workspaceColors.get(Math.floorMod(index, WORKSPACE_COLORS));
+    }
 
     /** True for themes with light text on a dark base, e.g. Dark Slate. */
     public boolean isDark() {
