@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -39,6 +40,19 @@ class ThemeTest {
     }
 
     @Test
+    void everyBuiltInThemeColoursFourWorkspacesDifferently() {
+        for (DesktopTheme theme : ThemeRegistry.BUILT_IN) {
+            assertEquals(DesktopTheme.WORKSPACE_COLORS, theme.workspaceColors().size(), theme.id());
+            assertEquals(DesktopTheme.WORKSPACE_COLORS, Set.copyOf(theme.workspaceColors()).size(),
+                    theme.id() + " workspace colours " + theme.workspaceColors());
+            assertEquals(theme.workspaceColor(0), theme.workspaceColor(4), "workspace Five repeats One");
+        }
+        // CDE's default palette: One blue-grey, Two the dialog colour, Three teal, Four rose
+        assertEquals(new Color(0x49, 0x92, 0xA7), DesktopTheme.WARM_MOTIF.workspaceColor(2));
+        assertEquals(DesktopTheme.WARM_MOTIF.base(), DesktopTheme.WARM_MOTIF.workspaceColor(1));
+    }
+
+    @Test
     void darkSlateDoesNotPutLightTextOnWhite() {
         DesktopTheme dark = DesktopTheme.DARK_SLATE;
         assertTrue(dark.isDark());
@@ -49,7 +63,7 @@ class ThemeTest {
     @Test
     void registryLoadsCustomThemesAndDerivesMissingColours() throws Exception {
         Path midnight = Files.createDirectories(dir.resolve("midnight"));
-        Files.writeString(midnight.resolve("theme.properties"), "name=Midnight\nbase=#2B3A55\n");
+        Files.writeString(midnight.resolve("theme.properties"), "name=Midnight\nbase=#2B3A55\nworkspace3=#C08040\n");
         Path broken = Files.createDirectories(dir.resolve("broken"));
         Files.writeString(broken.resolve("theme.properties"), "base=not-a-colour\n");
 
@@ -59,6 +73,9 @@ class ThemeTest {
         assertEquals(new Color(0x2B, 0x3A, 0x55), theme.base());
         assertNotNull(theme.shadow());
         assertEquals(DesktopTheme.DEFAULT_ICON_THEME, theme.iconTheme());
+        assertEquals(new Color(0xC0, 0x80, 0x40), theme.workspaceColor(2), "given workspace colour");
+        assertEquals(theme.base(), theme.workspaceColor(1), "derived workspace colour");
+        assertEquals(theme.workspaceColors(), theme.withIconTheme("Other").workspaceColors());
         assertTrue(registry.find("broken").isEmpty());
         assertEquals(6, registry.all().size());
     }
