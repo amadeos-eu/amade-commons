@@ -35,6 +35,8 @@ tasks.withType(Javadoc).configureEach {
 
 test {
     useJUnitPlatform()
+    // LaunchFeedback calls Xlib through the foreign function API.
+    jvmArgs '--enable-native-access=ALL-UNNAMED'
 }
 
 jar {
