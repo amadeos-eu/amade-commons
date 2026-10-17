@@ -9,7 +9,8 @@ import java.util.Set;
 
 /**
  * Opens links and files with the user's applications: {@code xdg-open} on amadeOS (AWT's
- * {@link Desktop} needs GNOME libraries there), {@link Desktop} elsewhere.
+ * {@link Desktop} needs GNOME libraries there), {@link Desktop} elsewhere. The amadeOS window
+ * manager shows the busy cursor meanwhile ({@link LaunchFeedback}).
  */
 public class DesktopLauncher {
     /** Attachments with these extensions are never opened directly, only saved. */
@@ -22,6 +23,7 @@ public class DesktopLauncher {
     }
 
     public void browse(String uri) throws IOException {
+        LaunchFeedback.announce();
         if (!xdgOpen(uri)) {
             if (!Desktop.isDesktopSupported() || !Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
                 throw new IOException("No web browser available");
@@ -31,6 +33,7 @@ public class DesktopLauncher {
     }
 
     public void open(Path file) throws IOException {
+        LaunchFeedback.announce();
         if (!xdgOpen(file.toAbsolutePath().toString())) {
             if (!Desktop.isDesktopSupported() || !Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
                 throw new IOException("No application available to open " + file.getFileName());
