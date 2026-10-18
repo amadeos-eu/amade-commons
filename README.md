@@ -13,7 +13,7 @@ same start-up code everywhere.
 | Package | Content |
 |---|---|
 | `theme` | `DesktopTheme` with the built-in themes *Warm Motif*, *CDE Brocade*, *CDE Desert*, *Classic Gray*, *Dark Slate*; `ThemeRegistry` (custom themes from `/etc/amadeos/themes` and `~/.config/amadeos/themes`); `ThemeStore` (reads `theme.conf` / `icon_theme.conf` and follows changes) |
-| `swing` | `AmadeUI` (Motif bevels, buttons, check boxes, radio buttons, menus, and theme colours for every standard component), `EdtExecutor` |
+| `swing` | `AmadeUI` (Motif bevels, buttons, check boxes, radio buttons, menus, and theme colours for every standard component), `DateChooser` (a dialog to pick a date, and the small calendar button that opens it next to a date field), `EdtExecutor` |
 | `app` | `AmadeApplication.launch(...)`, `AppInfo`, `CommonsModule` (Guice) |
 | `i18n` | `Language` (English, Deutsch, Français, Español, Italiano), `LocaleStore` (desktop language in `locale.conf`), `LocaleSettings` / `LocaleResolution` (which language an application uses), `Messages` (UTF-8 `.properties` texts), `Mnemonics` (`&Datei`), `LanguageChooser`, `TranslationCheck` |
 | `config` | `XdgDirectories`, `AppDirectories` (`~/.config/amadeos/<app>`), `PropertiesFile` (atomic, owner-only), `ConfigWatcher` |
