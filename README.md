@@ -63,7 +63,7 @@ radio.recording=Recording to {0}           radio.recording=Enregistrement dans l
 ```
 
 ```java
-Messages msg = Messages.load(MainWindow.class, "org.datazuul.amadeos.audio.messages");
+Messages msg = Messages.load(MainWindow.class, "eu.amadeos.audio.messages");
 Mnemonics.apply(new JMenu(), msg.get("menu.file"));
 status.setText(msg.format("player.tracks", count));
 ```
@@ -73,7 +73,7 @@ Apostrophes are plain characters, unlike in raw `MessageFormat`. Add a test so t
 falls behind:
 
 ```java
-assertEquals(Map.of(), TranslationCheck.problems(MainWindow.class, "org.datazuul.amadeos.audio.messages"));
+assertEquals(Map.of(), TranslationCheck.problems(MainWindow.class, "eu.amadeos.audio.messages"));
 ```
 
 The *Settings* dialog of an application offers `LanguageChooser` ("Desktop setting (Deutsch)", then
