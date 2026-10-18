@@ -44,7 +44,7 @@ jar {
         attributes(
             'Implementation-Title': 'amade-commons',
             'Implementation-Version': project.version,
-            'Automatic-Module-Name': 'org.datazuul.amadeos.commons'
+            'Automatic-Module-Name': 'eu.amadeos.commons'
         )
     }
 }
