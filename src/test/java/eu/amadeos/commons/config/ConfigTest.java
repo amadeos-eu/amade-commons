@@ -6,6 +6,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFileAttributeView;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Map;
 import java.util.Properties;
@@ -47,7 +48,9 @@ class ConfigTest {
         p.setProperty("key", "Grüße");
         PropertiesFile.store(file, p, "test");
         assertEquals("Grüße", PropertiesFile.load(file).getProperty("key"));
-        assertEquals("rw-------", PosixFilePermissions.toString(Files.getPosixFilePermissions(file)));
+        if (Files.getFileAttributeView(file, PosixFileAttributeView.class) != null) {
+            assertEquals("rw-------", PosixFilePermissions.toString(Files.getPosixFilePermissions(file)));
+        }
         try (var files = Files.list(file.getParent())) {
             assertEquals(1L, files.count(), "no temporary files left behind");
         }
