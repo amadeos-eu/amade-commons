@@ -68,3 +68,42 @@ publishing {
         }
     }
 }
+
+// The Application Developer's Handbook (docs/handbook) as the Debian package amade-app-handbook
+// (docs/handbook/package-deb.sh), which the amadeOS image installs; the Help drawer of the Front Panel
+// lists it. The applications whose code the chapters show must be checked out next to amade-commons.
+// The package version carries the date of the last commit to docs/handbook, so a new edition replaces the
+// installed one.
+def handbookVersion = {
+    def stamp = ''
+    try {
+        stamp = ['git', 'log', '-1', '--format=%cd', '--date=format:%Y%m%d%H%M', '--', 'docs/handbook']
+                .execute(null, projectDir).text.trim()
+    } catch (IOException ignored) {
+        // No git: the plain version.
+    }
+    stamp ? "${project.version}+${stamp}" : project.version
+}
+
+tasks.register('handbookDeb', Exec) {
+    description = 'Builds the Debian package amade-app-handbook (the handbook for reading offline)'
+    group = 'distribution'
+    commandLine 'docs/handbook/package-deb.sh', handbookVersion(), layout.buildDirectory.dir('distributions').get().asFile.absolutePath
+}
+
+tasks.register('installToAmadeOs') {
+    dependsOn 'handbookDeb'
+    description = 'Builds and drops the handbook package into ../amadeos/config/packages.chroot/'
+    group = 'distribution'
+
+    doLast {
+        def targetDir = file('../amadeos/config/packages.chroot')
+        targetDir.mkdirs()
+        def debFile = new File(layout.buildDirectory.get().asFile, "distributions/amade-app-handbook_${handbookVersion()}_all.deb")
+        copy {
+            from debFile
+            into targetDir
+        }
+        println "[installToAmadeOs] Copied ${debFile.name} to ${targetDir.absolutePath}"
+    }
+}

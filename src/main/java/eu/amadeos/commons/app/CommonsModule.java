@@ -42,6 +42,7 @@ public final class CommonsModule extends AbstractModule {
                 xdg.appConfig(app.configName()), System.getenv()));
     }
 
+    // --8<-- [start:configure]
     @Override
     protected void configure() {
         bind(AppInfo.class).toInstance(app);
@@ -56,4 +57,5 @@ public final class CommonsModule extends AbstractModule {
         bind(LocaleStore.class).toInstance(locales.desktop());
         bind(Locale.class).toInstance(locales.locale());
     }
+    // --8<-- [end:configure]
 }

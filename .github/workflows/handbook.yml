@@ -1,0 +1,64 @@
+name: Handbook
+
+# Builds the amadeOS Application Developer's Handbook (docs/handbook) and publishes it on GitHub Pages.
+# The code excerpts come from amade-commons itself and from the application repositories, checked out
+# next to it at the commits below, the state the chapters describe. Raise a commit when a chapter is
+# updated for it.
+
+on:
+  push:
+    branches: [main]
+    paths: ['docs/handbook/**', 'src/main/**', '.github/workflows/handbook.yml']
+  pull_request:
+    paths: ['docs/handbook/**', 'src/main/**', '.github/workflows/handbook.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  # Full hashes: actions/checkout does not take short ones.
+  PAD_COMMIT: 910e537d05103d68eeadf49beeac54d1a43045bc
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          path: amade-commons
+      - uses: actions/checkout@v7
+        with:
+          repository: datazuul/amade-pad
+          ref: ${{ env.PAD_COMMIT }}
+          path: amade-pad
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.13'
+      - name: Install MkDocs
+        run: pip install -r amade-commons/docs/handbook/requirements.txt
+      # Strict: a broken link or a missing code excerpt fails the build.
+      - name: Build
+        working-directory: amade-commons/docs/handbook
+        run: mkdocs build --strict --site-dir "$GITHUB_WORKSPACE/site"
+      # The offline variant of the Debian package amade-app-handbook (package-deb.sh) must build too.
+      - name: Build offline variant
+        working-directory: amade-commons/docs/handbook
+        run: mkdocs build --strict -f mkdocs-offline.yml --site-dir "$RUNNER_TEMP/site-offline"
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: site
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

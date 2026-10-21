@@ -46,6 +46,7 @@ public final class Mnemonics {
         return parse(marked).text();
     }
 
+    // --8<-- [start:apply]
     /** Sets text and mnemonic of a button, menu or menu item; returns it for chaining. */
     public static <B extends AbstractButton> B apply(B button, String marked) {
         Text t = parse(marked);
@@ -54,6 +55,7 @@ public final class Mnemonics {
         if (t.index() >= 0) button.setDisplayedMnemonicIndex(t.index());
         return button;
     }
+    // --8<-- [end:apply]
 
     /** Sets text and mnemonic of a label (pair it with {@link JLabel#setLabelFor}). */
     public static JLabel apply(JLabel label, String marked) {

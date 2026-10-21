@@ -206,12 +206,15 @@ public final class AmadeUI {
         }
     }
 
+    // --8<-- [start:follow]
     /** Follows theme changes of the desktop: watches the theme files and applies changes on the EDT. */
     public static void follow(ThemeStore store) {
         store.addListener(changed -> SwingUtilities.invokeLater(() -> apply(changed)));
         store.watch();
     }
+    // --8<-- [end:follow]
 
+    // --8<-- [start:style]
     /**
      * Gives a component colours beyond the standard ones, e.g. a white message pane or a highlighted bar.
      * The styler runs now and after every theme change.
@@ -223,6 +226,7 @@ public final class AmadeUI {
         stored.accept(component, theme);
         return component;
     }
+    // --8<-- [end:style]
 
     /** Runs the stylers of the component and all its children; public for tests and custom windows. */
     @SuppressWarnings("unchecked")
