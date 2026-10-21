@@ -65,4 +65,8 @@ nav:
       - 2. How an Application Is Built: 02-structure.md
   - "Part I: First Steps":
       - 10. Pad: 10-pad.md
+      - 11. Web: 11-web.md
+  - "Part II: Office":
+      - 20. Files: 20-files.md
+      - 21. Calendar: 21-calendar.md
   - The Road Ahead: roadmap.md

@@ -19,6 +19,9 @@ permissions:
 env:
   # Full hashes: actions/checkout does not take short ones.
   PAD_COMMIT: 910e537d05103d68eeadf49beeac54d1a43045bc
+  WEB_COMMIT: d43fbd11e15f1b9ca7af854502ff101b7d5d332c
+  FILES_COMMIT: 672a9ad172f8398ebaa54701f0d7106a0af4a83f
+  CALENDAR_COMMIT: 0c733e2d62f777dceb256fbc36e2a11a704d9cd5
 
 jobs:
   build:
@@ -32,6 +35,21 @@ jobs:
           repository: datazuul/amade-pad
           ref: ${{ env.PAD_COMMIT }}
           path: amade-pad
+      - uses: actions/checkout@v7
+        with:
+          repository: datazuul/amade-web
+          ref: ${{ env.WEB_COMMIT }}
+          path: amade-web
+      - uses: actions/checkout@v7
+        with:
+          repository: datazuul/amade-files
+          ref: ${{ env.FILES_COMMIT }}
+          path: amade-files
+      - uses: actions/checkout@v7
+        with:
+          repository: datazuul/amade-calendar
+          ref: ${{ env.CALENDAR_COMMIT }}
+          path: amade-calendar
       - uses: actions/setup-python@v7
         with:
           python-version: '3.13'
