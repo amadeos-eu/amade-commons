@@ -44,6 +44,7 @@ public final class DateChooser extends JDialog {
         return chooser.result();
     }
 
+    // --8<-- [start:button]
     /**
      * A small button with a calendar icon that opens the chooser on the current date of a field and
      * hands the chosen date back.
@@ -59,6 +60,7 @@ public final class DateChooser extends JDialog {
         });
         return button;
     }
+    // --8<-- [end:button]
 
     DateChooser(Window owner, LocalDate initial, Locale locale) {
         super(owner, Messages.commons(locale).get("date.choose"), ModalityType.APPLICATION_MODAL);
