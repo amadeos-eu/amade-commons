@@ -12,11 +12,12 @@ import eu.amadeos.commons.swing.EdtExecutor;
 import eu.amadeos.commons.theme.ThemeStore;
 
 import java.util.Locale;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 
 /**
  * Bindings every amadeOS application gets: {@link AppInfo}, {@link AppDirectories}, the background
- * {@link ExecutorService} (virtual threads), {@link EdtExecutor}, {@link ThemeStore}, {@link DesktopLauncher}
+ * {@link ExecutorService} (virtual threads), {@link EdtExecutor} (also as the {@link Ui} executor), {@link ThemeStore}, {@link DesktopLauncher}
  * a {@link PasswordStore} in the keyring under the application id, and the language: {@link LocaleSettings}
  * and the {@link Locale} the application runs in.
  */
@@ -50,6 +51,7 @@ public final class CommonsModule extends AbstractModule {
         bind(AppDirectories.class).toInstance(AppDirectories.of(xdg, app.configName()));
         bind(ExecutorService.class).toInstance(executor);
         bind(EdtExecutor.class).toInstance(new EdtExecutor());
+        bind(Executor.class).annotatedWith(Ui.class).to(EdtExecutor.class);
         bind(ThemeStore.class).toInstance(themes);
         bind(DesktopLauncher.class).toInstance(new DesktopLauncher());
         bind(PasswordStore.class).toInstance(new SecretToolPasswordStore(app.id()));
