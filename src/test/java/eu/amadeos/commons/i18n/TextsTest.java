@@ -9,17 +9,17 @@ import static eu.amadeos.commons.i18n.Texts.tr;
 import static org.junit.jupiter.api.Assertions.*;
 
 class TextsTest {
-    private static final String BUNDLE = "eu.amadeos.commons.i18n.texts-test";
     private final Locale before = Locale.getDefault();
 
     @AfterEach
-    void restoreLocale() {
+    void restore() {
         Locale.setDefault(before);
+        Texts.use(TextsTest.class, "eu.amadeos.commons.i18n.texts-test");
     }
 
     @Test
-    void textsFollowTheDefaultLocale() {
-        Texts.use(TextsTest.class, BUNDLE);
+    void theDeclaredTextsFollowTheDefaultLocale() {
+        assertEquals("eu.amadeos.commons.i18n.texts-test", Texts.bundle());
         Locale.setDefault(Locale.ENGLISH);
         assertEquals("Hello", tr("greeting"));
         assertEquals("3 messages", tr("count", 3));
@@ -29,12 +29,18 @@ class TextsTest {
     }
 
     @Test
-    void anotherBundleIsLoadedAfterUse() {
+    void useSwitchesToOtherTexts() {
         Locale.setDefault(Locale.ENGLISH);
-        Texts.use(TextsTest.class, BUNDLE);
-        assertEquals("Hello", tr("greeting"));
         Texts.use(Messages.class, "eu.amadeos.commons.i18n.commons");
         assertTrue(Texts.messages().has("language.label"));
         assertFalse(Texts.messages().has("greeting"));
+    }
+
+    @Test
+    void withoutADeclarationTheErrorSaysWhatIsMissing() {
+        ClassLoader empty = new ClassLoader(null) {
+        };
+        IllegalStateException e = assertThrows(IllegalStateException.class, () -> Texts.declared(empty));
+        assertTrue(e.getMessage().contains(Texts.DECLARATION), e.getMessage());
     }
 }
