@@ -21,3 +21,8 @@ bin/
 .*~
 .LCK*
 
+
+# Handbook (docs/handbook)
+docs/handbook/.venv/
+docs/handbook/site/
+docs/handbook/.cache/

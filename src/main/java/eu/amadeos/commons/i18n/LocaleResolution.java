@@ -32,6 +32,7 @@ public record LocaleResolution(Locale locale, Language language, Source source) 
         Objects.requireNonNull(source, "source");
     }
 
+    // --8<-- [start:resolve]
     /**
      * Decides the locale: the application's own setting, else the desktop's, else the environment, else
      * English. A setting whose language amadeOS is not translated into is skipped.
@@ -55,6 +56,7 @@ public record LocaleResolution(Locale locale, Language language, Source source) 
         if (fromEnvironment.isPresent()) return of(fromEnvironment.get(), Source.ENVIRONMENT);
         return new LocaleResolution(Language.ENGLISH.locale(), Language.ENGLISH, Source.DEFAULT);
     }
+    // --8<-- [end:resolve]
 
     private static LocaleResolution of(Locale locale, Source source) {
         return new LocaleResolution(locale, Language.of(locale).orElseThrow(), source);

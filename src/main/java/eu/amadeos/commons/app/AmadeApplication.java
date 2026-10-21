@@ -37,6 +37,7 @@ public final class AmadeApplication {
     private AmadeApplication() {
     }
 
+    // --8<-- [start:launch]
     public static void launch(AppInfo app, Consumer<Injector> start, Module... modules) {
         // Before any Swing class is used, so that the JDK's own texts (OK, Cancel, file chooser) and every
         // date and number format follow the language as well.
@@ -66,4 +67,5 @@ public final class AmadeApplication {
             }
         });
     }
+    // --8<-- [end:launch]
 }

@@ -1,0 +1,10 @@
+# The handbook for reading without a network, from /usr/share/doc/amade-app-handbook/html in the
+# web browser (package amade-app-handbook, built by package-deb.sh): links to .html files instead of
+# directories, search without a server, and the fonts and scripts the pages load from the web
+# (Mermaid) stored next to the pages.
+INHERIT: mkdocs.yml
+use_directory_urls: false
+plugins:
+  - search
+  - offline
+  - privacy
