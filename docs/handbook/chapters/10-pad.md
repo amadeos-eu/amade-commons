@@ -401,4 +401,4 @@ And what stays in Pad? Everything about text files: `TextCodec`, the atomic writ
 - The look and the theme come from amade-commons; never set theme colours directly.
 - A Debian package with a desktop entry puts the program into the Front Panel.
 
-Pad has shown everything that the start of an application needs. The next application, a small web browser, needs something new: opening a link in another program, safely.
+Pad has shown everything that the start of an application needs. The next application, a viewer for the documentation on the disk, needs something new: opening a link in another program, safely.

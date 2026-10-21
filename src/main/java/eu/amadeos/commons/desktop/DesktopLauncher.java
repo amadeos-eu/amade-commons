@@ -13,6 +13,7 @@ import java.util.Set;
  * manager shows the busy cursor meanwhile ({@link LaunchFeedback}).
  */
 public class DesktopLauncher {
+    // --8<-- [start:risky]
     /** Attachments with these extensions are never opened directly, only saved. */
     private static final Set<String> RISKY = Set.of("desktop", "sh", "bash", "run", "bin", "jar", "py", "pl",
             "appimage", "deb", "exe", "bat", "cmd", "com", "msi", "ps1", "vbs", "js", "jnlp", "lnk", "scr");
@@ -21,7 +22,9 @@ public class DesktopLauncher {
         int dot = fileName.lastIndexOf('.');
         return dot < 0 || RISKY.contains(fileName.substring(dot + 1).toLowerCase(Locale.ROOT));
     }
+    // --8<-- [end:risky]
 
+    // --8<-- [start:browse]
     public void browse(String uri) throws IOException {
         LaunchFeedback.announce();
         if (!xdgOpen(uri)) {
@@ -31,6 +34,7 @@ public class DesktopLauncher {
             Desktop.getDesktop().browse(URI.create(uri));
         }
     }
+    // --8<-- [end:browse]
 
     public void open(Path file) throws IOException {
         LaunchFeedback.announce();
@@ -42,6 +46,7 @@ public class DesktopLauncher {
         }
     }
 
+    // --8<-- [start:xdg-open]
     private static boolean xdgOpen(String target) {
         try {
             new ProcessBuilder("xdg-open", target).redirectErrorStream(true)
@@ -51,4 +56,5 @@ public class DesktopLauncher {
             return false; // xdg-open not installed
         }
     }
+    // --8<-- [end:xdg-open]
 }

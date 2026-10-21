@@ -10,14 +10,9 @@ The handbook grows with the applications: a chapter is written for an applicatio
 | [1. Why Swing and Our Own Library](01-why-swing.md) | | |
 | [2. How an Application Is Built](02-structure.md) | | |
 | [10. Pad](10-pad.md) | amade-pad, the text editor | Uses what every program needs: start-up, Guice wiring, the CDE look and themes, five languages, the EDT executor |
+| [11. Web](11-web.md) | amade-web, the documentation viewer | `DesktopLauncher`: opening links and files in other programs, refusing files that could run code |
 
 ## Planned
-
-### Part I: First Steps
-
-| Chapter | Application | New ideas | New in amade-commons |
-|---|---|---|---|
-| 11. Web | amade-web, a small browser | Parsing HTML, rendering XHTML, history | `DesktopLauncher`: opening links and files in other programs, refusing files that could run code |
 
 ### Part II: Office
 
