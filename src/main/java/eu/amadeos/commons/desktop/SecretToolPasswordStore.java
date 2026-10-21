@@ -48,6 +48,7 @@ public final class SecretToolPasswordStore implements PasswordStore {
         return Optional.of(result.output());
     }
 
+    // --8<-- [start:store]
     @Override
     public void store(String key, String label, String password) {
         cache.store(key, label, password);
@@ -59,6 +60,7 @@ public final class SecretToolPasswordStore implements PasswordStore {
                     key, result.exitCode());
         }
     }
+    // --8<-- [end:store]
 
     @Override
     public void delete(String key) {
@@ -71,6 +73,7 @@ public final class SecretToolPasswordStore implements PasswordStore {
         return executable != null;
     }
 
+    // --8<-- [start:run]
     private static Result run(String input, String... command) {
         try {
             Process process = new ProcessBuilder(List.of(command)).redirectErrorStream(false).start();
@@ -97,6 +100,7 @@ public final class SecretToolPasswordStore implements PasswordStore {
             return new Result(-1, "");
         }
     }
+    // --8<-- [end:run]
 
     static String findOnPath(String name) {
         String path = System.getenv("PATH");
