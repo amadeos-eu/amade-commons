@@ -13,15 +13,10 @@ The handbook grows with the applications: a chapter is written for an applicatio
 | [11. Web](11-web.md) | amade-web, the documentation viewer | `DesktopLauncher`: opening links and files in other programs, refusing files that could run code |
 | [20. Files](20-files.md) | amade-files, the two-panel file manager | `AppDirectories` and `PropertiesFile` for settings, `LaunchFeedback` for the busy cursor; the trash and file operations stay in Files |
 | [21. Calendar](21-calendar.md) | amade-calendar, dtcm's successor | `DateChooser` and `LanguageChooser` for dialogs; printing waits in Calendar for its second user |
+| [22. Mail](22-mail.md) | amade-mail, the mailer | `PasswordStore` for the desktop keyring; the `Texts` helper that four applications copied moves in |
+| [23. WritePad](23-writepad.md) | amade-writepad, the word processor | Printing moves in (`PaperSize`, `PrintJobs`), its second user after Calendar |
 
 ## Planned
-
-### Part II: Office
-
-| Chapter | Application | New ideas | New in amade-commons |
-|---|---|---|---|
-| 22. Mail | amade-mail | IMAP and SMTP, OAuth2, safe HTML mail | `PasswordStore` (the desktop keyring); the `Texts` helper that four applications copy today moves in |
-| 23. WritePad | amade-writepad, a word processor | Swing's text kit, a page view, document formats (ODT, DOCX, RTF) | Printing moves in, its second user after Calendar |
 
 ### Part III: Graphics and Media
 

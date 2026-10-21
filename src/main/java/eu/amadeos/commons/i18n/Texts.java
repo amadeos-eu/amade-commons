@@ -64,6 +64,7 @@ public final class Texts {
         return source().bundle();
     }
 
+    // --8<-- [start:messages]
     /** The application's texts in the default locale. */
     public static Messages messages() {
         Source s = source();
@@ -74,6 +75,7 @@ public final class Texts {
         }
         return l.messages();
     }
+    // --8<-- [end:messages]
 
     /** The text for the key. */
     public static String tr(String key) {
@@ -96,6 +98,7 @@ public final class Texts {
         return s;
     }
 
+    // --8<-- [start:declared]
     /** Reads {@value #DECLARATION}; there must be exactly one, the application's. */
     static Source declared(ClassLoader loader) {
         List<URL> found;
@@ -118,4 +121,5 @@ public final class Texts {
         if (bundle.isEmpty()) throw new IllegalStateException(found.getFirst() + " names no bundle");
         return new Source(Texts.class, bundle);
     }
+    // --8<-- [end:declared]
 }

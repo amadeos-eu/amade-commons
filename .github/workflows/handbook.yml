@@ -22,6 +22,8 @@ env:
   WEB_COMMIT: d43fbd11e15f1b9ca7af854502ff101b7d5d332c
   FILES_COMMIT: 672a9ad172f8398ebaa54701f0d7106a0af4a83f
   CALENDAR_COMMIT: 0c733e2d62f777dceb256fbc36e2a11a704d9cd5
+  MAIL_COMMIT: 6a4a32549ca0448941a2fac99913b2bb0a8db4d1
+  WRITEPAD_COMMIT: 06c3a02be6fdabd7be44bfe245cba809899c7711
 
 jobs:
   build:
@@ -50,6 +52,16 @@ jobs:
           repository: datazuul/amade-calendar
           ref: ${{ env.CALENDAR_COMMIT }}
           path: amade-calendar
+      - uses: actions/checkout@v7
+        with:
+          repository: datazuul/amade-mail
+          ref: ${{ env.MAIL_COMMIT }}
+          path: amade-mail
+      - uses: actions/checkout@v7
+        with:
+          repository: datazuul/amade-writepad
+          ref: ${{ env.WRITEPAD_COMMIT }}
+          path: amade-writepad
       - uses: actions/setup-python@v7
         with:
           python-version: '3.13'

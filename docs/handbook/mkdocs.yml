@@ -69,4 +69,6 @@ nav:
   - "Part II: Office":
       - 20. Files: 20-files.md
       - 21. Calendar: 21-calendar.md
+      - 22. Mail: 22-mail.md
+      - 23. WritePad: 23-writepad.md
   - The Road Ahead: roadmap.md
