@@ -48,6 +48,7 @@ public final class LaunchFeedback {
     private LaunchFeedback() {
     }
 
+    // --8<-- [start:announce]
     /** Asks the window manager to show the busy cursor until the next new window. Never throws. */
     public static void announce() {
         if (unavailable) return;
@@ -63,6 +64,7 @@ public final class LaunchFeedback {
             LOG.debug("No launch feedback: X11 not available", e);
         }
     }
+    // --8<-- [end:announce]
 
     private static Xlib xlib() {
         Xlib x = xlib;

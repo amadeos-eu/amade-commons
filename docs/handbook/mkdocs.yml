@@ -66,4 +66,6 @@ nav:
   - "Part I: First Steps":
       - 10. Pad: 10-pad.md
       - 11. Web: 11-web.md
+  - "Part II: Office":
+      - 20. Files: 20-files.md
   - The Road Ahead: roadmap.md
