@@ -27,6 +27,7 @@ env:
   FRACTALS_COMMIT: e7120e5859678a815effec10a76e25902ef04cec
   IMAGESCAN_COMMIT: a2f7779cc38b08f2637a9cf1265f49016b48a672
   AUDIO_COMMIT: 656361210603d5bb574aab6ddb34196d27371b5e
+  VIDEO_COMMIT: b505eb560c5b746acf13f4ed6800a93189c418f1
 
 jobs:
   build:
@@ -80,6 +81,11 @@ jobs:
           repository: datazuul/amade-audio
           ref: ${{ env.AUDIO_COMMIT }}
           path: amade-audio
+      - uses: actions/checkout@v7
+        with:
+          repository: datazuul/amade-video
+          ref: ${{ env.VIDEO_COMMIT }}
+          path: amade-video
       - uses: actions/setup-python@v7
         with:
           python-version: '3.13'
