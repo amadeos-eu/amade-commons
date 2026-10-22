@@ -15,6 +15,7 @@ The handbook grows with the applications: a chapter is written for an applicatio
 | [21. Calendar](21-calendar.md) | amade-calendar, dtcm's successor | `DateChooser` and `LanguageChooser` for dialogs; printing waits in Calendar for its second user |
 | [22. Mail](22-mail.md) | amade-mail, the mailer | `PasswordStore` for the desktop keyring; the `Texts` helper that four applications copied moves in |
 | [23. WritePad](23-writepad.md) | amade-writepad, the word processor | Printing moves in (`PaperSize`, `PrintJobs`), its second user after Calendar |
+| [30. Fractals](30-fractals.md) | amade-fractals, the fractal explorer | Toolbars with icons drawn in Java2D (`ToolIcon`, `StandardGlyph`, `ToolButtons`) and the `@Ui` executor binding move in, their second user after WritePad |
 
 ## Planned
 
@@ -22,8 +23,7 @@ The handbook grows with the applications: a chapter is written for an applicatio
 
 | Chapter | Application | New ideas | New in amade-commons |
 |---|---|---|---|
-| 30. Fractals | amade-fractals | Java2D, calculations on all processor cores, exporting images | Toolbars with icons drawn in Java2D (`ToolIcon`, `ToolButtons`) and the `@Ui` executor binding move in, their second user after WritePad |
-| 31. Imagescan | amade-imagescan | Scanners through SANE and WIA, image operations, undo for images | `CommandRunner` for external programs moves in |
+| 31. Imagescan | amade-imagescan | Scanners through SANE and WIA, image operations, undo for images | `CommandRunner` for external programs moves in; Imagescan's own toolbar copy gives way to the one from chapter 30 |
 | 32. Video | amade-video | A native library (libmpv) through JNA, video in a Swing window | |
 | 33. Audio | amade-audio | Sound output, decoders, web radio, CD, a mixer, custom widgets | `Json` moves in (second user after Mail), and the transport icons (second user after Video) |
 
