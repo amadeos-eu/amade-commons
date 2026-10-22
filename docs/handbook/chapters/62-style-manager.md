@@ -87,13 +87,21 @@ The **Backdrop** control paints the root window: an image (fill, fit, stretch, t
 
 The **Screen** control sets the screen saver of the session module: which saver (Qix, Swarm, Starfield, Floating Logo, Blank), after how many minutes it starts and whether it locks. The dialog previews the chosen saver while you pick it, and *Test* runs it on the whole screen.
 
-## What stays to be done
+## Five languages without Guice
 
-The Style Manager's texts are English only, written into the code. Translating it is the first exercise.
+The Style Manager speaks the five languages of the applications. Its texts are in `messages.properties` and its translations, with the menu letters marked by `&` ([chapter 43](43-languages.md#texts-messages)). What a tool program gets from Guice, the Style Manager does itself in a small class: it resolves the language once, the way `CommonsModule` does for the applications, from the desktop language in `locale.conf` and then from the environment:
+
+```java title="amadeos-system · style/StyleTexts.java"
+--8<-- "amadeos-system/style/src/main/java/eu/amadeos/system/style/StyleTexts.java:texts"
+```
+
+Everything with a name asks it: `StyleCategory.label()` reads `category.keyboard`, the dialogs their labels, the status line `status.applied` with the control's name as its argument. Two details show where texts hide. The scaling modes of the backdrop are an enum in `base`, whose `toString` the combo box used to show; a renderer now shows `backdrop.scale.fill` and its translations instead, and `base` stays free of the Style Manager's texts. And the status lines are built from parts (`Bildschirm: Schoner nach 10 Min., Sperre aus`), so each part is a text of its own with `{0}` for the number, never English glued to a translation.
+
+`StyleTextsTest` runs `TranslationCheck` over the five files and checks a German and a French line. `StyleManagerTest` compares English texts, so it sets the language with `StyleTexts.use(Locale.ENGLISH)` before it starts: a test must not depend on the language of the computer it runs on.
 
 ## Exercises
 
-1. **Five languages.** Move the texts of the Style Manager (window, dialogs, `StyleCategory`) into `messages.properties` with translations, load them with `Messages`, and add a `TranslationCheck` test. How does a desktop module without Guice get its `Locale`? Look at how the panel does it.
+1. **Following the language switch.** The Style Manager reads the language at start. Let it follow the panel's language button while it is open: `LocaleStore` can watch `locale.conf`. Which texts are already on the screen, and how do you replace them?
 2. **Font.** Implement the Font control: a scale factor for the desktop's fonts, stored in `~/.config/amadeos/font.conf`. Which programs would have to follow it, and through which class of amade-commons should they?
 3. **A theme editor.** Add *New…* to the Color control: pick a base colour, derive the rest with `DesktopTheme.fromBase`, show the palette and write `~/.config/amadeos/themes/<id>/theme.properties`.
 
@@ -103,3 +111,4 @@ The Style Manager's texts are English only, written into the code. Translating i
 - It writes `theme.conf` through `ThemeManager`, atomically, because a dozen programs read the file within milliseconds of a change.
 - The window manager and the panel also follow the root window property `_AMADEOS_THEME`; the applications follow the file alone.
 - Settings of the X server are files first and commands second, so the session can apply them again at every login.
+- Without Guice, a small class resolves the language from `locale.conf` and loads the texts; status lines are built from translated parts.

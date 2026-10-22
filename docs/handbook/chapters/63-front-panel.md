@@ -82,6 +82,16 @@ That is how *amadeOS Software* and the installer of the live image appear in the
 !!! tip "Tip: which categories go where"
     [Chapter 50](50-packaging.md#categories-and-the-front-panel-drawers) has the table of categories and drawers from the application's side. Give a program its one main category and the specific ones that fit: Mail says `Network;Email;`, and `Email` puts it first in *Mail & Internet*.
 
+### Drawers that follow
+
+A drawer that is filled once is out of date as soon as Software installs a program. So the panel watches the directories of the desktop entries, and when a package has written its entries and nothing has changed for two seconds, it reads them again in the background and fills every drawer again on the EDT:
+
+```java title="amadeos-system · panel-cde/AmadeDesktopPanel.java"
+--8<-- "amadeos-system/panel-cde/src/main/java/eu/amadeos/system/panel/cde/AmadeDesktopPanel.java:follow"
+```
+
+`ApplicationsWatcher` in `base` is a `WatchService` with a settle time, the same pattern as the package watcher of [chapter 64](64-software.md#knowing-when-something-changed). That is why each drawer above is built from *suppliers*, not lists: `createCategoryDrawer` and `fixedDrawer` keep a small `Runnable` per drawer that asks the suppliers again and hands the result to `DrawerDockWidget.update`, which closes an open drawer, replaces its entries and, for a category drawer, the program its button starts. A new graphics program is in the Graphics drawer a few seconds after its installation, and after its removal it is gone.
+
 ## Starting programs
 
 A program started from the panel or the window manager's root menu must not depend on the program that started it. The session restarts a window manager that crashed, and the user's editor must not go down with it. `ProcessLauncher` in `base` starts every program the same way:
@@ -114,7 +124,7 @@ The rightmost slot is a grid of small cells: the network and, while updates are 
 --8<-- "amadeos-system/panel-cde/src/main/java/eu/amadeos/system/panel/cde/AmadeDesktopPanel.java:status"
 ```
 
-The cells take their services in the constructor, `NmcliNetworkService` for the network and `AptPackageService` for the updates ([chapter 64](64-software.md)), and the actions to open the settings, so a test builds a cell with fakes. They are the parts of the panel with texts, in five languages from `desktop.properties`. As a desktop module without Guice, a cell finds its language itself with `LocaleResolution` from amade-commons ([chapter 43](43-languages.md#which-language-localeresolution)), from `~/.config/amadeos/locale.conf` and the environment.
+The cells take their services in the constructor, `NmcliNetworkService` for the network and `AptPackageService` for the updates ([chapter 64](64-software.md)), and the actions to open the settings, so a test builds a cell with fakes. Their texts, like all of the panel's, are in `desktop.properties` and its translations ([below](#the-panels-language)).
 
 The updates cell is the most careful one, because what it reads takes time. It reads the waiting updates on a thread of its own, twenty seconds after login so the session can settle first, then every thirty minutes, and whenever the installed packages or the package lists change:
 
@@ -130,14 +140,15 @@ The updates cell is the most careful one, because what it reads takes time. It r
 
 The number on the cell is red when security updates are among them. A click opens a menu with the first eight updates, *Install all*, *Install security updates only*, *Check now*, and *Show updates*, which starts the Software program on its Updates tab.
 
-## What stays to be done
+## The panel's language
 
-- The drawers are filled once, when the panel starts. A program installed with Software appears in its drawer at the next login, or after *Reload Cache* in the Application Manager, which reloads the list but not the drawers.
-- The drawer titles and the panel's own entries (*Style Manager*, *Root Console (sudo)*) are English, written into the code; only the status cells and the workspace switch have translations.
+Everything the panel says is in `desktop.properties` and its four translations: the drawer titles and the fixed entries, the tooltips, the Application Manager and its tabs, the clock and the calendar, the workspace names. `PanelTexts` loads them once, in the language of the session. That is deliberate: the session exports the language of `locale.conf` as `LANG` at login, and the panel's language button says that the panel follows at the next login, like the terminals. So `PanelTexts` resolves the language from the environment only ([chapter 43](43-languages.md#which-language-localeresolution)), where the Style Manager, a program started later, reads `locale.conf` itself ([chapter 62](62-style-manager.md#five-languages-without-guice)).
+
+Dates follow the language too. The calendar's tooltip used a fixed English pattern (`EEEE, MMMM d, yyyy`); it now uses `DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL)` in the panel's locale, so a German session reads *Donnerstag, 22. Oktober 2026*, and the month on the calendar sheet is the short name in that language. The session dialog behind the exit button lives in `base` and has its own `session.properties`, so `base` does not depend on the panel's texts.
 
 ## Exercises
 
-1. **Drawers that follow.** Rebuild a drawer's list when `/usr/share/applications` changes. Watch the directory as `PackageWatcher` does ([chapter 64](64-software.md#knowing-when-something-changed)), wait until the changes settle, then reload on a background thread and replace the drawer's entries on the EDT.
+1. **A drawer per user.** Let users add their own entries to a drawer, stored in `~/.config/amadeos/panel.conf` with `PropertiesFile`. How does such an entry survive a refill?
 2. **A battery cell.** Write a `StatusCell` that reads `/sys/class/power_supply/BAT0/capacity` and `status` every minute and is `available` only when there is a battery. Test it with a temporary directory in place of `/sys`, as System Information does with `/proc` ([chapter 61](61-system-information.md#linuxs-own-files)).
 3. **Twice in one drawer.** WritePad says `Office;WordProcessor;`. Why does it appear once in the Text & Office drawer and not twice? Find the line that makes sure, and what would happen without it.
 
@@ -147,4 +158,6 @@ The number on the cell is red when security updates are among them. A click open
 - Widgets are slots with a life cycle and a theme. The panel draws CDE's look in the colours of the current theme.
 - Drawers fill themselves from desktop entries by category, so a package that installs a desktop entry also puts its program into the panel.
 - Programs start in a session of their own with their output in a log file, and the busy cursor shows until their window appears.
+- Drawers fill themselves again a few seconds after programs are installed or removed.
 - Status cells read in the background, show only when they have something to say, and take their services in the constructor so tests can fake them.
+- The panel's texts and dates are in the session's language, resolved once at start.
