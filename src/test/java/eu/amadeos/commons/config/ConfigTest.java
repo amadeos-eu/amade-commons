@@ -31,6 +31,22 @@ class ConfigTest {
     }
     // --8<-- [end:xdg]
 
+    // --8<-- [start:pictures]
+    @Test
+    void picturesFolderFollowsTheUserDirectories() throws Exception {
+        XdgDirectories xdg = new XdgDirectories(Map.of("XDG_CONFIG_HOME", dir.resolve("cfg").toString()), "/home/anna");
+        assertEquals(Path.of("/home/anna/Pictures"), xdg.pictures(), "no user-dirs.dirs");
+
+        Files.createDirectories(dir.resolve("cfg"));
+        Files.writeString(dir.resolve("cfg/user-dirs.dirs"),
+                "# written by xdg-user-dirs-update\nXDG_DESKTOP_DIR=\"$HOME/Schreibtisch\"\nXDG_PICTURES_DIR=\"$HOME/Bilder\"\n");
+        assertEquals(Path.of("/home/anna/Bilder"), xdg.pictures());
+
+        Files.writeString(dir.resolve("cfg/user-dirs.dirs"), "XDG_PICTURES_DIR=\"/data/photos\"\n");
+        assertEquals(Path.of("/data/photos"), xdg.pictures());
+    }
+    // --8<-- [end:pictures]
+
     @Test
     void appDirectories() {
         AppDirectories dirs = AppDirectories.of(new XdgDirectories(Map.of(), "/h"), "mail");

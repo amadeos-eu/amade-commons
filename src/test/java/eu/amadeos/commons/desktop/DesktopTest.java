@@ -2,6 +2,13 @@ package eu.amadeos.commons.desktop;
 
 import org.junit.jupiter.api.Test;
 
+import java.awt.EventQueue;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
+import java.awt.image.BufferedImage;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class DesktopTest {
@@ -30,4 +37,20 @@ class DesktopTest {
         assertThrows(IllegalArgumentException.class, () -> new SecretToolPasswordStore(" "));
     }
     // --8<-- [end:session]
+
+    // --8<-- [start:image]
+    @Test
+    void anImageOnTheClipboardKnowsWhenItIsReplaced() throws Exception {
+        Clipboard clipboard = new Clipboard("test");
+        BufferedImage picture = new BufferedImage(4, 3, BufferedImage.TYPE_INT_RGB);
+        AtomicInteger lost = new AtomicInteger();
+        ImageSelection.put(clipboard, picture, lost::incrementAndGet);
+        assertSame(picture, clipboard.getData(DataFlavor.imageFlavor));
+        assertFalse(clipboard.isDataFlavorAvailable(DataFlavor.stringFlavor));
+
+        clipboard.setContents(new StringSelection("text"), null);
+        EventQueue.invokeAndWait(() -> { }); // the clipboard tells the old owner on the event thread
+        assertEquals(1, lost.get());
+    }
+    // --8<-- [end:image]
 }
