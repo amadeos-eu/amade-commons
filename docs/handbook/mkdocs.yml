@@ -94,5 +94,6 @@ nav:
       - 62. Style Manager: 62-style-manager.md
       - 63. The Front Panel: 63-front-panel.md
       - 64. Software: 64-software.md
-      - 65. A Module of Your Own: 65-own-module.md
+      - 65. The Clipboard Manager: 65-clipboard.md
+      - 66. A Module of Your Own: 66-own-module.md
   - The Road Ahead: roadmap.md

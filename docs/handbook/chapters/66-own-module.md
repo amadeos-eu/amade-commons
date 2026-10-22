@@ -1,6 +1,6 @@
-# 65. A Module of Your Own
+# 66. A Module of Your Own
 
-The chapters of this part went through four modules of the desktop. This one turns them into a checklist: what a new module of amadeos-system needs, from the first decision to the package in the image. As the running example, take a small tool that does not exist yet, *Disks*, which shows the disks and how full they are, `amadeos-disks`.
+The chapters of this part went through five modules of the desktop. This one turns them into a checklist: what a new module of amadeos-system needs, from the first decision to the package in the image. As the running example, take a small tool that does not exist yet, *Disks*, which shows the disks and how full they are, `amadeos-disks`.
 
 ## What you will learn
 

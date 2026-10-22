@@ -22,7 +22,7 @@ The desktop lives in the repository [amadeos-system](https://github.com/datazuul
 | `wm` | `amadeos-wm` | The window manager: Motif frames, four workspaces, the root menu |
 | `panel-cde` | `amadeos-panel-cde` | The CDE Front Panel: clock, calendar, workspace switch, drawers of applications, network and updates cells |
 | `dm` | `amadeos-dm` | The display manager: starts Xorg and the login greeter, authenticates through PAM, starts the session |
-| `session` | `amadeos-session` | The session (window manager, autostart, panel), the screen lock, the screen saver, the polkit agent |
+| `session` | `amadeos-session` | The session (window manager, autostart, panel), the screen lock, the screen saver, the polkit agent, the clipboard manager ([chapter 65](65-clipboard.md)) |
 | `style` | `amadeos-style` | The Style Manager: Color, Backdrop, Keyboard, Mouse, Beep, Screen |
 | `logviewer` | `amadeos-logviewer` | Session diagnostics and logs |
 | `print` | `amadeos-print` | The print manager: printers and jobs over IPP |

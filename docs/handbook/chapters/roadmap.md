@@ -28,7 +28,8 @@ The handbook grows with the applications: a chapter is written for an applicatio
 | [62. Style Manager](62-style-manager.md) | amadeos-style | The writing side of themes: `ThemeManager`, atomic files, the root window property, the X server's own tools, five languages without Guice |
 | [63. The Front Panel](63-front-panel.md) | amadeos-panel-cde | A Swing window as an EWMH dock, drawers from desktop entries that follow installations, starting programs, status cells, the panel's language |
 | [64. Software](64-software.md) | amadeos-software, amadeos-packages | A root helper behind pkexec and polkit, apt's progress, tests with a fake apt, watching for changes |
-| [65. A Module of Your Own](65-own-module.md) | | The checklist for a new module of amadeos-system |
+| [65. The Clipboard Manager](65-clipboard.md) | amadeos-session clipboard | A program without a window: XFixes instead of polling, an X thread, a worker and the EDT, taking the clipboard over, `SAVE_TARGETS`, passwords left alone |
+| [66. A Module of Your Own](66-own-module.md) | | The checklist for a new module of amadeos-system |
 
 ## Planned
 
