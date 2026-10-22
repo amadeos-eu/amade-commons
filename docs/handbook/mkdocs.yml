@@ -76,6 +76,15 @@ nav:
       - 31. Imagescan: 31-imagescan.md
       - 32. Video: 32-video.md
       - 33. Audio: 33-audio.md
+  - "Part IV: The amade-commons Manual":
+      - 40. amade-commons at a Glance: 40-commons.md
+      - 41. Start-up and Wiring: 41-start-up.md
+      - 42. Look and Themes: 42-look.md
+      - 43. Languages: 43-languages.md
+      - 44. Settings and Files: 44-settings.md
+      - 45. Desktop Integration: 45-desktop.md
+      - 46. Toolbars, Icons and Printing: 46-toolbars-and-printing.md
+      - 47. Programs, JSON and the Network: 47-programs-json-network.md
   - "Part V: Shipping Applications":
       - 50. Packaging and Installers: 50-packaging.md
   - The Road Ahead: roadmap.md
