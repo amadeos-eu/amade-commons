@@ -193,6 +193,7 @@ public final class AmadeUI {
         put("TabbedPane.contentBorderInsets", new Insets(2, 2, 2, 2));
     }
 
+    // --8<-- [start:apply]
     /**
      * Installs a new theme and updates every open window; call on the EDT. Components registered with
      * {@link #style(JComponent, BiConsumer)} get their extra colours again.
@@ -205,6 +206,7 @@ public final class AmadeUI {
             window.repaint();
         }
     }
+    // --8<-- [end:apply]
 
     // --8<-- [start:follow]
     /** Follows theme changes of the desktop: watches the theme files and applies changes on the EDT. */

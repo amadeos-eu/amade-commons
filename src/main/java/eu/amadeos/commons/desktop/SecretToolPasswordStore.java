@@ -38,6 +38,7 @@ public final class SecretToolPasswordStore implements PasswordStore {
         this.executable = executable;
     }
 
+    // --8<-- [start:lookup]
     @Override
     public Optional<String> lookup(String key) {
         Optional<String> cached = cache.lookup(key);
@@ -47,6 +48,7 @@ public final class SecretToolPasswordStore implements PasswordStore {
         cache.store(key, "", result.output());
         return Optional.of(result.output());
     }
+    // --8<-- [end:lookup]
 
     // --8<-- [start:store]
     @Override

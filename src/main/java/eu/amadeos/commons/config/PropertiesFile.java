@@ -30,6 +30,7 @@ public final class PropertiesFile {
         }
     }
 
+    // --8<-- [start:store]
     public static void store(Path file, Properties properties, String comment) {
         try {
             Files.createDirectories(file.getParent());
@@ -51,6 +52,7 @@ public final class PropertiesFile {
             throw new UncheckedIOException("Cannot write " + file, e);
         }
     }
+    // --8<-- [end:store]
 
     private static void restrictToOwner(Path file) throws IOException {
         try {

@@ -58,6 +58,7 @@ public record TransportButtons(double scale) {
     }
     // --8<-- [end:sizes]
 
+    // --8<-- [start:bar]
     /** Buttons side by side without gaps, as one bar. */
     public static JPanel bar(AbstractButton... buttons) {
         JPanel bar = new JPanel(new GridLayout(1, buttons.length, 0, 0));
@@ -65,6 +66,7 @@ public record TransportButtons(double scale) {
         for (AbstractButton b : buttons) bar.add(b);
         return bar;
     }
+    // --8<-- [end:bar]
 
     private int px(int value) {
         return Math.round((float) (value * scale));

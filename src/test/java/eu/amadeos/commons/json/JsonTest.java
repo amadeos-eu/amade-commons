@@ -19,6 +19,7 @@ class JsonTest {
         assertEquals(List.of(), Json.list(o, "missing"));
     }
 
+    // --8<-- [start:round-trip]
     @Test
     void writesWhatItReads() {
         Map<String, Object> m = new LinkedHashMap<>();
@@ -31,6 +32,7 @@ class JsonTest {
         assertEquals(128, Json.integer(Json.parse(json), "n"));
         assertEquals(List.of("a", 1.5, false), Json.member(Json.parse(json), "list"));
     }
+    // --8<-- [end:round-trip]
 
     @Test
     void rejectsGarbage() {

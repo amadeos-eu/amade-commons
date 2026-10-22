@@ -66,6 +66,7 @@ public final class ThemeRegistry {
         return Optional.ofNullable(id == null ? null : themes.get(id.strip()));
     }
 
+    // --8<-- [start:discover]
     /** Registers every {@code <id>/theme.properties} below {@code directory}. */
     public void discover(Path directory) {
         if (!Files.isDirectory(directory)) return;
@@ -87,6 +88,7 @@ public final class ThemeRegistry {
             }
         }
     }
+    // --8<-- [end:discover]
 
     static DesktopTheme load(String id, Path file) throws IOException {
         Properties p = new Properties();

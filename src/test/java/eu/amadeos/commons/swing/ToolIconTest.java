@@ -55,6 +55,7 @@ class ToolIconTest {
         assertEquals(32 * 32, count(image, rgb -> (rgb & 0xFFFFFF) == 0xFF0000));
     }
 
+    // --8<-- [start:app-glyph]
     @Test
     void anApplicationGlyphGetsThePenWithTheThemeColours() {
         AtomicReference<ToolIcon.Pen> seen = new AtomicReference<>();
@@ -72,6 +73,7 @@ class ToolIconTest {
         assertFalse(seen.get().enabled());
         assertEquals(AmadeUI.theme().textInactive(), seen.get().light());
     }
+    // --8<-- [end:app-glyph]
 
     @Test
     void toolButtonsShowOnlyTheIconAndNeverTakeTheFocus() {

@@ -25,6 +25,7 @@ public final class LanguageChooser extends JComboBox<LanguageChooser.Choice> {
         }
     }
 
+    // --8<-- [start:choices]
     public LanguageChooser(LocaleSettings settings, Messages commons) {
         Language desktop = settings.desktopResolution().language();
         addItem(new Choice(Optional.empty(), commons.format("language.follow-desktop", desktop.nativeName())));
@@ -34,6 +35,7 @@ public final class LanguageChooser extends JComboBox<LanguageChooser.Choice> {
         setSelectedLanguage(settings.applicationLanguage());
         getAccessibleContext().setAccessibleName(Mnemonics.strip(commons.get("language.label")));
     }
+    // --8<-- [end:choices]
 
     /** The selected language; empty for "follow the desktop". */
     public Optional<Language> selectedLanguage() {

@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class DesktopTest {
+    // --8<-- [start:risky]
     @Test
     void riskyAttachmentsAreRecognised() {
         assertTrue(DesktopLauncher.isRisky("setup.sh"));
@@ -14,7 +15,9 @@ class DesktopTest {
         assertFalse(DesktopLauncher.isRisky("report.pdf"));
         assertFalse(DesktopLauncher.isRisky("photo.jpeg"));
     }
+    // --8<-- [end:risky]
 
+    // --8<-- [start:session]
     @Test
     void withoutSecretToolPasswordsLiveForTheSession() {
         SecretToolPasswordStore store = new SecretToolPasswordStore("amade-test", null);
@@ -26,4 +29,5 @@ class DesktopTest {
         assertTrue(store.lookup("a1").isEmpty());
         assertThrows(IllegalArgumentException.class, () -> new SecretToolPasswordStore(" "));
     }
+    // --8<-- [end:session]
 }

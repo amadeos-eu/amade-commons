@@ -23,6 +23,7 @@ public final class TranslationCheck {
     private TranslationCheck() {
     }
 
+    // --8<-- [start:problems]
     /**
      * Per language the keys that are missing in its file (prefixed {@code missing: }), are not in the base
      * file ({@code unknown: }) or use other {@code {n}} arguments than English ({@code arguments: }).
@@ -52,6 +53,7 @@ public final class TranslationCheck {
         }
         return result;
     }
+    // --8<-- [end:problems]
 
     /** The argument numbers used in a text, e.g. {@code [0, 1]}. */
     static Set<Integer> arguments(String text) {

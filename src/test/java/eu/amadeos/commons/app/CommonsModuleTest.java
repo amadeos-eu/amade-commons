@@ -26,6 +26,7 @@ class CommonsModuleTest {
     @TempDir
     Path home;
 
+    // --8<-- [start:ui-executor]
     @Test
     void theUiExecutorIsTheEdtExecutor() throws Exception {
         XdgDirectories xdg = new XdgDirectories(Map.of(), home.toString());
@@ -40,4 +41,5 @@ class CommonsModuleTest {
             assertTrue(onEdt.get(5, TimeUnit.SECONDS));
         }
     }
+    // --8<-- [end:ui-executor]
 }

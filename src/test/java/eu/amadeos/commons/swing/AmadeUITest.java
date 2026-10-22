@@ -24,6 +24,7 @@ class AmadeUITest {
         AmadeUI.install(DesktopTheme.WARM_MOTIF);
     }
 
+    // --8<-- [start:stylers]
     @Test
     void stylersRunAgainAfterAThemeChange() {
         AmadeUI.install(DesktopTheme.WARM_MOTIF);
@@ -37,6 +38,7 @@ class AmadeUITest {
         assertEquals(DesktopTheme.CDE_BROCADE.activeTitleBg(), label.getForeground());
         AmadeUI.install(DesktopTheme.WARM_MOTIF);
     }
+    // --8<-- [end:stylers]
 
     @Test
     void colorDotHasTheRequestedSize() {

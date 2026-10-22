@@ -237,6 +237,7 @@ public final class DesktopTheme {
         return isDark(base);
     }
 
+    // --8<-- [start:fields]
     /**
      * Background of editable and list content (text fields, tables, trees, message bodies): white in light
      * themes, a dark tone in dark themes so that the light {@link #textActive()} stays readable.
@@ -259,6 +260,7 @@ public final class DesktopTheme {
     public Color selectionText() {
         return isDark(activeTitleBg) ? Color.WHITE : Color.BLACK;
     }
+    // --8<-- [end:fields]
 
     private static Color mix(Color a, Color b, double weightOfB) {
         return new Color(
@@ -299,6 +301,7 @@ public final class DesktopTheme {
         );
     }
 
+    // --8<-- [start:derive]
     private static Color deriveShadow(Color c) {
         return new Color(
                 (int) (c.getRed() * 0.68),
@@ -306,6 +309,7 @@ public final class DesktopTheme {
                 (int) (c.getBlue() * 0.68)
         );
     }
+    // --8<-- [end:derive]
 
     private static Color deriveDarkShadow(Color c) {
         return new Color(

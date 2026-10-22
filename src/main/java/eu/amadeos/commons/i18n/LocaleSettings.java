@@ -90,10 +90,12 @@ public final class LocaleSettings {
         }
     }
 
+    // --8<-- [start:restart]
     /** True if the settings now lead to another language than the application started with. */
     public boolean restartRequired() {
         return resolve().language() != applied.language();
     }
+    // --8<-- [end:restart]
 
     /** The desktop language store, for applications that want to follow changes. */
     public LocaleStore desktop() {

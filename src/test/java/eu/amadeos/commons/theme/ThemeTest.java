@@ -60,6 +60,7 @@ class ThemeTest {
         assertEquals(Color.WHITE, DesktopTheme.WARM_MOTIF.fieldBackground());
     }
 
+    // --8<-- [start:custom-theme]
     @Test
     void registryLoadsCustomThemesAndDerivesMissingColours() throws Exception {
         Path midnight = Files.createDirectories(dir.resolve("midnight"));
@@ -79,6 +80,7 @@ class ThemeTest {
         assertTrue(registry.find("broken").isEmpty());
         assertEquals(6, registry.all().size());
     }
+    // --8<-- [end:custom-theme]
 
     @Test
     void storeReadsThemeAndIconThemeAndFallsBack() throws Exception {
@@ -102,6 +104,7 @@ class ThemeTest {
         assertEquals(DesktopTheme.WARM_MOTIF, store.current());
     }
 
+    // --8<-- [start:follow]
     @Test
     void storeFollowsFileChanges() throws Exception {
         try (ThemeStore store = new ThemeStore(dir, new ThemeRegistry())) {
@@ -115,4 +118,5 @@ class ThemeTest {
             assertEquals(1, seen.size());
         }
     }
+    // --8<-- [end:follow]
 }

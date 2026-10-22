@@ -42,6 +42,7 @@ public final class Messages {
         this.baseName = baseName;
     }
 
+    // --8<-- [start:load]
     /**
      * Loads the texts for the locale. A language without a file falls back to the base file (English), never
      * to the JVM's default locale.
@@ -55,6 +56,7 @@ public final class Messages {
         ResourceBundle bundle = ResourceBundle.getBundle(baseName, locale, anchor.getClassLoader(), CONTROL);
         return new Messages(bundle, locale, baseName);
     }
+    // --8<-- [end:load]
 
     /** Loads the texts in the default locale, which {@code AmadeApplication} set to the resolved language. */
     public static Messages load(Class<?> anchor, String baseName) {
@@ -75,6 +77,7 @@ public final class Messages {
         return bundle.containsKey(key);
     }
 
+    // --8<-- [start:format]
     /** The text as written in the file. */
     public String get(String key) {
         try {
@@ -96,4 +99,5 @@ public final class Messages {
             return pattern;
         }
     }
+    // --8<-- [end:format]
 }

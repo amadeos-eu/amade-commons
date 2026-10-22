@@ -51,6 +51,7 @@ public final class XdgDirectories {
         return cacheHome().resolve("amadeos").resolve(name);
     }
 
+    // --8<-- [start:base]
     /**
      * The variable if it holds an absolute path; the specification says relative values must be ignored.
      */
@@ -59,4 +60,5 @@ public final class XdgDirectories {
         if (configured != null && configured.startsWith("/")) return Path.of(configured);
         return Path.of(userHome).resolve(fallback);
     }
+    // --8<-- [end:base]
 }
