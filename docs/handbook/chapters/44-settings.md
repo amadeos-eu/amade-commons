@@ -34,6 +34,25 @@ The constructor takes the environment and the home directory as parameters, and 
     --8<-- "amade-commons/src/test/java/eu/amadeos/commons/config/ConfigTest.java:xdg"
     ```
 
+## The pictures folder
+
+*Package `config` · `XdgDirectories.pictures()` introduced in [34. Screenshot](34-screenshot.md#the-pictures-folder-and-the-clipboard-move-into-amade-commons), used by Fractals and Imagescan · source: [`XdgDirectories`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/config/XdgDirectories.java)*
+
+**What it is for.** The folder where the user keeps pictures, under its name in the user's language: `~/Pictures`, `~/Bilder`, `~/Images`. The desktop's first login writes the names of these folders into `user-dirs.dirs` in the configuration directory.
+
+**When to choose it.** As the place a program saves pictures without asking, as Screenshot does, and as the folder a file chooser for pictures opens first, as in Fractals and Imagescan. The folder may not exist yet: create it before saving, or fall back to `home()` in a file chooser.
+
+**How it works.** It reads the line `XDG_PICTURES_DIR=` and accepts the two forms the file may contain, `"$HOME/Bilder"` and an absolute path. Without the file or the line, the answer is `~/Pictures`:
+
+```java title="amade-commons · config/XdgDirectories.java"
+--8<-- "amade-commons/src/main/java/eu/amadeos/commons/config/XdgDirectories.java:pictures"
+```
+
+??? example "Test: no file, a translated name, an absolute path"
+    ```java title="amade-commons · test/config/ConfigTest.java"
+    --8<-- "amade-commons/src/test/java/eu/amadeos/commons/config/ConfigTest.java:pictures"
+    ```
+
 ## Settings files: PropertiesFile
 
 *Package `config` · introduced in [20. Files](20-files.md#settings-that-survive) · source: [`PropertiesFile`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/config/PropertiesFile.java)*

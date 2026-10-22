@@ -1,6 +1,6 @@
 # 45. Desktop Integration
 
-A desktop program is not alone: it hands links to the web browser and files to the programs the user chose for them, tells the window manager that something is starting, and keeps passwords where the desktop keeps secrets. This chapter covers the three parts of amade-commons that talk to the desktop around the program.
+A desktop program is not alone: it hands links to the web browser and files to the programs the user chose for them, tells the window manager that something is starting, keeps passwords where the desktop keeps secrets, and puts pictures on the clipboard. This chapter covers the parts of amade-commons that talk to the desktop around the program.
 
 ## Opening links and files: DesktopLauncher
 
@@ -110,4 +110,31 @@ The command gets the password on its standard input and has 30 seconds to finish
 ??? example "Test: without secret-tool, passwords live for the session"
     ```java title="amade-commons · test/desktop/DesktopTest.java"
     --8<-- "amade-commons/src/test/java/eu/amadeos/commons/desktop/DesktopTest.java:session"
+    ```
+
+## A picture on the clipboard: ImageSelection
+
+*Package `desktop` · introduced in [34. Screenshot](34-screenshot.md#the-pictures-folder-and-the-clipboard-move-into-amade-commons), used by Fractals and Imagescan · source: [`ImageSelection`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/desktop/ImageSelection.java)*
+
+**What it is for.** Copying a picture, the counterpart of Swing's `StringSelection` for text. Java offers the picture to the pasting program as PNG and the other image types it asks for.
+
+| Method | What it does |
+|---|---|
+| `ImageSelection.copy(image)` | Puts the picture on the system clipboard |
+| `ImageSelection.put(clipboard, image, lost)` | Puts it on any clipboard; `lost` runs when another program takes the clipboard over |
+
+**When to choose it.** For every Copy of a picture. Use `put` with a `lost` callback when the program needs to know that its picture is no longer on the clipboard, as Screenshot does to end in the background ([chapter 34](34-screenshot.md#the-clipboard-on-x11)).
+
+**How it works.** The record is both the `Transferable`, which hands out the picture for `DataFlavor.imageFlavor`, and the `ClipboardOwner`, which hears about the loss:
+
+```java title="amade-commons · desktop/ImageSelection.java"
+--8<-- "amade-commons/src/main/java/eu/amadeos/commons/desktop/ImageSelection.java:class"
+```
+
+!!! warning "Pitfall: on X11 the program holds the picture"
+    The X11 clipboard is only the name of the program that owns the data. When that program ends, there is nothing to paste. A program that may end soon after Copy has to stay in the background until `lost` runs, or leave the data to a clipboard manager.
+
+??? example "Test: the owner hears that it lost the clipboard"
+    ```java title="amade-commons · test/desktop/DesktopTest.java"
+    --8<-- "amade-commons/src/test/java/eu/amadeos/commons/desktop/DesktopTest.java:image"
     ```
