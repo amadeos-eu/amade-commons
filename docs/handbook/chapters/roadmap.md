@@ -22,12 +22,14 @@ The handbook grows with the applications: a chapter is written for an applicatio
 | [40. amade-commons at a Glance](40-commons.md) | Part IV, the manual | The library by subsystem: what each part is for, when to choose it, how it works, with the chapter that introduced it |
 | [41](41-start-up.md) to [47](47-programs-json-network.md) | | Start-up and wiring, look and themes, languages, settings and files, desktop integration, toolbars and printing, programs, JSON and the network |
 | [50. Packaging and Installers](50-packaging.md) | amade-fractals, packaged | The Debian package, desktop entry and Front Panel drawers, icons, AppStream metadata, the amadeOS image, the Windows installer with jpackage, and CI checks for all of them |
+| [60. The Desktop and Its Modules](60-desktop.md) | Part VI, amadeos-system | The map of the desktop: desktop modules and tool programs, what they take from amade-commons, who writes and who follows the theme and the language |
+| [61. System Information](61-system-information.md) | amadeos-sysinfo | A tool program from `main` to the package; it becomes `CommandRunner`'s next user |
+| [62. Style Manager](62-style-manager.md) | amadeos-style | The writing side of themes: `ThemeManager`, atomic files, the root window property, the X server's own tools |
+| [63. The Front Panel](63-front-panel.md) | amadeos-panel-cde | A Swing window as an EWMH dock, drawers from desktop entries, starting programs, status cells |
+| [64. Software](64-software.md) | amadeos-software, amadeos-packages | A root helper behind pkexec and polkit, apt's progress, tests with a fake apt, watching for changes |
+| [65. A Module of Your Own](65-own-module.md) | | The checklist for a new module of amadeos-system |
 
 ## Planned
-
-### Part VI: Desktop Modules
-
-The amadeOS desktop's own tools (Front Panel, Style Manager, Software, system information) use amade-commons too. A later part shows how to write one.
 
 ### Appendices
 

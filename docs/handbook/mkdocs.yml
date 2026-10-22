@@ -87,4 +87,11 @@ nav:
       - 47. Programs, JSON and the Network: 47-programs-json-network.md
   - "Part V: Shipping Applications":
       - 50. Packaging and Installers: 50-packaging.md
+  - "Part VI: Desktop Modules":
+      - 60. The Desktop and Its Modules: 60-desktop.md
+      - 61. System Information: 61-system-information.md
+      - 62. Style Manager: 62-style-manager.md
+      - 63. The Front Panel: 63-front-panel.md
+      - 64. Software: 64-software.md
+      - 65. A Module of Your Own: 65-own-module.md
   - The Road Ahead: roadmap.md
