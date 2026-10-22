@@ -17,6 +17,7 @@ The handbook grows with the applications: a chapter is written for an applicatio
 | [23. WritePad](23-writepad.md) | amade-writepad, the word processor | Printing moves in (`PaperSize`, `PrintJobs`), its second user after Calendar |
 | [30. Fractals](30-fractals.md) | amade-fractals, the fractal explorer | Toolbars with icons drawn in Java2D (`ToolIcon`, `StandardGlyph`, `ToolButtons`) and the `@Ui` executor binding move in, their second user after WritePad |
 | [31. Imagescan](31-imagescan.md) | amade-imagescan, the scanning program | `CommandRunner` for other programs moves in from Imagescan, Audio and WritePad, with a time limit that holds; Imagescan becomes the toolbar's third user |
+| [32. Video](32-video.md) | amade-video, the video player | Nothing: libmpv through JNA and the player's state stay in Video; its transport symbols wait for their second user, Audio |
 | [50. Packaging and Installers](50-packaging.md) | amade-fractals, packaged | The Debian package, desktop entry and Front Panel drawers, icons, AppStream metadata, the amadeOS image, the Windows installer with jpackage, and CI checks for all of them |
 
 ## Planned
@@ -25,7 +26,6 @@ The handbook grows with the applications: a chapter is written for an applicatio
 
 | Chapter | Application | New ideas | New in amade-commons |
 |---|---|---|---|
-| 32. Video | amade-video | A native library (libmpv) through JNA, video in a Swing window | |
 | 33. Audio | amade-audio | Sound output, decoders, web radio, CD, a mixer, custom widgets | `Json` moves in (second user after Mail), and the transport icons (second user after Video) |
 
 ### Part IV: The amade-commons Manual
