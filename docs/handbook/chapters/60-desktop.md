@@ -65,12 +65,12 @@ Every module, desktop or tool, depends on amade-commons. The desktop modules tak
 
 | Module | Uses from amade-commons |
 |---|---|
-| `base` | `DesktopTheme`, `ThemeRegistry`, `ThemeStore`, `AmadeUI` |
+| `base` | `DesktopTheme`, `ThemeRegistry`, `ThemeStore`, `AmadeUI`, `LocaleResolution`, `Messages` |
 | `wm` | `DesktopTheme`, `AmadeUI` |
 | `panel-cde` | `DesktopTheme`, `AmadeUI`, `Language`, `LocaleResolution`, `LocaleStore`, `Messages` |
 | `dm` | `DesktopTheme`, `Language`, `LocaleResolution`, `LocaleStore` |
 | `session` | `DesktopTheme`, `AmadeUI`, `ThemeStore`, `PropertiesFile`, `LocaleResolution`, `Messages` |
-| `style` | `DesktopTheme`, `AmadeUI`, `PropertiesFile` |
+| `style` | `DesktopTheme`, `AmadeUI`, `PropertiesFile`, `LocaleResolution`, `LocaleStore`, `Messages`, `Mnemonics` |
 | `logviewer` | `DesktopTheme` |
 | `sysinfo` | `AmadeApplication`, `AppInfo`, `EdtExecutor`, `Messages`, `Mnemonics`, `CommandRunner` |
 | `print`, `software` | `AmadeApplication`, `AppInfo`, `EdtExecutor`, `DesktopLauncher`, `Messages`, `Mnemonics` |

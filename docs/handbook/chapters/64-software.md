@@ -34,6 +34,20 @@ Most of what Software shows can be read by any user. The installed packages come
 
 `Apt` holds these command lines and the parsers for their output, as pure functions tested with real output pasted into the tests, as in System Information ([chapter 61](61-system-information.md#linuxs-own-files)). `AptPackageService` runs them through a small `CommandRunner` interface of its own, so that tests answer with recorded output.
 
+Some of that output is large, every package Debian offers with its fields, so it is handed over line by line instead of collected. And like every program the desktop runs, apt gets a time limit. Here the library had the bug System Information had ([chapter 61](61-system-information.md#a-time-limit-that-holds)): it read the output to its end and only then waited with its limit, so a command that hung without closing its output blocked for good. The output is now read on a thread of its own, and the limit covers the end of the program and of its output together:
+
+```java title="amadeos-system · packages/AptPackageService.java"
+--8<-- "amadeos-system/packages/src/main/java/eu/amadeos/system/packages/AptPackageService.java:lines"
+```
+
+The test is the one that would have caught the bug, a program that prints one line and then hangs:
+
+```java title="amadeos-system · test/packages/AptPackageServiceTest.java"
+--8<-- "amadeos-system/packages/src/test/java/eu/amadeos/system/packages/AptPackageServiceTest.java:hang"
+```
+
+`exec` makes the shell become `sleep`, so stopping the program stops the sleep too. Otherwise the shell may run `sleep` as a child that keeps the output open after its parent is gone, which is the next exercise.
+
 ## Changing needs root: the helper
 
 Installing, upgrading and removing need root. The obvious ways are the wrong ones: running the whole Java program as root puts a Swing program with a web renderer and a YAML parser under root, and `sudo` in a terminal leaves the desktop out. amadeOS does it the way most Linux desktops do: a small program that only root may run does the change, and polkit decides who may start it.
@@ -171,7 +185,7 @@ Packages that the repositories do not describe, such as the amade applications o
 ## Exercises
 
 1. **CommandRunner for the helper.** Replace the `ProcessBuilder` in `runHelper` with `CommandRunner.start` from amade-commons, and let the tests pass a `CommandRunner` instead of a helper command line. Which tests become simpler?
-2. **A time limit for reading.** `AptPackageService.lines` reads the output to its end and only then waits with its time limit, like System Information's old code in [chapter 61](61-system-information.md#a-time-limit-that-holds). Write a test with a program that hangs without printing, and make it pass.
+2. **Children that hold the output.** `lines` stops the program it started, but a child of that program that keeps the output open goes on running, and the reading thread waits for it. `Process.descendants()` lists the children; stop them too when the time is up, and write the test with `sh -c 'sleep 30 & echo started'`.
 3. **Remove what is no longer needed.** Add the command `autoremove` to the helper and to `PackageService`, with a simulation first that lists what would go. What does the helper have to refuse?
 
 ## Summary

@@ -71,7 +71,7 @@ If the module has to change the system as root, do not run it as root. Write a h
 
 ### 4. Texts in five languages
 
-Put the texts into `src/main/resources/eu/amadeos/system/disks/messages.properties` and its translations `_de`, `_fr`, `_es`, `_it`, mark the menu letters with `&`, and add a test with `TranslationCheck` ([chapter 43](43-languages.md#a-test-for-every-translation-translationcheck)). A desktop module without Guice loads its texts with `Messages.load` and finds its language with `LocaleResolution`, as the panel's status cells do ([chapter 63](63-front-panel.md#status-cells)).
+Put the texts into `src/main/resources/eu/amadeos/system/disks/messages.properties` and its translations `_de`, `_fr`, `_es`, `_it`, mark the menu letters with `&`, and add a test with `TranslationCheck` ([chapter 43](43-languages.md#a-test-for-every-translation-translationcheck)). A desktop module without Guice loads its texts with `Messages.load` and finds its language with `LocaleResolution`, as the Style Manager's `StyleTexts` does ([chapter 62](62-style-manager.md#five-languages-without-guice)).
 
 ### 5. The desktop entry
 
