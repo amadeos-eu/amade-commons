@@ -48,5 +48,6 @@ It is built from `mkdocs-offline.yml`, which takes everything from `mkdocs.yml` 
 from disk needs: links to `.html` files (`use_directory_urls: false`), the `offline` plugin for search
 without a server, and the `privacy` plugin, which stores the fonts and scripts (Mermaid) that the
 pages would load from the web. The applications must be checked out next to `amade-commons` as for the
-published book; MkDocs is installed into `.venv` if none is on the PATH. The package version is the
+published book, but the excerpts are taken at the commits `handbook.yml` pins (fetched if missing), so
+the package builds whatever branch the checkouts are on; MkDocs is installed into `.venv` if none is on the PATH. The package version is the
 library's version plus the date of the last commit to `docs/handbook`. CI builds this variant too.
