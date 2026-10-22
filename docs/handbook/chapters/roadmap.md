@@ -17,6 +17,7 @@ The handbook grows with the applications: a chapter is written for an applicatio
 | [23. WritePad](23-writepad.md) | amade-writepad, the word processor | Printing moves in (`PaperSize`, `PrintJobs`), its second user after Calendar |
 | [30. Fractals](30-fractals.md) | amade-fractals, the fractal explorer | Toolbars with icons drawn in Java2D (`ToolIcon`, `StandardGlyph`, `ToolButtons`) and the `@Ui` executor binding move in, their second user after WritePad |
 | [31. Imagescan](31-imagescan.md) | amade-imagescan, the scanning program | `CommandRunner` for other programs moves in from Imagescan, Audio and WritePad, with a time limit that holds; Imagescan becomes the toolbar's third user |
+| [50. Packaging and Installers](50-packaging.md) | amade-fractals, packaged | The Debian package, desktop entry and Front Panel drawers, icons, AppStream metadata, the amadeOS image, the Windows installer with jpackage, and CI checks for all of them |
 
 ## Planned
 
@@ -31,10 +32,10 @@ The handbook grows with the applications: a chapter is written for an applicatio
 
 The library by subsystem rather than by application, as a reference once the applications are read: 40 overview, 41 start-up and wiring, 42 look and themes, 43 languages, 44 settings and files, 45 desktop integration, 46 toolbars, icons and printing, 47 programs, JSON and the network. Each section names the chapter that introduced its part.
 
-### Part V: Desktop Modules
+### Part VI: Desktop Modules
 
 The amadeOS desktop's own tools (Front Panel, Style Manager, Software, system information) use amade-commons too. A later part shows how to write one.
 
 ### Appendices
 
-Swing and Motif pitfalls, a packaging reference (Debian packages, desktop entries and the Front Panel drawers), and a glossary.
+Swing and Motif pitfalls and a glossary. Packaging, first planned as an appendix, became [chapter 50](50-packaging.md).
