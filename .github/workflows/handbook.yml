@@ -28,6 +28,8 @@ env:
   IMAGESCAN_COMMIT: a2f7779cc38b08f2637a9cf1265f49016b48a672
   AUDIO_COMMIT: ae02fc0c694533805fabbd1b282ce352bba1b999
   VIDEO_COMMIT: 0aa0ed30d12a996b80aac2d86cbf1373354f5b8b
+  # Part VI: the desktop modules.
+  AMADEOS_SYSTEM_COMMIT: c5e28dfd640a1ab3d289bf65e8f0fac4d2efc96f
 
 jobs:
   build:
@@ -86,6 +88,11 @@ jobs:
           repository: datazuul/amade-video
           ref: ${{ env.VIDEO_COMMIT }}
           path: amade-video
+      - uses: actions/checkout@v7
+        with:
+          repository: datazuul/amadeos-system
+          ref: ${{ env.AMADEOS_SYSTEM_COMMIT }}
+          path: amadeos-system
       - uses: actions/setup-python@v7
         with:
           python-version: '3.13'

@@ -59,6 +59,7 @@ public enum Language {
         return locale == null ? Optional.empty() : ofCode(locale.getLanguage());
     }
 
+    // --8<-- [start:parse]
     /**
      * Parses a locale as found in {@code LANG}, {@code locale.conf} or a language setting: {@code de},
      * {@code de_AT}, {@code de_AT.UTF-8}, {@code de_AT.UTF-8@euro} or {@code de-AT}. Keeps the region, so
@@ -81,6 +82,7 @@ public enum Language {
         }
         return Optional.of(language.get().locale());
     }
+    // --8<-- [end:parse]
 
     private static int indexOfAny(String s, char a, char b) {
         int i = s.indexOf(a);

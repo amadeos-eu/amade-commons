@@ -54,6 +54,7 @@ public final class ConfigWatcher implements AutoCloseable {
         return true;
     }
 
+    // --8<-- [start:loop]
     private void loop(WatchService service) {
         try {
             while (true) {
@@ -78,6 +79,7 @@ public final class ConfigWatcher implements AutoCloseable {
             // stopped
         }
     }
+    // --8<-- [end:loop]
 
     @Override
     public synchronized void close() {

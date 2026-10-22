@@ -416,4 +416,4 @@ ALSA's own `null` device works too, but it swallows the samples as fast as they 
 - Keep to a web service's rate limit in one synchronized method, and cache its answers.
 - A dot-matrix font written as text in the source is readable, testable and easy to extend.
 - `Json` and the transport buttons move into amade-commons, as `eu.amadeos.commons.json.Json`, `TransportGlyph` and `TransportButtons`. Their texts stay in the programs, and an unused symbol is dropped, not moved.
-- With Audio, Part III and the applications of the book are complete. Part IV describes amade-commons by subsystem.
+- With Audio, Part III and the applications of the book are complete. [Part IV](40-commons.md) describes amade-commons by subsystem.

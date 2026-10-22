@@ -17,6 +17,7 @@ class ConfigTest {
     @TempDir
     Path dir;
 
+    // --8<-- [start:xdg]
     @Test
     void xdgDefaultsAndOverrides() {
         XdgDirectories defaults = new XdgDirectories(Map.of(), "/home/ralf");
@@ -28,6 +29,7 @@ class ConfigTest {
         assertEquals(Path.of("/cfg/amadeos"), custom.amadeosConfig());
         assertEquals(Path.of("/home/ralf/.cache"), custom.cacheHome(), "relative values are ignored");
     }
+    // --8<-- [end:xdg]
 
     @Test
     void appDirectories() {
@@ -41,6 +43,7 @@ class ConfigTest {
         assertEquals("mail", new AppInfo("amade-mail", "Mailer", "mail").configName());
     }
 
+    // --8<-- [start:properties]
     @Test
     void propertiesFileIsPrivateAndAtomic() throws Exception {
         Path file = dir.resolve("sub/settings.conf");
@@ -56,4 +59,5 @@ class ConfigTest {
         }
         assertTrue(PropertiesFile.load(dir.resolve("missing.conf")).isEmpty());
     }
+    // --8<-- [end:properties]
 }

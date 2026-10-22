@@ -37,6 +37,7 @@ class I18nTest {
         assertEquals(Optional.of(Language.SPANISH), Language.ofCode("ES"));
     }
 
+    // --8<-- [start:order]
     @Test
     void applicationSettingWinsThenDesktopThenEnvironmentThenEnglish() {
         Map<String, String> env = Map.of("LANG", "it_IT.UTF-8");
@@ -60,6 +61,7 @@ class I18nTest {
         assertEquals(Language.ENGLISH, fallback.language());
         assertEquals(LocaleResolution.Source.DEFAULT, fallback.source());
     }
+    // --8<-- [end:order]
 
     @Test
     void applicationSettingKeepsTheRegionOfTheSameLanguage() {
@@ -137,6 +139,7 @@ class I18nTest {
         assertFalse(settings.restartRequired());
     }
 
+    // --8<-- [start:fallback]
     @Test
     void messagesFallBackToEnglishNotToTheDefaultLocale() {
         Locale previous = Locale.getDefault();
@@ -152,7 +155,9 @@ class I18nTest {
         assertEquals("!no.such.key!", german.get("no.such.key"));
         assertFalse(german.has("no.such.key"));
     }
+    // --8<-- [end:fallback]
 
+    // --8<-- [start:apostrophes]
     @Test
     void apostrophesArePlainAndArgumentsAreLocalised() {
         Messages french = Messages.commons(Locale.FRANCE);
@@ -161,6 +166,7 @@ class I18nTest {
         assertEquals("La nuova lingua sarà usata al prossimo avvio di Audio.",
                 italian.format("language.restart", "Audio"));
     }
+    // --8<-- [end:apostrophes]
 
     @Test
     void everyCommonsTranslationIsComplete() {

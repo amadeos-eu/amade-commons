@@ -17,6 +17,7 @@ class TextsTest {
         Texts.use(TextsTest.class, "eu.amadeos.commons.i18n.texts-test");
     }
 
+    // --8<-- [start:declared]
     @Test
     void theDeclaredTextsFollowTheDefaultLocale() {
         assertEquals("eu.amadeos.commons.i18n.texts-test", Texts.bundle());
@@ -27,6 +28,7 @@ class TextsTest {
         assertEquals("Hallo", tr("greeting"));
         assertEquals(Locale.GERMAN, Texts.messages().locale());
     }
+    // --8<-- [end:declared]
 
     @Test
     void useSwitchesToOtherTexts() {

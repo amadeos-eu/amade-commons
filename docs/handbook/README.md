@@ -20,8 +20,8 @@ The handbook teaches desktop programming in Java by building the amadeOS applica
   --8<-- "amade-pad/src/main/java/eu/amadeos/apps/pad/repository/TextCodec.java:decode"
   ```
 
-  Paths start at the directory that holds the repositories, so the applications must be checked out next to `amade-commons`. The book then always shows code that compiles and is tested.
-- The workflow `.github/workflows/handbook.yml` checks out each application at a fixed commit (`PAD_COMMIT`, …). Raise it when a chapter is updated for a newer state of the application.
+  Paths start at the directory that holds the repositories, so the applications, and amadeos-system for Part VI, must be checked out next to `amade-commons`. The book then always shows code that compiles and is tested.
+- The workflow `.github/workflows/handbook.yml` checks out each application and amadeos-system at a fixed commit (`PAD_COMMIT`, …, `AMADEOS_SYSTEM_COMMIT`). Raise it when a chapter is updated for a newer state of the application.
 - When a chapter moves code into amade-commons, the same pull request adds the chapter and the moved code; the applications follow with pull requests that use the new commons commit.
 
 ## Building locally

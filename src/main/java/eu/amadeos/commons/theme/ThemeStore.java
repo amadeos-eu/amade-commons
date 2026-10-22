@@ -68,6 +68,7 @@ public final class ThemeStore implements AutoCloseable {
         listeners.remove(listener);
     }
 
+    // --8<-- [start:reload]
     /** Reads the files again and notifies the listeners if the theme changed. */
     public synchronized boolean reload() {
         DesktopTheme theme = read();
@@ -83,12 +84,15 @@ public final class ThemeStore implements AutoCloseable {
         }
         return true;
     }
+    // --8<-- [end:reload]
 
+    // --8<-- [start:read]
     private DesktopTheme read() {
         DesktopTheme theme = readLine(THEME_FILE).flatMap(registry::find).orElse(DesktopTheme.WARM_MOTIF);
         String icons = readLine(ICON_THEME_FILE).orElse(null);
         return icons == null ? theme : theme.withIconTheme(icons);
     }
+    // --8<-- [end:read]
 
     private Optional<String> readLine(String fileName) {
         Path file = configDirectory.resolve(fileName);

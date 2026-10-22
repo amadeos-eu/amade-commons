@@ -45,6 +45,7 @@ class PrintJobsTest {
         assertEquals(PaperSize.A4.width() - 72, format.getImageableWidth(), 0.01);
     }
 
+    // --8<-- [start:landscape]
     @Test
     void landscapeTurnsTheFormatButNotThePaper() {
         PageFormat format = PrintJobs.pageFormat(PaperSize.A5, true, 0);
@@ -53,6 +54,7 @@ class PrintJobsTest {
         assertEquals(PaperSize.A5.width(), format.getHeight(), 0.01);
         assertEquals(PaperSize.A5.width(), format.getPaper().getWidth(), 0.01);
     }
+    // --8<-- [end:landscape]
 
     @Test
     void marginMustFit() {
@@ -67,6 +69,7 @@ class PrintJobsTest {
         assertNull(attributes.get(OrientationRequested.class));
     }
 
+    // --8<-- [start:post-script]
     @Test
     void writesPostScriptWithoutAPrinter() throws Exception {
         Path file = Files.createTempFile("print-jobs-", ".ps");
@@ -85,6 +88,7 @@ class PrintJobsTest {
             Files.deleteIfExists(file);
         }
     }
+    // --8<-- [end:post-script]
 
     @Test
     void printerNamesNeverFail() {

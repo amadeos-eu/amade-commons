@@ -28,6 +28,7 @@ public interface CommandRunner {
      */
     Process start(List<String> command) throws IOException;
 
+    // --8<-- [start:system]
     /** Starts real processes, with the environment of this program. */
     static CommandRunner system() {
         return command -> {
@@ -38,6 +39,7 @@ public interface CommandRunner {
             }
         };
     }
+    // --8<-- [end:system]
 
     // --8<-- [start:run]
     /**
@@ -77,6 +79,7 @@ public interface CommandRunner {
     }
     // --8<-- [end:run]
 
+    // --8<-- [start:output]
     /**
      * Runs a short command and returns its standard output as UTF-8 text.
      *
@@ -94,6 +97,7 @@ public interface CommandRunner {
         if (!result.succeeded()) throw new IOException(result.failure(command.getFirst()));
         return result.stdoutText();
     }
+    // --8<-- [end:output]
 
     private static void copy(InputStream in, ByteArrayOutputStream out) {
         byte[] buffer = new byte[8192];

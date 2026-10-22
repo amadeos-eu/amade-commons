@@ -64,6 +64,7 @@ class CommandRunnerTest {
         assertEquals(300_000, result.stderr().length);
     }
 
+    // --8<-- [start:fake]
     @Test
     void testsAnswerWithFinishedProcesses() throws Exception {
         List<List<String>> commands = new ArrayList<>();
@@ -77,6 +78,7 @@ class CommandRunnerTest {
         assertEquals("pactl failed (exit code 1): no such sink", e.getMessage());
         assertEquals(List.of(List.of("wpctl", "get-volume"), List.of("pactl", "info")), commands);
     }
+    // --8<-- [end:fake]
 
     @Test
     void onlyAMissingProgramBecomesProgramMissing() {
