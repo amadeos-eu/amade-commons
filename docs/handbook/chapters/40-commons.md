@@ -62,10 +62,12 @@ A few rules hold for nearly every class. Knowing them makes the rest of the manu
 | A language field in my settings dialog | `LanguageChooser` | [43](43-languages.md#the-language-setting-localesettings-and-languagechooser) |
 | A test that every translation is complete | `TranslationCheck` | [43](43-languages.md#a-test-for-every-translation-translationcheck) |
 | Where to put settings, caches and data | `AppDirectories`, `XdgDirectories` | [44](44-settings.md#where-files-go-xdgdirectories-and-appdirectories) |
+| The user's pictures folder, in their language | `XdgDirectories.pictures()` | [44](44-settings.md#the-pictures-folder) |
 | To read and write a settings file safely | `PropertiesFile` | [44](44-settings.md#settings-files-propertiesfile) |
 | To react when a file in a directory changes | `ConfigWatcher` | [44](44-settings.md#following-a-file-configwatcher) |
 | To open a link in the browser or a file in its program | `DesktopLauncher` | [45](45-desktop.md#opening-links-and-files-desktoplauncher) |
 | To know whether opening a file could run code | `DesktopLauncher.isRisky` | [45](45-desktop.md#files-that-could-run-isrisky) |
+| To copy a picture to the clipboard | `ImageSelection` | [45](45-desktop.md#a-picture-on-the-clipboard-imageselection) |
 | The busy cursor while another program starts | `LaunchFeedback.announce` | [45](45-desktop.md#the-busy-cursor-launchfeedback) |
 | A password kept in the desktop keyring | `PasswordStore` | [45](45-desktop.md#passwords-passwordstore) |
 | A toolbar icon that follows the theme and scales | `ToolIcon`, `StandardGlyph` | [46](46-toolbars-and-printing.md#icons-drawn-in-code-toolicon) |
@@ -95,9 +97,11 @@ A few rules hold for nearly every class. Knowing them makes the rest of the manu
 | `i18n` | `Texts` | [22. Mail](22-mail.md#the-texts-helper-moves-into-amade-commons) |
 | `config` | `XdgDirectories`, `ConfigWatcher` | [10. Pad](10-pad.md#what-amade-commons-gives-pad) |
 | `config` | `AppDirectories`, `PropertiesFile` | [20. Files](20-files.md#settings-that-survive) |
+| `config` | `XdgDirectories.pictures()` | [34. Screenshot](34-screenshot.md#the-pictures-folder-and-the-clipboard-move-into-amade-commons) |
 | `desktop` | `DesktopLauncher` | [11. Web](11-web.md#opening-links-in-other-programs) |
 | `desktop` | `LaunchFeedback` | [20. Files](20-files.md#the-busy-cursor) |
 | `desktop` | `PasswordStore`, `SecretToolPasswordStore`, `SessionPasswordStore` | [22. Mail](22-mail.md#the-keyring) |
+| `desktop` | `ImageSelection` | [34. Screenshot](34-screenshot.md#the-pictures-folder-and-the-clipboard-move-into-amade-commons) |
 | `print` | `PaperSize`, `PrintJobs` | [23. WritePad](23-writepad.md#printing-moves-into-amade-commons) |
 | `process` | `CommandRunner`, `ProgramResult`, `ProgramMissingException`, `FinishedProcess` | [31. Imagescan](31-imagescan.md#the-command-runner-moves-into-amade-commons) |
 | `json` | `Json` | [33. Audio](33-audio.md#json) |

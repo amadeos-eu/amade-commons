@@ -1,5 +1,7 @@
 package eu.amadeos.commons.config;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 
@@ -49,6 +51,37 @@ public final class XdgDirectories {
     /** {@code ~/.cache/amadeos/<name>}: data an application can rebuild. */
     public Path appCache(String name) {
         return cacheHome().resolve("amadeos").resolve(name);
+    }
+
+    // --8<-- [start:pictures]
+    /**
+     * The user's pictures folder: {@code XDG_PICTURES_DIR} from {@code user-dirs.dirs} in the config home, which
+     * holds the translated name ({@code ~/Bilder}, {@code ~/Images}), else {@code ~/Pictures}. The folder may not
+     * exist yet; a program that saves into it creates it, a file chooser falls back to the home folder.
+     */
+    public Path pictures() {
+        Path home = Path.of(userHome);
+        try {
+            Path dirs = configHome().resolve("user-dirs.dirs");
+            if (Files.isRegularFile(dirs)) {
+                for (String line : Files.readAllLines(dirs)) {
+                    line = line.strip();
+                    if (!line.startsWith("XDG_PICTURES_DIR=")) continue;
+                    String value = line.substring(line.indexOf('=') + 1).replace("\"", "");
+                    if (value.startsWith("$HOME")) return home.resolve(value.substring(5).replaceFirst("^/+", ""));
+                    if (value.startsWith("/")) return Path.of(value);
+                }
+            }
+        } catch (IOException | RuntimeException e) {
+            // an unreadable file counts as no file
+        }
+        return home.resolve("Pictures");
+    }
+    // --8<-- [end:pictures]
+
+    /** The home folder. */
+    public Path home() {
+        return Path.of(userHome);
     }
 
     // --8<-- [start:base]

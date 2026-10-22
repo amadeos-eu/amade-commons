@@ -4,7 +4,7 @@ Video (chapter 32) left the hard work to a C library and kept to the window and 
 
 amade-audio is the Audio Station of the desktop. It is a rack of devices in the style of the hi-fi systems of the 1990s: a mixer, a CD player, a file player and an internet radio, each with its own front, LCDs and transport buttons, and a playlist below. At about 11,600 lines of Java and 1,900 lines of tests it is the largest program of the book, so this chapter does not walk through all of it. It picks the ideas you will need again: a sound engine and its threads, decoders found at run time, a network stream with metadata inside, recording without decoding, a CD through JNA, a web service that wants politeness, and widgets drawn from scratch.
 
-Two parts move into amade-commons, and with them Part III ends. `Json` gets its second user, Mail. The transport symbols get theirs, Video.
+Two parts move into amade-commons. `Json` gets its second user, Mail. The transport symbols get theirs, Video.
 
 ## What you build
 
@@ -416,4 +416,4 @@ ALSA's own `null` device works too, but it swallows the samples as fast as they 
 - Keep to a web service's rate limit in one synchronized method, and cache its answers.
 - A dot-matrix font written as text in the source is readable, testable and easy to extend.
 - `Json` and the transport buttons move into amade-commons, as `eu.amadeos.commons.json.Json`, `TransportGlyph` and `TransportButtons`. Their texts stay in the programs, and an unused symbol is dropped, not moved.
-- With Audio, Part III and the applications of the book are complete. [Part IV](40-commons.md) describes amade-commons by subsystem.
+- With Audio, the media programs are complete. [Chapter 34](34-screenshot.md) ends Part III with a small tool that knows the desktop around it.

@@ -28,6 +28,7 @@ env:
   IMAGESCAN_COMMIT: a2f7779cc38b08f2637a9cf1265f49016b48a672
   AUDIO_COMMIT: ae02fc0c694533805fabbd1b282ce352bba1b999
   VIDEO_COMMIT: 0aa0ed30d12a996b80aac2d86cbf1373354f5b8b
+  SCREENSHOT_COMMIT: 5cf855040f5760c8a9d7788bb885da5da66fdccd
   # Part VI: the desktop modules.
   AMADEOS_SYSTEM_COMMIT: 6323469b0c5a04539b05a612c63fa4279e7ea60a
 
@@ -88,6 +89,11 @@ jobs:
           repository: datazuul/amade-video
           ref: ${{ env.VIDEO_COMMIT }}
           path: amade-video
+      - uses: actions/checkout@v7
+        with:
+          repository: datazuul/amade-screenshot
+          ref: ${{ env.SCREENSHOT_COMMIT }}
+          path: amade-screenshot
       - uses: actions/checkout@v7
         with:
           repository: datazuul/amadeos-system
