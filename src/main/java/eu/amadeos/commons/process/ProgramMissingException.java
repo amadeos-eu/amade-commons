@@ -19,6 +19,7 @@ public class ProgramMissingException extends IOException {
         return program;
     }
 
+    // --8<-- [start:check]
     /**
      * Turns the JDK's "Cannot run program" into a {@code ProgramMissingException}; other errors (no permission,
      * no memory for the process) stay as they are.
@@ -32,4 +33,5 @@ public class ProgramMissingException extends IOException {
         }
         return e;
     }
+    // --8<-- [end:check]
 }
