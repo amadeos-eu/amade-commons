@@ -50,7 +50,7 @@ Boxes point out things worth remembering:
 | II. Office | Files, Calendar, Mail, WritePad | Settings files, two-pane layouts, the trash, dates and calendars, printing, passwords in the keyring, network protocols, rich text and document formats |
 | III. Graphics and media | Fractals, Imagescan, Video, Audio, Screenshot | Drawing with Java2D, calculations on many threads, toolbars with drawn icons, external programs, native libraries, sound, the screen and the X11 clipboard |
 
-[Part IV](40-commons.md), the manual of amade-commons, comes after the applications. It describes the library by subsystem rather than by application: what each part is for, when to choose it, how it works, and which chapter introduced it. Part V shows how a program is packaged and shipped. [Part VI](60-desktop.md) turns to the desktop itself: the Front Panel, the Style Manager, Software and System Information, and how to write a module of your own.
+[Part IV](40-commons.md), the manual of amade-commons, comes after the applications. It describes the library by subsystem rather than by application: what each part is for, when to choose it, how it works, and which chapter introduced it. Part V shows how a program is packaged and shipped. [Part VI](60-desktop.md) turns to the desktop itself: the Front Panel, Settings, Software and System Information, and how to write a module of your own.
 
 What is written so far and what comes next is listed in [The Road Ahead](roadmap.md).
 

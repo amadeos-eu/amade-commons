@@ -1,6 +1,6 @@
 # 42. Look and Themes
 
-amadeOS looks like CDE: grey-brown panels with 3D bevels, bold buttons that sink in when pressed, and colours from a palette the user picks in the Style Manager. Every program looks the same and changes its colours together with the desktop, without a line of code of its own. This chapter covers the colour themes, where custom themes come from, how a running program follows the desktop, the Swing look that paints it all, and what a program does for colours beyond the standard ones.
+amadeOS looks like CDE: grey-brown panels with 3D bevels, bold buttons that sink in when pressed, and colours from a palette the user picks in Settings. Every program looks the same and changes its colours together with the desktop, without a line of code of its own. This chapter covers the colour themes, where custom themes come from, how a running program follows the desktop, the Swing look that paints it all, the text size, and what a program does for colours and fonts beyond the standard ones.
 
 ## Colour schemes: DesktopTheme
 
@@ -59,7 +59,7 @@ workspace3=#4992A7
 iconTheme=NsCDE
 ```
 
-**When to choose it.** A program never needs it directly: `ThemeStore.system()` builds the registry with both directories. The Style Manager lists `registry().all()`; a theme designer writes a file, and the next registry that is built lists it.
+**When to choose it.** A program never needs it directly: `ThemeStore.system()` builds the registry with both directories. Settings lists `registry().all()`; a theme designer writes a file, and the next registry that is built lists it.
 
 **How it works.** `discover` registers every sub-directory with a `theme.properties`, in alphabetical order, and later directories win, so a user's theme can replace the system's of the same id. A broken file is logged and skipped: one bad theme never takes the others down.
 
@@ -78,7 +78,7 @@ The keys are the method names of `DesktopTheme`: `highlight`, `shadow`, `activeT
 
 *Package `theme` · introduced in [10. Pad](10-pad.md#following-the-desktop-theme) · source: [`ThemeStore`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/theme/ThemeStore.java)*
 
-**What it is for.** The theme the user chose in the Style Manager, and news when they choose another. The Style Manager writes the theme's id into `~/.config/amadeos/theme.conf` and the icon theme into `icon_theme.conf`; `ThemeStore` reads them and, once `watch()` was called, follows them.
+**What it is for.** The theme the user chose in Settings, and news when they choose another. Settings writes the theme's id into `~/.config/amadeos/theme.conf`, the icon theme into `icon_theme.conf` and the text size, 1 to 7, into `font.conf`; `ThemeStore` reads the three into one `DesktopTheme` and, once `watch()` was called, follows them. The text size is part of the theme value (`fontSize()`, `withFontSize(int)`), so a new size reaches a program the same way a new palette does.
 
 **When to choose it.** `AmadeApplication.launch` creates it and passes it to `AmadeUI.follow`, and `CommonsModule` binds it. A program asks for it only to react to a theme change beyond colours, for example to load other icons when `iconTheme()` changes.
 
@@ -88,7 +88,7 @@ The keys are the method names of `DesktopTheme`: `highlight`, `shadow`, `activeT
 --8<-- "amade-commons/src/main/java/eu/amadeos/commons/theme/ThemeStore.java:read"
 ```
 
-`watch()` starts a [`ConfigWatcher`](44-settings.md#following-a-file-configwatcher) on the two files. On a change it calls `reload()`, which reads them again and tells the listeners only if the theme really changed:
+`watch()` starts a [`ConfigWatcher`](44-settings.md#following-a-file-configwatcher) on the three files. On a change it calls `reload()`, which reads them again and tells the listeners only if the theme really changed:
 
 ```java title="amade-commons · theme/ThemeStore.java"
 --8<-- "amade-commons/src/main/java/eu/amadeos/commons/theme/ThemeStore.java:reload"
@@ -103,7 +103,7 @@ The keys are the method names of `DesktopTheme`: `highlight`, `shadow`, `activeT
 | `watch()`, `close()` | Start and stop following the files |
 
 !!! note "Programs read, the desktop writes"
-    `ThemeStore` has no method to write a theme. Only the Style Manager does, and every program follows. A program with a theme setting of its own would make the desktop look different in every window.
+    `ThemeStore` has no method to write a theme. Only Settings does, and every program follows. A program with a theme setting of its own would make the desktop look different in every window.
 
 ??? example "Test: the store follows a change to the file"
     ```java title="amade-commons · test/theme/ThemeTest.java"
@@ -138,6 +138,42 @@ The keys are the method names of `DesktopTheme`: `highlight`, `shadow`, `activeT
 | `theme()` | The theme installed last; read it while painting |
 | `style(component, styler)`, `restyle(root)` | Colours of your own ([below](#colours-of-your-own-style)) |
 | `sunken()`, `raised()`, `paintBevel(...)`, `colorDot(color, size)` | Helpers ([below](#bevels-and-dots)) |
+
+## Text size: fontScale
+
+*Package `swing` · introduced in [62. Settings](62-settings.md#font-one-number-for-every-program) · source: [`AmadeUI`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/swing/AmadeUI.java)*
+
+**What it is for.** The text size the user picks on the *Font* page of Settings, seven steps from *Smallest* to *Largest*. At the default size 4 nothing changes; size 7 makes every font of the look half as big again.
+
+**When to choose it.** A program gets it for free: `install` scales the fonts of the look, and `follow` installs again when `font.conf` changes, so labels, menus, buttons, fields, lists and tables change size while the program runs. A program needs `scaled` only where it picks a font size of its own, such as a heading or the small print of a status line:
+
+```java
+AmadeUI.style(title, (l, t) -> l.setFont(UIManager.getFont("Label.font").deriveFont(Font.BOLD, AmadeUI.scaled(17f))));
+```
+
+Put such a line into a [styler](#colours-of-your-own-style), not into the constructor, so the size follows a change like the colours do.
+
+**How it works.** The scale factors are a table, `0.75` to `1.5`. `install` scales every font of the look and feel's own defaults, the keys ending in `font`, and puts the result into Swing's table:
+
+```java title="amade-commons · swing/AmadeUI.java"
+--8<-- "amade-commons/src/main/java/eu/amadeos/commons/swing/AmadeUI.java:fonts"
+```
+
+It always starts from `UIManager.getLookAndFeelDefaults()`, never from the fonts it installed before, so installing a theme twice at size 7 gives the same sizes as once, and going back to 4 gives the original fonts.
+
+| Method | What it does |
+|---|---|
+| `fontScale()` | The factor of the installed theme's size, 1 at size 4 |
+| `fontScale(size)` | The factor of any size, for a preview |
+| `scaled(size)` | A size of your own times the factor, rounded to half a point |
+
+!!! warning "Pitfall: fixed sizes in pixels"
+    A layout that gives a text a fixed height in pixels, a `setPreferredSize` on a label or a table row height, cuts the text off at size 7. Let the layout manager size text components, and multiply the row heights you need with `fontScale()`.
+
+??? example "Test: sizes scale without compounding"
+    ```java title="amade-commons · test/swing/AmadeUITest.java"
+    --8<-- "amade-commons/src/test/java/eu/amadeos/commons/swing/AmadeUITest.java:font-size"
+    ```
 
 ## Colours of your own: style
 

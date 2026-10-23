@@ -40,6 +40,7 @@ class AmadeUITest {
     }
     // --8<-- [end:stylers]
 
+    // --8<-- [start:font-size]
     @Test
     void fontSizeScalesTheLookAndFeelFontsWithoutCompounding() {
         AmadeUI.install(DesktopTheme.WARM_MOTIF);
@@ -55,6 +56,7 @@ class AmadeUITest {
         AmadeUI.install(DesktopTheme.WARM_MOTIF);
         assertEquals(normal, UIManager.getFont("Label.font").getSize2D());
     }
+    // --8<-- [end:font-size]
 
     @Test
     void colorDotHasTheRequestedSize() {

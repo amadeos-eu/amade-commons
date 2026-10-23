@@ -300,7 +300,7 @@ The choice is stored, and takes effect at the next start. Changing the language 
 
 ## Following the desktop theme
 
-The user picks a colour theme in the Style Manager, and the desktop changes at once: window frames, Front Panel, backdrop. So does Pad, while it runs. Here is the same window after switching to *Dark Slate*:
+The user picks a colour theme in Settings, and the desktop changes at once: window frames, Front Panel, backdrop. So does Pad, while it runs. Here is the same window after switching to *Dark Slate*:
 
 ![amade-pad on the Dark Slate theme](images/pad/dark-slate.png)
 

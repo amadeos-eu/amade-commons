@@ -7,7 +7,7 @@ Each chapter of this part covers one area. Each section in it describes one part
 | Chapter | Packages | For |
 |---|---|---|
 | [41. Start-up and Wiring](41-start-up.md) | `app`, `swing` | Starting a program, its identity, what Guice binds for every program, the two threads |
-| [42. Look and Themes](42-look.md) | `theme`, `swing` | The desktop's colour themes, custom themes, following the Style Manager, the CDE look, colours of your own, the date dialog |
+| [42. Look and Themes](42-look.md) | `theme`, `swing` | The desktop's colour themes, custom themes, following Settings, the CDE look, the text size, colours of your own, the date dialog |
 | [43. Languages](43-languages.md) | `i18n` | The five languages, which one a program speaks, texts and their formats, menu letters, the language setting, the translation test |
 | [44. Settings and Files](44-settings.md) | `config` | Where files go, settings files that survive a crash, following a file the desktop writes |
 | [45. Desktop Integration](45-desktop.md) | `desktop` | Opening links and files in other programs, the busy cursor, passwords in the keyring |
@@ -20,13 +20,13 @@ amade-commons is a library, not a framework. It calls your program exactly once,
 
 It holds only what at least two programs share. Everything in it came from a program that needed it first and moved in when a second program needed the same thing: `PasswordStore` from Mail, printing from Calendar and WritePad, `Json` from Mail and Audio. Pad's text decoding, Files' trash, Video's libmpv binding and Audio's sound engine stay in their programs, because no second program needs them yet. The rule is in [chapter 10](10-pad.md#what-amade-commons-gives-pad), and every chapter since ends with a table of what the program takes from the library and what stays.
 
-The desktop's own tools (the Front Panel, the Style Manager, Software) use amade-commons too. [Part VI](roadmap.md) shows how to write one.
+The desktop's own tools (the Front Panel, Settings, Software) use amade-commons too. [Part VI](roadmap.md) shows how to write one.
 
 ## Ideas that run through the library
 
 A few rules hold for nearly every class. Knowing them makes the rest of the manual shorter.
 
-**The desktop writes, the programs follow.** The theme (`theme.conf`), the desktop language (`locale.conf`) and the icon theme are written by the Style Manager into `~/.config/amadeos`. Programs only read these files, and a `ConfigWatcher` tells them when the files change. A program's own settings live in a directory of its own below ([chapter 44](44-settings.md#where-files-go-xdgdirectories-and-appdirectories)).
+**The desktop writes, the programs follow.** The theme (`theme.conf`), the desktop language (`locale.conf`) and the icon theme are written by Settings into `~/.config/amadeos`, and so is the text size. Programs only read these files, and a `ConfigWatcher` tells them when the files change. A program's own settings live in a directory of its own below ([chapter 44](44-settings.md#where-files-go-xdgdirectories-and-appdirectories)).
 
 **Two threads.** Swing components are touched only on the event dispatch thread (EDT); slow work runs on the virtual-thread executor that `CommonsModule` binds, and its result comes back through the `@Ui` executor. Listeners that amade-commons calls from a background thread say so in their javadoc, and `AmadeUI.follow` is the example of switching to the EDT ([chapter 41](41-start-up.md#two-threads-edtexecutor-and-ui)).
 
@@ -51,7 +51,7 @@ A few rules hold for nearly every class. Knowing them makes the rest of the manu
 | To continue on the EDT after background work | `@Ui Executor`, `EdtExecutor` | [41](41-start-up.md#two-threads-edtexecutor-and-ui) |
 | The colours of the current theme | `AmadeUI.theme()`, `DesktopTheme` | [42](42-look.md#colour-schemes-desktoptheme) |
 | A theme of my own on the desktop | `theme.properties` in `~/.config/amadeos/themes/<id>/` | [42](42-look.md#custom-themes-themeregistry) |
-| To follow the theme the user picks in the Style Manager | `AmadeUI.follow` (done by `launch`) | [42](42-look.md#following-the-desktop-themestore) |
+| To follow the theme the user picks in Settings | `AmadeUI.follow` (done by `launch`) | [42](42-look.md#following-the-desktop-themestore) |
 | A component with colours beyond the standard ones | `AmadeUI.style` | [42](42-look.md#colours-of-your-own-style) |
 | A sunken or raised bevel, a coloured dot | `AmadeUI.sunken()`, `raised()`, `colorDot` | [42](42-look.md#bevels-and-dots) |
 | A dialog to pick a date | `DateChooser` | [42](42-look.md#picking-a-date-datechooser) |

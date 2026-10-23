@@ -1,6 +1,6 @@
 # 60. The Desktop and Its Modules
 
-The applications of this book run on a desktop, and the desktop is Java too: the window manager that draws the frames, the Front Panel at the bottom of the screen, the login screen, the screen lock, the Style Manager and the small tools around them. Part VI looks at that side. This chapter is the map: which modules there are, how they start one another, which of them use amade-commons and how, and how to run them on your own computer. The chapters after it build on that map. They take the smallest tool step by step (System Information), then the Style Manager, the Front Panel and the Software program, and end with a checklist for writing a module of your own.
+The applications of this book run on a desktop, and the desktop is Java too: the window manager that draws the frames, the Front Panel at the bottom of the screen, the login screen, the screen lock, Settings and the small tools around them. Part VI looks at that side. This chapter is the map: which modules there are, how they start one another, which of them use amade-commons and how, and how to run them on your own computer. The chapters after it build on that map. They take the smallest tool step by step (System Information), then Settings, the Front Panel and the Software program, and end with a checklist for writing a module of your own.
 
 ![The amadeOS desktop with the Front Panel at the bottom](images/desktop/desktop-with-windows.jpg)
 
@@ -23,7 +23,7 @@ The desktop lives in the repository [amadeos-system](https://github.com/datazuul
 | `panel-cde` | `amadeos-panel-cde` | The CDE Front Panel: clock, calendar, workspace switch, drawers of applications, network and updates cells |
 | `dm` | `amadeos-dm` | The display manager: starts Xorg and the login greeter, authenticates through PAM, starts the session |
 | `session` | `amadeos-session` | The session (window manager, autostart, panel), the screen lock, the screen saver, the polkit agent, the clipboard manager ([chapter 65](65-clipboard.md)) |
-| `style` | `amadeos-style` | The Style Manager: Color, Backdrop, Keyboard, Mouse, Beep, Screen |
+| `settings` | `amadeos-settings` | Settings, formerly the Style Manager: Color, Font, Backdrop, Keyboard, Mouse, Beep, Screen, Window, Clipboard |
 | `logviewer` | `amadeos-logviewer` | Session diagnostics and logs |
 | `print` | `amadeos-print` | The print manager: printers and jobs over IPP |
 | `sysinfo` | `amadeos-sysinfo` | System information on one page |
@@ -86,14 +86,14 @@ The desktop and the applications never call each other. They agree through files
 
 | What | Written by | Followed by |
 |---|---|---|
-| The theme, `~/.config/amadeos/theme.conf` and `icon_theme.conf` | Style Manager, through `ThemeManager` in `base` | every application (`ThemeStore`), the panel and the window manager |
-| The theme as the root window property `_AMADEOS_THEME` | Style Manager | panel and window manager, which poll it |
+| The theme, `~/.config/amadeos/theme.conf`, `icon_theme.conf` and `font.conf` | Settings, through `ThemeManager` in `base` | every application (`ThemeStore`), the panel and the window manager |
+| The theme as the root window property `_AMADEOS_THEME` | Settings | panel and window manager, which poll it |
 | The language, `~/.config/amadeos/locale.conf` | login greeter (through the session) and the panel's language button | every application at start (`LocaleStore`), the panel |
 | "A program is starting", the X11 message `_AMADEOS_LAUNCH` | panel, Files, every `DesktopLauncher` | window manager, which shows the busy cursor |
 | The panel, a window of type `_NET_WM_WINDOW_TYPE_DOCK` with a strut | panel | window manager, which keeps it above the others and out of the way |
 | The installed applications, `/usr/share/applications/*.desktop` | each package | panel drawers, Software |
 
-That is why the applications of this book follow the Style Manager without a line of code ([chapter 42](42-look.md#following-the-desktop-themestore)): the Style Manager writes the same file `ThemeStore` watches. [Chapter 62](62-style-manager.md) shows the writing side.
+That is why the applications of this book follow Settings without a line of code ([chapter 42](42-look.md#following-the-desktop-themestore)): Settings writes the same files `ThemeStore` watches. [Chapter 62](62-settings.md) shows the writing side.
 
 ## Running a module
 
@@ -101,7 +101,7 @@ You do not need amadeOS to work on the desktop. Every module runs from the build
 
 ```sh
 ./gradlew :sysinfo:run          # a tool program, in any desktop
-./gradlew :style:run            # the Style Manager; it writes your real ~/.config/amadeos/theme.conf
+./gradlew :settings:run         # Settings; it writes your real ~/.config/amadeos/theme.conf
 ./gradlew :panel-cde:run        # the Front Panel on your current desktop
 wm/run-xephyr.sh                # window manager and panel in a nested X server
 dm/run-greeter.sh               # the login greeter in a nested X server (user amadeos, password amadeos)
@@ -109,8 +109,8 @@ dm/run-greeter.sh               # the login greeter in a nested X server (user a
 
 The nested X server, Xephyr, is a window on your desktop that behaves like a screen of its own. A window manager can take it over without touching your real desktop, which is the only safe way to try one. `./gradlew deb` builds the packages, and `./gradlew :sysinfo:installToAmadeOs` puts one where the image build finds it ([chapter 50](50-packaging.md#into-the-amadeos-image)).
 
-!!! warning "Pitfall: the Style Manager writes your settings"
-    The Style Manager from the build writes `~/.config/amadeos/theme.conf` like the installed one. On your own desktop that is harmless: your amade applications switch colours. Run it with another home (`HOME=/tmp/try ./gradlew :style:run`) to keep your settings out of the experiment.
+!!! warning "Pitfall: Settings writes your settings"
+    Settings from the build writes `~/.config/amadeos/theme.conf` like the installed one. On your own desktop that is harmless: your amade applications switch colours. Run it with another home (`HOME=/tmp/try ./gradlew :settings:run`) to keep your settings out of the experiment.
 
 ## Summary
 
