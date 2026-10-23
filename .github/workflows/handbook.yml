@@ -33,6 +33,7 @@ env:
   CONTACTS_COMMIT: cd0346ac51ee0d410eb755f6184b6d804900f7b8
   IMAGEVIEWER_COMMIT: 8bebb867282e6cf49cd11199beb8a484e76b42ae
   PDFVIEWER_COMMIT: ed5cdfe43962a515620a267d99b6e68eda4f7985
+  BOOKS_COMMIT: e7316c86be713d08dcc9916ae3798814c48f918f
   # Part VI: the desktop modules.
   AMADEOS_SYSTEM_COMMIT: 415692c7045d4d19fedac4271921d352d3de1b25
 
@@ -118,6 +119,11 @@ jobs:
           repository: datazuul/amade-pdfviewer
           ref: ${{ env.PDFVIEWER_COMMIT }}
           path: amade-pdfviewer
+      - uses: actions/checkout@v7
+        with:
+          repository: datazuul/amade-books
+          ref: ${{ env.BOOKS_COMMIT }}
+          path: amade-books
       - uses: actions/checkout@v7
         with:
           repository: datazuul/amadeos-system
