@@ -14,7 +14,7 @@ The chapters of this part went through five modules of the desktop. This one tur
 |---|---|---|
 | Does it run before the user can start anything, or must it be on the screen within a second? | yes: window manager, panel, login, lock | no |
 | Does it talk to the X server directly (window types, root window properties, grabs)? | yes | rarely; then through `base` |
-| Does the user open it from a drawer and wait for a window? | sometimes (Style Manager, logs) | yes |
+| Does the user open it from a drawer and wait for a window? | sometimes (Settings, logs) | yes |
 | Start-up, wiring, languages | `main`, by hand | `AmadeApplication`, Guice, `Messages` ([chapter 41](41-start-up.md)) |
 | Logging | `java.util.logging`, into the session log | SLF4J with Logback, like the applications |
 
@@ -71,7 +71,7 @@ If the module has to change the system as root, do not run it as root. Write a h
 
 ### 4. Texts in five languages
 
-Put the texts into `src/main/resources/eu/amadeos/system/disks/messages.properties` and its translations `_de`, `_fr`, `_es`, `_it`, mark the menu letters with `&`, and add a test with `TranslationCheck` ([chapter 43](43-languages.md#a-test-for-every-translation-translationcheck)). A desktop module without Guice loads its texts with `Messages.load` and finds its language with `LocaleResolution`, as the Style Manager's `StyleTexts` does ([chapter 62](62-style-manager.md#five-languages-without-guice)).
+Put the texts into `src/main/resources/eu/amadeos/system/disks/messages.properties` and its translations `_de`, `_fr`, `_es`, `_it`, mark the menu letters with `&`, and add a test with `TranslationCheck` ([chapter 43](43-languages.md#a-test-for-every-translation-translationcheck)). A desktop module without Guice loads its texts with `Messages.load` and finds its language with `LocaleResolution`, as `SettingsTexts` of Settings does ([chapter 62](62-settings.md#five-languages-without-guice)).
 
 ### 5. The desktop entry
 
@@ -126,7 +126,7 @@ A module that users see gets a page in the amadeOS User's Handbook, in the amade
 ## Exercises
 
 1. **Disks.** Build it: the records, a parser for `/proc/mounts` that skips the pseudo file systems (`proc`, `sysfs`, `tmpfs`, ...), free space with `java.nio.file.FileStore`, a window like System Information's. What should the page show for a mount point the user may not read?
-2. **A desktop module.** Turn the Style Manager's Beep control into a small module of its own, `amadeos-bell`, that only plays the bell with the current settings, as a desktop module without Guice. Which lines of the root `build.gradle` and of the CI have to change?
+2. **A desktop module.** Turn the Beep page of Settings into a small module of its own, `amadeos-bell`, that only plays the bell with the current settings, as a desktop module without Guice. Which lines of the root `build.gradle` and of the CI have to change?
 
 ## Summary
 

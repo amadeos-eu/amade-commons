@@ -215,6 +215,7 @@ public final class AmadeUI {
                 - DesktopTheme.MIN_FONT_SIZE];
     }
 
+    // --8<-- [start:fonts]
     /** A font size of the application's own, scaled by {@link #fontScale()}. */
     public static float scaled(float size) {
         return Math.round(size * fontScale() * 2) / 2f;
@@ -230,6 +231,7 @@ public final class AmadeUI {
             }
         }
     }
+    // --8<-- [end:fonts]
 
     // --8<-- [start:apply]
     /**

@@ -60,7 +60,7 @@ AWT's clipboard can report changes too, through a `FlavorListener`. On X11 it do
 
 The extension's events have no fixed number. `XFixesQueryExtension` tells the program its *event base*, and the selection event is that number plus 0. Everything else the watcher hears is core X11: the key press of Ctrl+Alt+V, which it grabs on the root window like the window manager grabs Super+L, a client message with a command, and selection requests.
 
-One manager per session is enough. The watcher claims a selection of its own, `_AMADEOS_CLIPBOARD`, and stops with exit code 3 when another program already owns it, which also tells the autostart script not to start it again. That selection's owner is also where commands go: `amadeos-clipboard`, the Front Panel's *Clipboard History* entry, sends a client message to it, and the Style Manager's *Clear History* button sends another (`ClipboardCommand`). It is the trick the screen lock plays with `_AMADEOS_LOCK`: whoever owns the selection is running, the X server releases it when that program dies, and the owner's window is an address other programs can write to.
+One manager per session is enough. The watcher claims a selection of its own, `_AMADEOS_CLIPBOARD`, and stops with exit code 3 when another program already owns it, which also tells the autostart script not to start it again. That selection's owner is also where commands go: `amadeos-clipboard`, the Front Panel's *Clipboard History* entry, sends a client message to it, and the *Clear History* button of Settings sends another (`ClipboardCommand`). It is the trick the screen lock plays with `_AMADEOS_LOCK`: whoever owns the selection is running, the X server releases it when that program dies, and the owner's window is an address other programs can write to.
 
 ## Recording a copy
 
@@ -123,9 +123,9 @@ Ctrl+Alt+V or *Clipboard History* in the Tools drawer shows the history next to 
 
 ![The Tools drawer with the Clipboard History entry](images/desktop/clipboard-drawer.jpg)
 
-The settings are a control of the Style Manager ([chapter 62](62-style-manager.md)), the first one CDE did not have. `ClipboardDialog` writes `~/.config/amadeos/clipboard.conf` through `ClipboardSettingsStore`; the manager notices the new file within two seconds, as the screen saver does with `screen.conf`.
+The settings are a page of Settings ([chapter 62](62-settings.md)), the first one CDE did not have. `ClipboardPage` writes `~/.config/amadeos/clipboard.conf` through `ClipboardSettingsStore`; the manager notices the new file within two seconds, as the screen saver does with `screen.conf`.
 
-![Style Manager > Clipboard](images/desktop/style-clipboard.jpg)
+![Settings > Clipboard](images/desktop/settings-clipboard.jpg)
 
 *Also record selected text* watches `PRIMARY` too and puts selected text on the clipboard. Selecting is not one event: the owner is set when the selection starts, while the mouse is still moving. So the worker asks the probe whether a mouse button is down and tries again a tenth of a second later, and drops the attempt when a newer selection has started meanwhile. That is what `handle` returning false means.
 

@@ -282,7 +282,7 @@ Painting is then two loops: for each column on the display, for each of the nine
 
 The translations brought accented letters. Instead of drawing *é*, *ñ* and *ç* by hand, `DotMatrixDisplay` splits a letter into its base letter and its accent with `java.text.Normalizer` and draws the accent in the top row. A test checks every letter the five languages use.
 
-The second rule: **colours come from the theme.** The rack fronts, bevels and labels use `AmadeUI.theme()` at paint time, so they change at once when the Style Manager changes the theme. The LCDs stay black, and their glow is picked to suit the theme:
+The second rule: **colours come from the theme.** The rack fronts, bevels and labels use `AmadeUI.theme()` at paint time, so they change at once when Settings changes the theme. The LCDs stay black, and their glow is picked to suit the theme:
 
 ```java title="amade-audio · ui/widget/LcdPalette.java"
 --8<-- "amade-audio/src/main/java/eu/amadeos/apps/audio/ui/widget/LcdPalette.java:theme"

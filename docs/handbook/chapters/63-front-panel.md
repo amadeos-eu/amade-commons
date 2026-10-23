@@ -48,7 +48,7 @@ The panel is a row of slots, each a `DockWidget`:
 --8<-- "amadeos-system/panel-cde/src/main/java/eu/amadeos/system/panel/cde/widget/DockWidget.java"
 ```
 
-A widget is a Swing component with a life: `start` after the panel is built (the clock starts its timer here), `stop` when it goes, and `onThemeChanged` when the Style Manager picks another palette. The panel keeps them in a list and passes each event on, so a new kind of slot needs no change to the panel beyond adding it. The width of the panel follows the slots: it is the preferred width of its content, centred on the screen.
+A widget is a Swing component with a life: `start` after the panel is built (the clock starts its timer here), `stop` when it goes, and `onThemeChanged` when Settings picks another palette. The panel keeps them in a list and passes each event on, so a new kind of slot needs no change to the panel beyond adding it. The width of the panel follows the slots: it is the preferred width of its content, centred on the screen.
 
 The look is CDE's and drawn by hand: `CdePanelChrome` paints the chiselled frame and the row of drawer tabs, each widget its bevels, all in the colours of the current `DesktopTheme` ([chapter 42](42-look.md)). Nothing in the panel has a colour of its own.
 
@@ -119,7 +119,7 @@ A Java program needs a second or two before its window appears, and a click with
 --8<-- "amadeos-system/panel-cde/src/main/java/eu/amadeos/system/panel/cde/AmadeDesktopPanel.java:poll"
 ```
 
-The same timer follows the workspace (switched with a key or the root menu, not only with the panel's buttons) and the theme ([chapter 62](62-style-manager.md#telling-the-desktop)). The panel's own clock, `launchedAt`, shows the watch for the first second even before the window manager has answered. The applications of this book announce their own starts the same way: `DesktopLauncher` in amade-commons sends the same message ([chapter 45](45-desktop.md#the-busy-cursor-launchfeedback)).
+The same timer follows the workspace (switched with a key or the root menu, not only with the panel's buttons) and the theme ([chapter 62](62-settings.md#telling-the-desktop)). The panel's own clock, `launchedAt`, shows the watch for the first second even before the window manager has answered. The applications of this book announce their own starts the same way: `DesktopLauncher` in amade-commons sends the same message ([chapter 45](45-desktop.md#the-busy-cursor-launchfeedback)).
 
 ## Workspace names
 
@@ -131,7 +131,7 @@ The four workspace buttons are called *One* to *Four* in the panel's language un
 
 A double click on another button is then a switch and a rename, as in CDE. Each button sits in a small `CardLayout` with a `JTextField`; `startRename` shows the field in the button's colours with the old name selected, Return or leaving the field keeps the new name, Escape the old one, and an empty name gives back the default. The field needs the keyboard, which a dock does not get from the window manager, so the panel brings its window to the front and asks for the focus itself.
 
-`WorkspaceNames` in `base` keeps the names in `~/.config/amadeos/workspaces.conf`, one line per renamed workspace, cut to 24 characters on one line. The panel then publishes all four in the root window's `_NET_DESKTOP_NAMES`, the EWMH property for workspace names: `X11EwmhHelper.setDesktopNames` writes them NUL-separated in UTF-8. The window manager watches the property with a `PropertyNotify` and uses the names in its root menu; the Style Manager reads it for its Backdrop control ([chapter 62](62-style-manager.md#backdrop-and-screen)). So the panel is the only program that renames, and the others only read.
+`WorkspaceNames` in `base` keeps the names in `~/.config/amadeos/workspaces.conf`, one line per renamed workspace, cut to 24 characters on one line. The panel then publishes all four in the root window's `_NET_DESKTOP_NAMES`, the EWMH property for workspace names: `X11EwmhHelper.setDesktopNames` writes them NUL-separated in UTF-8. The window manager watches the property with a `PropertyNotify` and uses the names in its root menu; Settings reads it for its Backdrop page ([chapter 62](62-settings.md#backdrop-and-screen)). So the panel is the only program that renames, and the others only read.
 
 ## Status cells
 
@@ -159,7 +159,7 @@ The number on the cell is red when security updates are among them. A click open
 
 ## The panel's language
 
-Everything the panel says is in `desktop.properties` and its four translations: the drawer titles and the fixed entries, the tooltips, the Application Manager and its tabs, the clock and the calendar, the workspace names. `PanelTexts` loads them once, in the language of the session. That is deliberate: the session exports the language of `locale.conf` as `LANG` at login, and the panel's language button says that the panel follows at the next login, like the terminals. So `PanelTexts` resolves the language from the environment only ([chapter 43](43-languages.md#which-language-localeresolution)), where the Style Manager, a program started later, reads `locale.conf` itself ([chapter 62](62-style-manager.md#five-languages-without-guice)).
+Everything the panel says is in `desktop.properties` and its four translations: the drawer titles and the fixed entries, the tooltips, the Application Manager and its tabs, the clock and the calendar, the workspace names. `PanelTexts` loads them once, in the language of the session. That is deliberate: the session exports the language of `locale.conf` as `LANG` at login, and the panel's language button says that the panel follows at the next login, like the terminals. So `PanelTexts` resolves the language from the environment only ([chapter 43](43-languages.md#which-language-localeresolution)), where Settings, a program started later, reads `locale.conf` itself ([chapter 62](62-settings.md#five-languages-without-guice)).
 
 Dates follow the language too. The calendar's tooltip used a fixed English pattern (`EEEE, MMMM d, yyyy`); it now uses `DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL)` in the panel's locale, so a German session reads *Donnerstag, 22. Oktober 2026*, and the month on the calendar sheet is the short name in that language. The session dialog behind the exit button lives in `base` and has its own `session.properties`, so `base` does not depend on the panel's texts.
 
@@ -176,6 +176,6 @@ Dates follow the language too. The calendar's tooltip used a fixed English patte
 - Drawers fill themselves from desktop entries by category, so a package that installs a desktop entry also puts its program into the panel.
 - Programs start in a session of their own with their output in a log file, and the busy cursor shows until their window appears.
 - Drawers fill themselves again a few seconds after programs are installed or removed.
-- A click on the current workspace's button renames it; the panel stores the names and publishes them in `_NET_DESKTOP_NAMES` for the window manager and the Style Manager.
+- A click on the current workspace's button renames it; the panel stores the names and publishes them in `_NET_DESKTOP_NAMES` for the window manager and Settings.
 - Status cells read in the background, show only when they have something to say, and take their services in the constructor so tests can fake them.
 - The panel's texts and dates are in the session's language, resolved once at start.

@@ -117,8 +117,9 @@ These are the files amadeOS programs share. Programs read them; the desktop writ
 
 | File | Written by | Read by | Holds |
 |---|---|---|---|
-| `~/.config/amadeos/theme.conf` | Style Manager | `ThemeStore` | The theme id, e.g. `dark-slate` |
-| `~/.config/amadeos/icon_theme.conf` | Style Manager | `ThemeStore` | The icon theme, e.g. `NsCDE` |
+| `~/.config/amadeos/theme.conf` | Settings | `ThemeStore` | The theme id, e.g. `dark-slate` |
+| `~/.config/amadeos/icon_theme.conf` | Settings | `ThemeStore` | The icon theme, e.g. `NsCDE` |
+| `~/.config/amadeos/font.conf` | Settings | `ThemeStore` | The text size, 1 to 7, e.g. `4` |
 | `~/.config/amadeos/locale.conf` | the desktop's language switcher | `LocaleStore` | The desktop language, e.g. `de_DE.UTF-8` |
 | `~/.config/amadeos/themes/<id>/theme.properties` | the user or a theme package | `ThemeRegistry` | A custom theme ([chapter 42](42-look.md#custom-themes-themeregistry)) |
 | `~/.config/amadeos/<app>/language.conf` | the program's language setting | `LocaleSettings` | `desktop` or a language code |

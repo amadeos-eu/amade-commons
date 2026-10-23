@@ -154,7 +154,7 @@ The desktop itself keeps two files there that every application reads:
 
 | File | Written by | Says |
 |---|---|---|
-| `~/.config/amadeos/theme.conf` | the Style Manager | the colour theme, e.g. `dark-slate` |
+| `~/.config/amadeos/theme.conf` | Settings | the colour theme, e.g. `dark-slate` |
 | `~/.config/amadeos/locale.conf` | the desktop's language setting | the language, e.g. `de_DE.UTF-8` |
 
 All of them are plain text files. Open one in an editor: you will see exactly what was saved. Change `theme.conf` while Pad is running, and watch the window change its colours.

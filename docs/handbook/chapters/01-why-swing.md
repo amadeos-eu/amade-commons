@@ -33,7 +33,7 @@ Each of them is a good choice for someone. If you write a cross-platform program
 
 ### 1. The whole desktop is Swing
 
-The amadeOS desktop is written in Java: the window manager, the Front Panel, the Style Manager, the login screen. An application built with the same toolkit shares their look exactly: the same bevels, the same fonts, the same colours. When the user picks another theme in the Style Manager, the desktop and every application change together, because they read the same file and run the same code.
+The amadeOS desktop is written in Java: the window manager, the Front Panel, Settings, the login screen. An application built with the same toolkit shares their look exactly: the same bevels, the same fonts, the same colours. When the user picks another theme in Settings, the desktop and every application change together, because they read the same file and run the same code.
 
 ### 2. The look is ours
 

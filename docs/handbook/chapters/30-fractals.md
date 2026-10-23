@@ -281,7 +281,7 @@ Presenters still take a plain `Executor` with `@Ui` in front, so the tests can k
 |---|---|---|
 | `AmadeApplication`, `CommonsModule`, `EdtExecutor` | chapter 10 | start-up, wiring, the background executor, the event dispatch thread |
 | `Messages`, `Mnemonics`, `LocaleSettings`, `TranslationCheck` | chapter 10 | five languages, menu letters, the language setting |
-| `AmadeUI`, `DesktopTheme` | chapter 10 | the theme's colours, and the *Desktop Colours* palette that follows the Style Manager |
+| `AmadeUI`, `DesktopTheme` | chapter 10 | the theme's colours, and the *Desktop Colours* palette that follows Settings |
 | `AppDirectories`, `PropertiesFile` | chapter 20 | the preferences: bars, automatic iterations, export size |
 | `ToolIcon`, `StandardGlyph`, `ToolButtons`, `@Ui` | **this chapter** | the toolbar and the menus' icons; continuing on the event dispatch thread |
 
