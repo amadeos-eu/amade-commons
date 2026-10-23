@@ -2,20 +2,26 @@
 
 Pad and Web read files the user picked. The File Manager is about the files themselves: it lists folders, copies and moves whole trees, puts things into the trash and gets them back. That brings three problems the first two programs did not have. Work can take minutes, and the user must see it progress and be able to stop it. Work can need an answer halfway through ("this file exists already, what now?"), while it runs on another thread. And mistakes destroy data, so every step must leave the disk in a state the user understands, even when it is cancelled or fails.
 
-amade-files is also the first application in this book that remembers something between two runs: which folders were open and how the user likes to see them.
+amade-files is also the first application in this book that remembers something between two runs: which folders were open and how the user likes to see them. And it is the first that exchanges data with other programs in both directions: files go to the clipboard and come from it, and they are dragged in and out of the window.
 
 ## What you build
 
-![amade-files with two panels: Documents on the left, Projects on the right](images/files/window.png)
+![amade-files in the tree view: the folder tree on the left, the contents of Documents on the right](images/files/tree.png)
 
-- **Two panels** side by side, each showing a folder as a table: name, size, modification date, permissions. Tab switches between them. One panel is also possible.
-- **The keyboard first**: Enter opens, Backspace goes up, Insert or Space marks lines; F2 renames, F3 views, F4 edits, F5 copies, F6 moves, F7 makes a folder, F8 moves to the trash. The row of buttons at the bottom shows the keys, in the tradition of the two-panel file managers of the 1980s and 1990s.
+- **Two views of the same files.** The *tree view*, the default, has a folder tree on the left (home, trash, the file system and USB sticks at the top) and the contents of the chosen folder on the right, as most file managers today have it. Its commands are on the right mouse button, in the Edit menu and in drag and drop. The *two-panel view* shows two folders side by side, with the row of function keys below, in the tradition of the two-panel file managers of the 1980s and 1990s. *View → Tree* (Ctrl+1) and *View → Two Panels* (Ctrl+2) switch.
+
+    ![The two-panel view: Documents on the left, Projects on the right](images/files/window.png)
+
+- **The keyboard first** in both views: Enter opens, Backspace goes up, Insert or Space marks lines; F2 renames, F3 views, F4 edits, F5 copies, F6 moves, F7 makes a folder, F8 moves to the trash.
+- **Cut, Copy and Paste** of files, through the clipboard of the desktop: files copied here can be pasted in other file managers, and the other way round.
+- **Drag and drop**: onto a folder in the tree or the table, from and to other programs. Without a key, files move on the same disk and are copied onto another one; Ctrl copies, Shift moves.
+- **A path bar** with a button per folder; a click on its free space turns it into a text field, to type or paste a path, with Tab completing folder names.
 - **Copy and move** of files and whole folders, with a progress window, Cancel, and a question when a file exists in the target.
 - **The trash**, compatible with other Linux desktops: what amade-files trashes, they can restore, and the other way round. Inside the trash the panel shows where each file came from.
 - **Opening files**: plain text goes to Pad, everything else to the application the desktop has for its type, with the busy cursor while it starts. Programs and launchers are not started without asking.
-- **Settings** that survive: hidden files on or off, one or two panels, and the folders of both panels.
+- **Settings** that survive: the view, hidden files on or off, one or two panels, and the folders of both panels.
 
-The program is about 3,700 lines of Java and 1,200 lines of tests: the largest so far, and most of it is in two services, file operations and the trash.
+The program is about 6,000 lines of Java and 1,500 lines of tests: the largest so far. Most of it is in two services, file operations and the trash, and in the Swing classes that make the tree and drag and drop work.
 
 ## What you will learn
 
@@ -25,6 +31,9 @@ The program is about 3,700 lines of Java and 1,200 lines of tests: the largest s
 - How to copy a file so that a cancelled or failed copy never leaves a broken file behind.
 - How the freedesktop.org trash works, and how to test code that depends on the clock.
 - How a program starts another one, and how the window manager learns about it.
+- How to build a `JTree` that reads its folders only when they are opened, and update it without closing what the user opened.
+- How files travel on the X11 clipboard and in drag and drop, in formats that other programs understand.
+- How a `TransferHandler` decides between copy and move, and what Swing does not tell it.
 
 ## The packages
 
@@ -32,17 +41,17 @@ Files follows the structure of chapter 2:
 
 | Package | Classes |
 |---|---|
-| `domain` | `FileEntry` (one line of a panel), `FilePreferences`, `Progress`, `Resolution`, `SortOrder`, `TrashInfo`, `Side` |
+| `domain` | `FileEntry` (one line of a panel), `FilePreferences`, `ViewMode`, `Place`, `ClipboardFiles`, `DropMode`, `Progress`, `Resolution`, `SortOrder`, `TrashInfo`, `Side` |
 | `repository` | `PreferencesRepository` |
-| `service` | `FileSystemService` (list, create, rename), `FileOperations` (copy, move, delete), `TrashService`, `Opener`, `Formats` |
-| `ui.main` | `MainView`, `MainPresenter`, `MainWindow`, `MainMenuBar` |
-| `ui.panel`, `ui.dialogs` | `FilePanel`, `FileTableModel`, `IconicPathBar`, `ProgressDialog`, `ConflictDialog` |
+| `service` | `FileSystemService` (list, create, rename, places), `FileOperations` (copy, move, delete), `TrashService`, `Opener`, `FileUris`, `PathCompletion`, `Formats` |
+| `ui.main` | `MainView`, `MainPresenter`, `MainWindow`, `MainMenuBar`, `ContextMenus`, `DropHint` |
+| `ui.panel`, `ui.dialogs` | `FilePanel`, `FileTableModel`, `FolderTree`, `IconicPathBar`, `FileTransfer`, `FileDropHandler`, `ProgressDialog`, `ConflictDialog` |
 
-Unlike Web, Files has a presenter again, and it is the biggest class of the program. It has a lot to decide: what each panel shows, which lines an F-key acts on, what to ask before deleting, what to say afterwards. `MainPresenterTest` checks all of it without a window, with the fake view of chapter 10.
+Unlike Web, Files has a presenter again, and it is the biggest class of the program. It has a lot to decide: what each panel shows, which lines a command acts on, where a drop goes, what to ask before deleting, what to say afterwards. `MainPresenterTest` checks all of it without a window, with the fake view of chapter 10.
 
 ## Settings that survive
 
-When the File Manager closes, it writes down four things: whether hidden files are shown, whether there are two panels, and the folder of each panel. They form a record, as everything in the domain does:
+When the File Manager closes, it writes down five things: the view (tree or two panels), whether hidden files are shown, whether there are two panels, and the folder of each panel. They form a record, as everything in the domain does:
 
 ```java title="amade-files · domain/FilePreferences.java"
 --8<-- "amade-files/src/main/java/eu/amadeos/apps/files/domain/FilePreferences.java"
@@ -98,6 +107,113 @@ Two details are new. The error handler falls back to an existing parent folder i
 Binding a key to the action name `"none"`, which no action map contains, removes the table's binding, and the key goes on to the menu bar, where F2 means *Rename*.
 
 The *marks* (Insert, Space) are kept in the model, separate from the table's selection, which serves as the cursor. That is how two-panel file managers work: you mark ten files, move the cursor somewhere else to look, and the marks stay.
+
+## Two views, one presenter
+
+The tree view looks like a different program, but it is not one. Its right side is the left `FilePanel` of the two-panel view, in *explorer mode*: no ".." line, a plain click selects one line and drops the marks, Ctrl+click and Shift+click add to them. The tree on the left is new. Switching the view only rearranges components in `MainWindow` and hides the function keys; the presenter keeps its two `PanelState`s and does not care where they are shown.
+
+There is one new thing the presenter has to know. In the two-panel view, a command works on the marked lines or the line under the cursor. In the tree view, the user can also choose a folder in the tree and press F2 or Ctrl+C there. So the presenter remembers that folder while the tree has the focus, and every command asks one method what it works on:
+
+```java title="amade-files · ui/main/MainPresenter.java (targets)"
+--8<-- "amade-files/src/main/java/eu/amadeos/apps/files/ui/main/MainPresenter.java:targets"
+```
+
+Because all commands go through `targets`, *Rename*, *Copy*, *Move to Trash* and the others work in the tree without a line of extra code. Some folders in the tree must not be touched at all: Home, the trash, the file system and the mounted media are *places*, and the presenter refuses to rename, move or delete them, with a message instead of an error.
+
+## A tree of folders
+
+![Dragging two files onto Projects in the tree](images/files/drag.png)
+
+A folder tree cannot be read in one go: the file system has hundreds of thousands of folders, and a network share or a sleeping disk can take seconds to answer. So `FolderTree` reads a folder when it is opened for the first time, on a worker thread like every listing. Until then, the node has one child, a placeholder "…", so that `JTree` draws the handle that lets the user open it:
+
+```java title="amade-files · ui/panel/FolderTree.java (FolderNode)"
+--8<-- "amade-files/src/main/java/eu/amadeos/apps/files/ui/panel/FolderTree.java:lazy-node"
+```
+
+A `TreeWillExpandListener` asks the presenter for the sub-folders (`expandFolder`), which reads them in the background and answers with `view.showFolders(dir, folders)`. The trash has no placeholder: it is a place for files, not for folders.
+
+Reading a folder again, after a copy or when hidden files are switched on, is harder than reading it the first time. The easy way, removing all children and adding the new ones, closes every folder the user had opened below, and for a moment leaves the node without children, which makes `JTree` close the node itself. `update` changes only what changed, and it inserts before it removes:
+
+```java title="amade-files · ui/panel/FolderTree.java (update)"
+--8<-- "amade-files/src/main/java/eu/amadeos/apps/files/ui/panel/FolderTree.java:update"
+```
+
+Nodes that stay are the same objects, with their own children and their open or closed state. The model's `insertNodeInto` and `removeNodeFromParent` tell the tree exactly which rows changed, so it keeps the selection and the scroll position too.
+
+The top level is updated the same way. `MainWindow` asks the presenter for the places every three seconds; the media come from `/proc/self/mounts`, everything mounted below `/media`, `/run/media` and `/mnt`. A USB stick appears in the tree a moment after it is plugged in, and disappears when it is removed, without a library that watches the hardware.
+
+!!! warning "Pitfall: the tree and the table want the same keys"
+    `JTree` has its own bindings for F2 (edit the node), Ctrl+C, Ctrl+X and Ctrl+V (Swing's own clipboard of nodes) and Ctrl+A. As in the table, `FolderTree` maps them to `"none"`, so they reach the Edit menu, and Rename or Copy work on the folder the tree has chosen.
+
+## Files on the clipboard
+
+Ctrl+C on a file does not copy the file. It puts its *name* on the clipboard, with the promise that a later Paste copies the file, wherever that is. On X11, the clipboard is not a store but a conversation: the program that copied keeps the data and answers when another program asks for it, in a format the other one names. For files, the Linux desktops agree on two formats:
+
+- `text/uri-list`, defined in RFC 2483: one `file:///home/anna/Documents/report.odt` per line. Java offers a list of `File`s as `DataFlavor.javaFileListFlavor`, and AWT converts it to this format when another program asks.
+- `x-special/gnome-copied-files`: the word `copy` or `cut`, then the same URIs. It is how the GTK file managers tell Cut from Copy, and the others read it too.
+
+`FileUris` writes and reads both formats, and has its own tests, as a service without Swing. `FileTransfer` offers them, with the plain paths as text for programs like Pad that only take text. AWT knows nothing about the GNOME format, and by default it would announce a Java flavour under an encoded name that no other program asks for. One registration gives it the plain name:
+
+```java title="amade-files · ui/panel/FileTransfer.java"
+--8<-- "amade-files/src/main/java/eu/amadeos/apps/files/ui/panel/FileTransfer.java:flavor-map"
+```
+
+Reading goes the other way round: the GNOME format first, because it knows Cut, then the Java file list, then any `text/uri-list` as text. Paste then goes through the same operation as F5 and F6, with progress, cancel and the conflict question:
+
+```java title="amade-files · ui/main/MainPresenter.java (pasteInto)"
+--8<-- "amade-files/src/main/java/eu/amadeos/apps/files/ui/main/MainPresenter.java:paste"
+```
+
+Cut files are pasted once: afterwards the presenter empties the clipboard, because the files are no longer where it says. Pasting into the folder the files came from makes copies beside them, *report (2).odt*, as the conflict rule *Keep Both* does.
+
+To test this you need a second program on the clipboard. On any X11 desktop `xclip` is enough: copy a file in amade-files, then `xclip -selection clipboard -t TARGETS -o` lists the formats offered, and `xclip -selection clipboard -t x-special/gnome-copied-files -o` shows the text another file manager receives.
+
+## Drag and drop
+
+Swing's drag and drop is built on one class, `TransferHandler`. A component that has one can be a drag source (`createTransferable`) and a drop target (`canImport`, `importData`). The table and the tree each need one, and the two differ only in where a drop goes and which files a drag takes along, so the common part is the abstract `FileDropHandler`, with `dropTarget` and `dragged` for the two subclasses. The transferable it creates is the same `FileTransfer` as the clipboard's, which is why files dragged into another program arrive there.
+
+### Copy or move?
+
+Every file manager has the same rule, and users rely on it: without a key, files dragged onto a folder *move* when the folder is on the same disk, and are *copied* to another disk, such as a USB stick; Ctrl forces a copy and Shift a move. Swing has the idea, but not quite this rule: a drop target sees the *user drop action*, which is MOVE without a key, and it cannot tell Shift from no key at all. The drag source can: while the drag runs, AWT tells every `DragSourceListener` which modifier keys are held. `FileDropHandler` listens once, for the whole program, and turns the keys into a `DropMode`:
+
+```java title="amade-files · ui/panel/FileDropHandler.java (mode)"
+--8<-- "amade-files/src/main/java/eu/amadeos/apps/files/ui/panel/FileDropHandler.java:mode"
+```
+
+For files from another program there is no drag source in our process, so Ctrl is all we can know. *AUTO* then decides by the disk, just as for our own drags.
+
+### Asking before the drop
+
+While the mouse moves, Swing calls `canImport` again and again. Its answer decides the mouse cursor, and here it also decides the hint next to the mouse: *Move to "Projects"*, *Copy to "USB-STICK"*, *Move to Trash*. The text comes from the presenter, which also says where a drop is not possible: a folder into itself, files back to where they are. `canImport` only asks and remembers:
+
+```java title="amade-files · ui/panel/FileDropHandler.java (canImport)"
+--8<-- "amade-files/src/main/java/eu/amadeos/apps/files/ui/panel/FileDropHandler.java:can-import"
+```
+
+Two details matter here. The answer is cached per target and mode, because `canImport` comes many times a second and reading a transfer from another program goes through the X server. And a drop from another program is always reported as COPY, whatever we do with the files: a program that receives MOVE deletes its own copy after the drop, and if our move then failed or was cancelled, the files would be gone. The presenter does the move itself, with the same care as F6.
+
+The presenter's side is short, because the operations are there already:
+
+```java title="amade-files · ui/main/MainPresenter.java (drop)"
+--8<-- "amade-files/src/main/java/eu/amadeos/apps/files/ui/main/MainPresenter.java:drop"
+```
+
+`importData` does not call `drop` directly but with `SwingUtilities.invokeLater`. The drop is still running when `importData` is called, and the operation may open a dialog, the conflict question: a modal dialog inside a drop blocks the drag of the other program until it is closed. After `invokeLater`, the drop is finished first.
+
+### Folders that open by themselves
+
+To drag a file into a folder deep down in the tree, the user would have to open the folders first, and then find the file again. Other file managers open a closed folder when the mouse rests on it during a drag, and so does `FolderTree`: its drop handler restarts an 800 ms `Timer` whenever the row under the mouse changes, and when it fires, the row expands. Escape cancels the drag, as everywhere in AWT.
+
+!!! warning "Pitfall: the hint must go when the drag leaves"
+    `TransferHandler` tells a component when a drag comes in (`canImport`), but not when it leaves or is cancelled. Without care, the hint stays on the screen. `FileDropHandler.install` adds a `DropTargetListener` to the component's drop target, which does get `dragExit` and `drop`. The hint is drawn in the `DRAG_LAYER` of the window's `JLayeredPane`, above everything else, and that listener removes it.
+
+## Typing a path
+
+![The path bar as a text field, with a path being typed](images/files/path-bar.png)
+
+`IconicPathBar` has a button for each folder above the current one, as the CDE File Manager had. Sometimes a path is quicker to type, or comes from somewhere else, a mail or a terminal. A click on the free space of the bar, or Ctrl+L, replaces the buttons with a `JTextField` that holds the path, selected. Enter goes there, Escape goes back, and Tab completes the last folder name, as a shell does: `PathCompletion.complete` lists the folder, takes the folders whose name starts with what was typed, and completes as far as they agree. It knows `~` and paths relative to the shown folder, and shows hidden folders only after a dot was typed. Its context menu has *Copy Path*, which puts the path on the clipboard as text.
+
+The text field takes Tab for itself with `setFocusTraversalKeysEnabled(false)`, the same thing `FolderTree` does to make Tab go from the tree to the contents.
 
 ## Long operations
 
@@ -275,6 +391,14 @@ The presenter tests use the fake view of chapter 10 and an executor that runs ta
 
 Two files exist in the target, the user answers *Overwrite All* once, and the second file is not asked about. The test checks the files on disk, not just what the view was told.
 
+Drag and drop is hard to test with a mouse, but most of it is not in the mouse. The presenter decides what a drop does, and the test asks it, as the hint does, before dropping:
+
+```java title="amade-files · MainPresenterTest.java"
+--8<-- "amade-files/src/test/java/eu/amadeos/apps/files/ui/main/MainPresenterTest.java:drop-test"
+```
+
+What stays for a person to try is the Swing part: the hint, the keys, folders opening while dragging, and files dragged to and from another program.
+
 ## What amade-commons gives Files
 
 | Part | Since | Files uses it for |
@@ -298,7 +422,8 @@ There is one thing Files does not do that Pad does: it speaks only English. Its 
 2. **Free space first.** Before copying 20 GB to a stick with 8 GB free, warn the user instead of failing at 40 %. `FileOperations` already measures the total; where does the check belong, and what if the target is on the same file system as the source?
 3. **Speed and time left.** Show "12 MB/s, about 2 minutes left" in the progress window. Which class computes it, and how do you test it without waiting?
 4. **Undo for Move.** After a move, *Edit → Undo* moves the files back. What must the presenter remember, and what happens if a file was changed in the meantime?
-5. **A watched folder.** When another program creates a file in a shown folder, the panel should update by itself. Look at `java.nio.file.WatchService`. Which thread waits for its events, and how do they reach the panel?
+5. **Ask on drop.** Some file managers show a small menu when files are dropped with Alt held: *Move Here*, *Copy Here*, *Link Here*, *Cancel*. Add it. Which class knows that Alt was held, where does the menu open, and why must it open after the drop has ended?
+6. **A watched folder.** When another program creates a file in a shown folder, the panel should update by itself. Look at `java.nio.file.WatchService`. Which thread waits for its events, and how do they reach the panel?
 
 ## Summary
 
@@ -308,6 +433,9 @@ There is one thing Files does not do that Pad does: it speaks only English. Its 
 - A copy goes into a temporary file and is renamed into place when complete, so no cancel or failure ever leaves half a file.
 - The freedesktop.org trash is shared by all desktops; an info file created with `CREATE_NEW` reserves the name, and each file system has its own trash.
 - Code that reads the time takes a `Clock`, so tests can stop it.
+- A tree of folders reads each folder when it is opened, and updates its nodes in place, inserting before removing, so nothing the user opened closes.
+- Files travel between programs as `text/uri-list` and `x-special/gnome-copied-files`. Java offers the first by itself; the second needs a name in the `SystemFlavorMap`.
+- A `TransferHandler` cannot see Shift; a `DragSourceListener` can. Drops from other programs are reported as copies, so the other program never deletes anything.
 - `LaunchFeedback` calls Xlib through the foreign function API to show the busy cursor; the application must allow native access in its manifest.
 - Code with one user stays with that user. Sometimes the best way to share a feature is to start the program that has it.
 
