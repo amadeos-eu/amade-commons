@@ -2,7 +2,7 @@
 
 An address book looks like the simplest program in this part: a list of names and a form. The difficult part is not on the screen. The addresses a user brings come from a phone, from Google, from Outlook and from Thunderbird, each in its own format and encoding, and the addresses the program writes should be readable by the next program the user tries, and by a phone that synchronises them. amade-contacts is a chapter about data that belongs to the user: open formats, files that other programs may change at any time, and the duty to keep what you do not understand.
 
-The program has about 5,200 lines of Java and 1,800 lines of tests. Nothing new moves into amade-commons with it, but its toolbar made the shared glyphs grow: five programs had drawn their own *Export*, *Turn* and *Full Screen*, and they now share them in `StandardGlyph` ([chapter 46](46-toolbars-and-printing.md#the-shared-symbols-standardglyph)).
+The program has about 5,200 lines of Java and 1,800 lines of tests. Its toolbar made the shared glyphs grow: five programs had drawn their own *Export*, *Turn* and *Full Screen*, and they now share them in `StandardGlyph` ([chapter 46](46-toolbars-and-printing.md#the-shared-symbols-standardglyph)). And its address books go into amade-commons as a read-only `ContactDirectory`, from which the Mailer completes addresses and the Calendar shows birthdays ([below](#contacts-in-other-programs)).
 
 ## What you build
 
@@ -194,6 +194,79 @@ A contact without a photo gets its initials in a circle. The colour comes from t
 !!! warning "Pitfall: a JTable asks its model at once"
     The import dialog has a table of columns whose model translates its column titles with the dialog's `Messages`. The table was a field: `private final JTable table = new JTable(columns);`. Field initialisers run before the constructor's body, so the `JTable` constructor asked the model for its column names while `msg` was still `null`. The program never showed the dialog with a CSV file during development, and the first test that built the dialog failed with a `NullPointerException`. Create Swing components that call back into your object in the constructor, after the fields they need.
 
+## Contacts in other programs
+
+An address book earns its keep when the other programs use it. The Mailer completes addresses from it while you type, and the Calendar shows the birthdays. Both read the same folder Contacts writes, through a small `ContactDirectory` in amade-commons:
+
+![The Mailer offers the people whose name, nickname or address has a word starting with "an"](images/contacts/mail-completion.png)
+
+### Reading without the library
+
+The Mailer and the Calendar need three things from a card: the name, the e-mail addresses and the birthday, plus the groups to put a whole group into *To*. ez-vcard would bring them all, at the price of a library in two more programs. `ContactDirectory` reads them with under 300 lines of its own instead: it unfolds the lines, drops group prefixes such as `item1.EMAIL`, unescapes `\,` and `\n`, decodes vCard 2.1's `QUOTED-PRINTABLE` and skips every property it does not know. It never writes. Contacts stays the only program that changes a contact, so there is one place that has to get the full format right.
+
+The directory is asked on every key press, so it must be cheap. It looks at the folder again at most every two seconds and reads only the files whose modification time changed, the same rule `AddressBooks.reload` follows ([above](#one-file-per-contact)):
+
+```java title="amade-commons · contacts/ContactDirectory.java"
+--8<-- "amade-commons/src/main/java/eu/amadeos/commons/contacts/ContactDirectory.java:rescan"
+```
+
+### Completing an address
+
+What the user typed is matched against the start of every word of the name, the nickname and the address, folded as in the search of Contacts, so `mull` finds *Müller* and `firma` finds `a.berger@firma.example`. Whole-name matches come first, then word matches, then addresses, and groups after the people. A group becomes one suggestion that puts in the preferred address of every member:
+
+```java title="amade-commons · contacts/ContactDirectory.java"
+--8<-- "amade-commons/src/main/java/eu/amadeos/commons/contacts/ContactDirectory.java:complete"
+```
+
+`AddressCompletion` is the Swing half. It listens to the field, finds the address under the caret between the commas, asks for suggestions and shows them in a popup under that address. Up and Down choose, Enter or Tab takes one, Escape closes the list. The popup is not focusable, so the caret stays in the field and the user simply goes on typing. A comma inside a quoted name is not a separator:
+
+```java title="amade-commons · contacts/AddressCompletion.java"
+--8<-- "amade-commons/src/main/java/eu/amadeos/commons/contacts/AddressCompletion.java:token"
+```
+
+`CommonsModule` binds a `ContactDirectory` for every program ([chapter 41](41-start-up.md#what-every-program-gets-commonsmodule)), so the Mailer only has to ask for it and install the completion on its three address fields:
+
+```java title="amade-mail · ui/compose/ComposeWindow.java"
+--8<-- "amade-mail/src/main/java/eu/amadeos/apps/mail/ui/compose/ComposeWindow.java:completion"
+```
+
+The completion leaves `Anna Berger <anna@example.org>, ` in the field, with a comma for the next address. Jakarta Mail's `InternetAddress.parse` skips the empty address after the last comma, and a test in the Mailer makes sure it stays that way.
+
+??? example "Test: names, words, addresses and groups"
+    ```java title="amade-commons · test/contacts/ContactDirectoryTest.java"
+    --8<-- "amade-commons/src/test/java/eu/amadeos/commons/contacts/ContactDirectoryTest.java:complete-test"
+    ```
+
+### Birthdays in the calendar
+
+`ContactDirectory.birthdays(from, to)` lists the birthdays in a range of days, with the age when the year is known. A birthday on 29 February is on 28 February in other years, and nobody has a birthday before they were born:
+
+```java title="amade-commons · contacts/ContactDirectory.java"
+--8<-- "amade-commons/src/main/java/eu/amadeos/commons/contacts/ContactDirectory.java:birthdays"
+```
+
+The Calendar turns them into day notes, appointments without a time. They must look like appointments to the views, the lists, Find and printing, and must not become part of the calendar file. So `CalendarService` keeps them out of its map and adds them only when it answers `occurrencesBetween` ([chapter 21](21-calendar.md#all-occurrences-of-a-period)). Their UIDs start with a prefix no iCalendar program uses, which is how the presenter recognises them:
+
+```java title="amade-calendar · service/CalendarService.java"
+--8<-- "amade-calendar/src/main/java/eu/amadeos/apps/calendar/service/CalendarService.java:birthdays"
+```
+
+```java title="amade-calendar · ui/main/MainPresenter.java"
+--8<-- "amade-calendar/src/main/java/eu/amadeos/apps/calendar/ui/main/MainPresenter.java:birthdays"
+```
+
+![October in the Calendar with three birthdays from the address book](images/contacts/calendar-birthdays.png)
+
+A birthday cannot be edited in the Calendar. A double-click says where it comes from and offers to open Contacts; the Appointment Editor leaves birthdays out of its list of the day, and the presenter ignores a change or a delete of one. *Display Settings* can hide them.
+
+??? example "Test: birthdays are day notes that cannot be edited"
+    ```java title="amade-calendar · test/ui/main/MainPresenterTest.java"
+    --8<-- "amade-calendar/src/test/java/eu/amadeos/apps/calendar/ui/main/MainPresenterTest.java:birthday-test"
+    ```
+
+!!! tip "Tip: `user.home` is not `$HOME`"
+    `XdgDirectories.system()` takes the home folder from the Java property `user.home`, which the JVM reads from the user database, not from the `HOME` variable. A screenshot or test that sets `HOME=/tmp/demo` still sees the real address books. Pass `-Duser.home=/tmp/demo` too, or build an `XdgDirectories` with the folder you want.
+
 ## What amade-commons gives Contacts
 
 | Part | Since | Contacts uses it for |
@@ -205,10 +278,11 @@ A contact without a photo gets its initials in a circle. The colour comes from t
 | `XdgDirectories`, `AppDirectories`, `PropertiesFile` | chapter 20 | the contacts folder, `contacts.properties` |
 | `DateChooser` | chapter 21 | the birthday in the editor |
 | `ToolIcon`, `StandardGlyph`, `ToolButtons` | chapter 30 | the toolbar; *Edit*, *Delete*, *Import*, *Export* and *Mail* are new in `StandardGlyph` |
+| `ContactDirectory`, `AddressCompletion`, `Recipient` | **this chapter** | not used by Contacts itself: they give its address books to the Mailer and the Calendar |
 
 ### And what stays in Contacts
 
-- **vCard reading and writing.** ez-vcard is a dependency of this program only. When the Mailer and the Calendar read the contacts to complete addresses and show birthdays, they need much less: names, e-mail addresses and birthdays, read only. That will be a small `ContactDirectory` in amade-commons with its own few lines of vCard parsing, so that the other programs do not carry the library.
+- **vCard reading and writing.** ez-vcard is a dependency of this program only. The Mailer and the Calendar need much less, read only, and get it from `ContactDirectory` with its own small reader ([above](#reading-without-the-library)).
 - **CSV and LDIF import.** No other program imports address tables.
 - **Merging.** It depends on what a contact is.
 
@@ -218,7 +292,8 @@ A contact without a photo gets its initials in a circle. The colour comes from t
 2. **Duplicates without an import.** Add *Contacts → Find Duplicates…* that lists pairs with the same e-mail address or the same phone digits and merges a pair on request. Which contact keeps its UID and file, and what happens to the other file?
 3. **Address labels.** Print the selected contacts' postal addresses on a sheet of labels, 3 × 8 on A4, with `PrintJobs` ([chapter 46](46-toolbars-and-printing.md)). How do you print the address in the order the country uses?
 4. **A second address book.** The repository already reads every folder as an address book. Add *Contacts → New Address Book…* and a way to move contacts between books. Why must moving be a write of the new file followed by a delete of the old one, and not the other way round?
-5. **Watch the folder.** Replace the reload on window activation with a `WatchService` on the folders. What happens when vdirsyncer writes fifty files in one second?
+5. **Recently used addresses.** The Mailer could also suggest addresses it sent to that are not in the address book. Where would you keep them, how would you rank them against contacts, and how does the user turn such an address into a contact?
+6. **Watch the folder.** Replace the reload on window activation with a `WatchService` on the folders. What happens when vdirsyncer writes fifty files in one second?
 
 ## Summary
 
@@ -230,3 +305,5 @@ A contact without a photo gets its initials in a circle. The colour comes from t
 - Guess the meaning of columns from their folded words, and show the guess so the user can correct it.
 - Merge imported records by a strong key such as the e-mail address, add what is missing, and never overwrite.
 - Hand mails, calls and maps to other programs with URIs, and have a fallback when no program takes them.
+- Let other programs read your data through a small read-only view in the shared library, and keep the writing in one program.
+- Show data that belongs to another program, such as birthdays, next to your own without saving it, and say where to change it.

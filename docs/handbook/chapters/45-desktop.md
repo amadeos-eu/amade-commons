@@ -1,6 +1,6 @@
 # 45. Desktop Integration
 
-A desktop program is not alone: it hands links to the web browser and files to the programs the user chose for them, tells the window manager that something is starting, keeps passwords where the desktop keeps secrets, and puts pictures on the clipboard. This chapter covers the parts of amade-commons that talk to the desktop around the program.
+A desktop program is not alone: it hands links to the web browser and files to the programs the user chose for them, tells the window manager that something is starting, keeps passwords where the desktop keeps secrets, puts pictures on the clipboard and reads the user's address books. This chapter covers the parts of amade-commons that talk to the desktop around the program.
 
 ## Opening links and files: DesktopLauncher
 
@@ -138,3 +138,56 @@ The command gets the password on its standard input and has 30 seconds to finish
     ```java title="amade-commons · test/desktop/DesktopTest.java"
     --8<-- "amade-commons/src/test/java/eu/amadeos/commons/desktop/DesktopTest.java:image"
     ```
+
+## The address books: ContactDirectory
+
+*Package `contacts` · introduced in [25. Contacts](25-contacts.md#contacts-in-other-programs), used by Mail and Calendar · source: [`ContactDirectory`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/contacts/ContactDirectory.java)*
+
+**What it is for.** Reading the contacts that amade-contacts keeps in `~/.local/share/amadeos/contacts`, one folder per address book and one vCard file per contact, from any program. It reads; it never writes.
+
+| Method | What it does |
+|---|---|
+| `ContactDirectory.of(xdg)` | The directory of the running user (`CommonsModule` binds one) |
+| `contacts()` | Every contact as a `ContactCard`: name, nickname, organization, e-mail addresses (preferred first), birthday, groups |
+| `complete(typed, limit)` | `Recipient`s for an address field: people whose name, nickname or address has a word starting with `typed`, then groups |
+| `birthdays(from, to)` | The birthdays in a range of days, as `BirthdayOn` with the date and the age |
+| `refresh()` | Looks at the folder again on the next call |
+| `Recipient.mailbox(name, address)` | `Anna Berger <anna@example.org>`, quoted where RFC 5322 needs it |
+
+**When to choose it.** Whenever a program needs a person's address or birthday. Ask for it in a constructor; do not read the vCard files yourself, and do not change them: amade-contacts is the program that writes contacts, and it keeps what it does not understand.
+
+**How it works.** A small reader of its own takes the few properties it needs from vCard 2.1, 3.0 and 4.0 and skips the rest, so the programs do not carry a vCard library. The folder is looked at again at most every two seconds, and only changed files are read again, so calling it on every key press is cheap:
+
+```java title="amade-commons · contacts/ContactDirectory.java"
+--8<-- "amade-commons/src/main/java/eu/amadeos/commons/contacts/ContactDirectory.java:rescan"
+```
+
+!!! warning "Pitfall: `HOME` does not move the address books"
+    `XdgDirectories.system()` uses the Java property `user.home`, not the `HOME` variable. A test or a screenshot with its own demo contacts must pass `-Duser.home=…` or build its own `XdgDirectories`.
+
+??? example "Test: names, words, addresses and groups"
+    ```java title="amade-commons · test/contacts/ContactDirectoryTest.java"
+    --8<-- "amade-commons/src/test/java/eu/amadeos/commons/contacts/ContactDirectoryTest.java:complete-test"
+    ```
+
+## Completing addresses: AddressCompletion
+
+*Package `contacts` · introduced in [25. Contacts](25-contacts.md#completing-an-address), used by Mail and Calendar · source: [`AddressCompletion`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/contacts/AddressCompletion.java)*
+
+**What it is for.** A list of suggestions under a text field that holds e-mail addresses separated by commas, as the user types.
+
+| Method | What it does |
+|---|---|
+| `AddressCompletion.install(field, directory, locale)` | Completes from the address books; starts reading them at once in the background |
+| `AddressCompletion.install(field, suggestions, locale)` | Completes with any function from the typed text to `Recipient`s, for tests or other sources |
+
+**When to choose it.** For every field where the user types e-mail addresses: To, Cc and Bcc in the Mailer, the *Mail To* address of a Calendar reminder.
+
+**How it works.** It listens to the field's document, takes the address under the caret between the commas, and shows the suggestions in a popup that cannot take the focus, so the user goes on typing. Up and Down choose, Enter or Tab takes one, Escape closes the list. A taken suggestion replaces what was typed and adds `, ` for the next address; a group puts in all of its members. Addresses that are in the field already are not offered again.
+
+```java title="amade-commons · contacts/AddressCompletion.java"
+--8<-- "amade-commons/src/main/java/eu/amadeos/commons/contacts/AddressCompletion.java:token"
+```
+
+!!! tip "Tip: Tab while the list is open"
+    The field turns off Swing's focus traversal keys so that Tab reaches the completion while the list is open, and moves the focus itself when the list is closed. Shift+Tab goes back as usual.

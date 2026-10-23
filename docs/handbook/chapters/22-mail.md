@@ -282,6 +282,7 @@ The diff of each program is mostly import lines, which is what a good move looks
 | `LanguageChooser` | chapter 21 | the language page of the options |
 | `PasswordStore`, `SecretToolPasswordStore` | **this chapter** | passwords and refresh tokens in the keyring |
 | `Texts` | **this chapter** | `tr(...)` everywhere, declared in `texts.properties` |
+| `ContactDirectory`, `AddressCompletion` | chapter 25 | completing To, Cc and Bcc from the address books ([how](25-contacts.md#completing-an-address)) |
 
 ### And what stays in Mail
 

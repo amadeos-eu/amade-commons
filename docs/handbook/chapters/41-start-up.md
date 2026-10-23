@@ -67,6 +67,7 @@ public static void main(String[] args) {
 | `DesktopLauncher` | Opening links and files | [45](45-desktop.md#opening-links-and-files-desktoplauncher) |
 | `PasswordStore` | The keyring, under the program's `id` | [45](45-desktop.md#passwords-passwordstore) |
 | `LocaleSettings`, `LocaleStore`, `Locale` | The language the program runs in, and its setting | [43](43-languages.md#the-language-setting-localesettings-and-languagechooser) |
+| `ContactDirectory` | The user's address books, read-only | [45](45-desktop.md#the-address-books-contactdirectory) |
 
 **When to choose it.** `launch` installs it for you. Build it yourself in tests that need the real wiring, with an `XdgDirectories` pointing into a temporary directory so that nothing touches the developer's own settings; the test below does that. Most tests need none of it and pass their collaborators by hand.
 
