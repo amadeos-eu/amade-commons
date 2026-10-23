@@ -16,8 +16,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 
 /**
- * The desktop theme as chosen in the Style Manager. Reads {@code ~/.config/amadeos/theme.conf} (theme id)
- * and {@code icon_theme.conf} (icon theme) and, once {@link #watch()} was called, follows changes to these
+ * The desktop theme as chosen in the desktop's Settings. Reads {@code ~/.config/amadeos/theme.conf} (theme
+ * id), {@code icon_theme.conf} (icon theme) and {@code font.conf} (font size 1 to 7) and, once {@link #watch()} was called, follows changes to these
  * files, so that applications switch theme together with the desktop. Applications only read the theme;
  * the desktop writes it.
  */
@@ -25,7 +25,8 @@ public final class ThemeStore implements AutoCloseable {
     private static final Logger LOG = LoggerFactory.getLogger(ThemeStore.class);
     public static final String THEME_FILE = "theme.conf";
     public static final String ICON_THEME_FILE = "icon_theme.conf";
-    private static final Set<String> WATCHED = Set.of(THEME_FILE, ICON_THEME_FILE);
+    public static final String FONT_FILE = "font.conf";
+    private static final Set<String> WATCHED = Set.of(THEME_FILE, ICON_THEME_FILE, FONT_FILE);
 
     private final Path configDirectory;
     private final ThemeRegistry registry;
@@ -74,7 +75,8 @@ public final class ThemeStore implements AutoCloseable {
         DesktopTheme theme = read();
         if (theme.equals(current)) return false;
         current = theme;
-        LOG.info("Desktop theme changed to {} (icons: {})", theme.id(), theme.iconTheme());
+        LOG.info("Desktop theme changed to {} (icons: {}, font size {})", theme.id(), theme.iconTheme(),
+                theme.fontSize());
         for (Consumer<DesktopTheme> listener : listeners) {
             try {
                 listener.accept(theme);
@@ -90,9 +92,19 @@ public final class ThemeStore implements AutoCloseable {
     private DesktopTheme read() {
         DesktopTheme theme = readLine(THEME_FILE).flatMap(registry::find).orElse(DesktopTheme.WARM_MOTIF);
         String icons = readLine(ICON_THEME_FILE).orElse(null);
-        return icons == null ? theme : theme.withIconTheme(icons);
+        if (icons != null) theme = theme.withIconTheme(icons);
+        return theme.withFontSize(readLine(FONT_FILE).map(ThemeStore::fontSize).orElse(DesktopTheme.DEFAULT_FONT_SIZE));
     }
     // --8<-- [end:read]
+
+    private static int fontSize(String value) {
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            LOG.debug("Not a font size: {}", value);
+            return DesktopTheme.DEFAULT_FONT_SIZE;
+        }
+    }
 
     private Optional<String> readLine(String fileName) {
         Path file = configDirectory.resolve(fileName);

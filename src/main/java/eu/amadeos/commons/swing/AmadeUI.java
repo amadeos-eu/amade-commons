@@ -8,6 +8,7 @@ import javax.swing.border.AbstractBorder;
 import javax.swing.border.Border;
 import javax.swing.plaf.ColorUIResource;
 import javax.swing.plaf.ComponentUI;
+import javax.swing.plaf.FontUIResource;
 import javax.swing.plaf.UIResource;
 import javax.swing.plaf.basic.BasicButtonUI;
 import javax.swing.plaf.basic.BasicToggleButtonUI;
@@ -32,6 +33,8 @@ import java.util.function.BiConsumer;
  */
 public final class AmadeUI {
     private static final String STYLER = "amade.styler";
+    /** Factor of each font size 1 to 7 on the look and feel's fonts, close to CDE's font groups. */
+    private static final float[] FONT_SCALES = {0.75f, 0.84f, 0.92f, 1.0f, 1.17f, 1.34f, 1.5f};
     private static volatile DesktopTheme theme = DesktopTheme.WARM_MOTIF;
 
     private AmadeUI() {
@@ -191,6 +194,32 @@ public final class AmadeUI {
         put("TabbedPane.foreground", text);
         put("TabbedPane.selected", softHighlight);
         put("TabbedPane.contentBorderInsets", new Insets(2, 2, 2, 2));
+
+        installFonts(fontScale());
+    }
+
+    /**
+     * The factor of the theme's font size on the look and feel's fonts: 1 at the default size 4. Components
+     * that choose their own font size multiply it with this factor to follow the desktop's font size.
+     */
+    public static float fontScale() {
+        return FONT_SCALES[theme.fontSize() - DesktopTheme.MIN_FONT_SIZE];
+    }
+
+    /** A font size of the application's own, scaled by {@link #fontScale()}. */
+    public static float scaled(float size) {
+        return Math.round(size * fontScale() * 2) / 2f;
+    }
+
+    // Starts from the look and feel's own fonts every time, so that sizes never compound.
+    private static void installFonts(float scale) {
+        UIDefaults defaults = UIManager.getLookAndFeelDefaults();
+        for (Object key : java.util.List.copyOf(defaults.keySet())) {
+            if (!(key instanceof String name) || !name.endsWith("font")) continue;
+            if (defaults.get(key) instanceof Font font) {
+                put(name, new FontUIResource(font.deriveFont((float) Math.round(font.getSize2D() * scale))));
+            }
+        }
     }
 
     // --8<-- [start:apply]

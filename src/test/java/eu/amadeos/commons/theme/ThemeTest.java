@@ -104,6 +104,31 @@ class ThemeTest {
         assertEquals(DesktopTheme.WARM_MOTIF, store.current());
     }
 
+    @Test
+    void storeReadsTheFontSize() throws Exception {
+        ThemeStore store = new ThemeStore(dir, new ThemeRegistry());
+        assertEquals(DesktopTheme.DEFAULT_FONT_SIZE, store.current().fontSize());
+
+        Files.writeString(dir.resolve(ThemeStore.FONT_FILE), "6\n");
+        assertTrue(store.reload(), "a new font size is a change of the theme");
+        assertEquals(6, store.current().fontSize());
+        assertEquals("warm-motif", store.current().id());
+
+        Files.writeString(dir.resolve(ThemeStore.FONT_FILE), "12");
+        assertTrue(store.reload());
+        assertEquals(DesktopTheme.MAX_FONT_SIZE, store.current().fontSize(), "sizes are clamped");
+        Files.writeString(dir.resolve(ThemeStore.FONT_FILE), "big");
+        store.reload();
+        assertEquals(DesktopTheme.DEFAULT_FONT_SIZE, store.current().fontSize());
+    }
+
+    @Test
+    void fontSizeSurvivesAnotherIconTheme() {
+        DesktopTheme theme = DesktopTheme.CDE_DESERT.withFontSize(2).withIconTheme("Adwaita");
+        assertEquals(2, theme.fontSize());
+        assertNotEquals(DesktopTheme.CDE_DESERT.withIconTheme("Adwaita"), theme);
+    }
+
     // --8<-- [start:follow]
     @Test
     void storeFollowsFileChanges() throws Exception {
