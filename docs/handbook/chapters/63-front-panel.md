@@ -9,6 +9,7 @@ The Front Panel is the bar at the bottom of the screen, built after CDE's: the c
 - How a window tells the window manager that it is a dock, and keeps space free for itself.
 - How the drawers fill themselves from desktop entries, so a package that installs an application also puts it into the panel.
 - How the panel starts programs, and shows the busy cursor while they start.
+- How the workspace buttons are renamed in place, as in CDE, and how the panel tells the other programs the names.
 - The status cells: small widgets that read the system in the background and appear only when they have something to show.
 
 ## Start-up
@@ -120,6 +121,18 @@ A Java program needs a second or two before its window appears, and a click with
 
 The same timer follows the workspace (switched with a key or the root menu, not only with the panel's buttons) and the theme ([chapter 62](62-style-manager.md#telling-the-desktop)). The panel's own clock, `launchedAt`, shows the watch for the first second even before the window manager has answered. The applications of this book announce their own starts the same way: `DesktopLauncher` in amade-commons sends the same message ([chapter 45](45-desktop.md#the-busy-cursor-launchfeedback)).
 
+## Workspace names
+
+The four workspace buttons are called *One* to *Four* in the panel's language until the user renames them. Renaming works as in CDE: a click on the button of the current workspace turns it into a text field. So the button's action listener first asks whether its workspace is the current one already:
+
+```java title="amadeos-system · panel-cde/widget/WorkspaceSwitcherDockWidget.java"
+--8<-- "amadeos-system/panel-cde/src/main/java/eu/amadeos/system/panel/cde/widget/WorkspaceSwitcherDockWidget.java:rename"
+```
+
+A double click on another button is then a switch and a rename, as in CDE. Each button sits in a small `CardLayout` with a `JTextField`; `startRename` shows the field in the button's colours with the old name selected, Return or leaving the field keeps the new name, Escape the old one, and an empty name gives back the default. The field needs the keyboard, which a dock does not get from the window manager, so the panel brings its window to the front and asks for the focus itself.
+
+`WorkspaceNames` in `base` keeps the names in `~/.config/amadeos/workspaces.conf`, one line per renamed workspace, cut to 24 characters on one line. The panel then publishes all four in the root window's `_NET_DESKTOP_NAMES`, the EWMH property for workspace names: `X11EwmhHelper.setDesktopNames` writes them NUL-separated in UTF-8. The window manager watches the property with a `PropertyNotify` and uses the names in its root menu; the Style Manager reads it for its Backdrop control ([chapter 62](62-style-manager.md#backdrop-and-screen)). So the panel is the only program that renames, and the others only read.
+
 ## Status cells
 
 The rightmost slot is a grid of small cells: the network and, while updates are waiting, the software updates. Sound, battery and Bluetooth are to follow. Each cell is a `StatusCell`, and the slot shows only those that report themselves `available`:
@@ -163,5 +176,6 @@ Dates follow the language too. The calendar's tooltip used a fixed English patte
 - Drawers fill themselves from desktop entries by category, so a package that installs a desktop entry also puts its program into the panel.
 - Programs start in a session of their own with their output in a log file, and the busy cursor shows until their window appears.
 - Drawers fill themselves again a few seconds after programs are installed or removed.
+- A click on the current workspace's button renames it; the panel stores the names and publishes them in `_NET_DESKTOP_NAMES` for the window manager and the Style Manager.
 - Status cells read in the background, show only when they have something to say, and take their services in the constructor so tests can fake them.
 - The panel's texts and dates are in the session's language, resolved once at start.
