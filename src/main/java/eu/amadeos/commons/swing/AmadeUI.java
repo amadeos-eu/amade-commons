@@ -26,6 +26,9 @@ import java.util.function.BiConsumer;
  * AmadeUI.follow(themes);              // switch together with the desktop
  * </pre>
  *
+ * <p>The theme's font size (Settings &gt; Font) scales the standard fonts; components with a font size of their
+ * own follow with {@link #scaled(float)}.
+ *
  * <p>Components that need colours beyond the standard ones register them with
  * {@link #style(JComponent, BiConsumer)}, so that they are repainted correctly after a theme change.
  * Never pass theme colours to {@code setBackground} directly: such colours would stay when the theme
@@ -203,7 +206,13 @@ public final class AmadeUI {
      * that choose their own font size multiply it with this factor to follow the desktop's font size.
      */
     public static float fontScale() {
-        return FONT_SCALES[theme.fontSize() - DesktopTheme.MIN_FONT_SIZE];
+        return fontScale(theme.fontSize());
+    }
+
+    /** The factor of a font size, {@link DesktopTheme#MIN_FONT_SIZE} to {@link DesktopTheme#MAX_FONT_SIZE}, e.g. for a preview. */
+    public static float fontScale(int fontSize) {
+        return FONT_SCALES[Math.clamp(fontSize, DesktopTheme.MIN_FONT_SIZE, DesktopTheme.MAX_FONT_SIZE)
+                - DesktopTheme.MIN_FONT_SIZE];
     }
 
     /** A font size of the application's own, scaled by {@link #fontScale()}. */
