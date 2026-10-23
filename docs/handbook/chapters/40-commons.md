@@ -70,6 +70,8 @@ A few rules hold for nearly every class. Knowing them makes the rest of the manu
 | To copy a picture to the clipboard | `ImageSelection` | [45](45-desktop.md#a-picture-on-the-clipboard-imageselection) |
 | The busy cursor while another program starts | `LaunchFeedback.announce` | [45](45-desktop.md#the-busy-cursor-launchfeedback) |
 | A password kept in the desktop keyring | `PasswordStore` | [45](45-desktop.md#passwords-passwordstore) |
+| The user's contacts: names, addresses, birthdays | `ContactDirectory` | [45](45-desktop.md#the-address-books-contactdirectory) |
+| Address completion in a To or Cc field | `AddressCompletion` | [45](45-desktop.md#completing-addresses-addresscompletion) |
 | A toolbar icon that follows the theme and scales | `ToolIcon`, `StandardGlyph` | [46](46-toolbars-and-printing.md#icons-drawn-in-code-toolicon) |
 | Toolbar buttons in the Motif style | `ToolButtons` | [46](46-toolbars-and-printing.md#toolbar-buttons-toolbuttons) |
 | Play, Pause, Stop and the rest | `TransportButtons`, `TransportGlyph` | [46](46-toolbars-and-printing.md#a-players-buttons-transportbuttons) |
@@ -102,6 +104,7 @@ A few rules hold for nearly every class. Knowing them makes the rest of the manu
 | `desktop` | `LaunchFeedback` | [20. Files](20-files.md#the-busy-cursor) |
 | `desktop` | `PasswordStore`, `SecretToolPasswordStore`, `SessionPasswordStore` | [22. Mail](22-mail.md#the-keyring) |
 | `desktop` | `ImageSelection` | [34. Screenshot](34-screenshot.md#the-pictures-folder-and-the-clipboard-move-into-amade-commons) |
+| `contacts` | `ContactDirectory`, `ContactCard`, `Recipient`, `AddressCompletion` | [25. Contacts](25-contacts.md#contacts-in-other-programs) |
 | `print` | `PaperSize`, `PrintJobs` | [23. WritePad](23-writepad.md#printing-moves-into-amade-commons) |
 | `process` | `CommandRunner`, `ProgramResult`, `ProgramMissingException`, `FinishedProcess` | [31. Imagescan](31-imagescan.md#the-command-runner-moves-into-amade-commons) |
 | `json` | `Json` | [33. Audio](33-audio.md#json) |

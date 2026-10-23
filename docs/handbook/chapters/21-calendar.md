@@ -316,8 +316,44 @@ Calendar is the first application that prints. WritePad is the second, and in ch
 
 Calendar has its texts in five languages, like Pad. It reads them through a small class of its own:
 
-```java title="amade-calendar · i18n/Texts.java"
---8<-- "amade-calendar/src/main/java/eu/amadeos/apps/calendar/i18n/Texts.java"
+```java title="amade-calendar · i18n/Texts.java (until chapter 22 moved it into amade-commons)"
+package eu.amadeos.apps.calendar.i18n;
+
+import eu.amadeos.commons.i18n.Messages;
+
+import java.util.Locale;
+
+/**
+ * The texts of the Calendar in the language {@code AmadeApplication} chose (the default locale), from
+ * {@code eu.amadeos.apps.calendar.messages*.properties}. Loaded on first use.
+ */
+public final class Texts {
+    /** Base name of the text files. */
+    public static final String BUNDLE = "eu.amadeos.apps.calendar.messages";
+    private static volatile Messages messages;
+
+    private Texts() {
+    }
+
+    public static Messages messages() {
+        Messages m = messages;
+        if (m == null || !m.locale().equals(Locale.getDefault())) {
+            m = Messages.load(Texts.class, BUNDLE, Locale.getDefault());
+            messages = m;
+        }
+        return m;
+    }
+
+    /** The text for the key. */
+    public static String tr(String key) {
+        return messages().get(key);
+    }
+
+    /** The text with {@code {0}}, {@code {1}}, ... filled in. */
+    public static String tr(String key, Object... arguments) {
+        return messages().format(key, arguments);
+    }
+}
 ```
 
 With a static import, a text is `tr("status.loaded", 6, 1)` anywhere in the program, in dialogs too, without passing a `Messages` object through every constructor. Pad gets its `Messages` through Guice instead (chapter 10); for a program with dozens of dialogs, the static helper is easier.
@@ -335,6 +371,7 @@ Look at it closely: apart from the name of the bundle, nothing in it is about Ca
 | `AppDirectories`, `PropertiesFile`, `XdgDirectories` | chapter 20 | the options file; the calendar in the data directory |
 | `DateChooser` | **this chapter** | the button next to every date field |
 | `LanguageChooser` | **this chapter** | the language page of the options |
+| `ContactDirectory`, `AddressCompletion` | chapter 25 | birthdays as day notes; completing the *Mail To* address ([how](25-contacts.md#birthdays-in-the-calendar)) |
 
 ### The third atomic write
 
