@@ -189,7 +189,7 @@ All monitors together still form one root window, so a maximized window covers a
 
 ## Workspaces and Front Panel: files the panel follows
 
-The *Workspaces* page names the four workspaces, the *Front Panel* page chooses an analog or a digital clock and whether the network and updates cells are shown. Neither page talks to the panel. They write `workspaces.conf` and `panel.conf`, and the panel follows both files with one `ConfigWatcher`, as the window manager follows `window.conf`. The settings of the panel are a record in `base`, beside the store that reads and writes them:
+The *Workspaces* page names the four workspaces, the *Front Panel* page chooses an analog or a digital clock, whether the network and updates cells are shown, and whether the busy light shows disk and network activity. Neither page talks to the panel. They write `workspaces.conf` and `panel.conf`, and the panel follows both files with one `ConfigWatcher`, as the window manager follows `window.conf`. The settings of the panel are a record in `base`, beside the store that reads and writes them:
 
 ```java title="amadeos-system · base/panel/PanelSettings.java"
 --8<-- "amadeos-system/base/src/main/java/eu/amadeos/system/base/panel/PanelSettings.java"

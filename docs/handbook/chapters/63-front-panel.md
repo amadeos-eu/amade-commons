@@ -8,7 +8,7 @@ The Front Panel is the bar at the bottom of the screen, built after CDE's: the c
 
 - How a window tells the window manager that it is a dock, and keeps space free for itself.
 - How the drawers fill themselves from desktop entries, so a package that installs an application also puts it into the panel.
-- How the panel starts programs, and shows the busy cursor while they start.
+- How the panel starts programs, shows the busy cursor while they start, and how the busy light above EXIT reads the disks and the network from `/proc`.
 - How the workspace buttons are renamed in place, as in CDE, and how the panel tells the other programs the names.
 - The status cells: small widgets that read the system in the background and appear only when they have something to show.
 
@@ -121,6 +121,16 @@ A Java program needs a second or two before its window appears, and a click with
 
 The same timer follows the workspace (switched with a key or the root menu, not only with the panel's buttons) and the theme ([chapter 62](62-settings.md#telling-the-desktop)). The panel's own clock, `launchedAt`, shows the watch for the first second even before the window manager has answered. The applications of this book announce their own starts the same way: `DesktopLauncher` in amade-commons sends the same message ([chapter 45](45-desktop.md#the-busy-cursor-launchfeedback)).
 
+### The busy light
+
+Above EXIT sits CDE's busy light, a slit of ten LED dashes. `ActivityLight` in the package `activity` draws it, and the same timer tells it what the window manager says: `setLaunching` with the flag above, and `setInstalling` while the updates cell installs. Everything else the light reads itself. A daemon thread of its own reads two files of `/proc` four times a second. `/proc/diskstats` counts the sectors of 512 bytes read and written per block device, and `ActivityCounters` sums the whole disks only, because a partition, a device-mapper volume or a loop device would count the same bytes twice. `/proc/net/dev` counts the bytes per interface, without `lo`, whose traffic never leaves the computer. Every two seconds the thread also looks through `/proc/*/comm` for a `dpkg`, so an install from a terminal shows too. Only the difference between two readings matters, so the rates need no calibration. The thread hands them to the EDT with `invokeLater`, and there one method decides what the ten dashes show:
+
+```java title="amadeos-system · panel-cde/activity/ActivityLight.java"
+--8<-- "amadeos-system/panel-cde/src/main/java/eu/amadeos/system/panel/cde/activity/ActivityLight.java:dashes"
+```
+
+The order is the priority: a start wins over an install, and an install wins over the meter. The levels are logarithmic steps (64 KB/s lights the first disk dash, 50 MB/s the fifth), and a level rises at once but falls by one dash per tick, so a burst of a quarter second stays visible like the glow of a real LED. The component repaints only when the pattern changes. Because the counters come from a `Path`, the tests feed it a directory with a fake `diskstats` and `net/dev`, and they call `tick` directly instead of waiting for the thread. Settings > Front Panel switches the disk and network halves off through `panel.conf` (`activity.meter`, [chapter 62](62-settings.md#workspaces-and-front-panel-files-the-panel-follows)).
+
 ## Workspace names
 
 The four workspace buttons are called *One* to *Four* in the panel's language until the user renames them. Renaming works as in CDE: a click on the button of the current workspace turns it into a text field. So the button's action listener first asks whether its workspace is the current one already:
@@ -175,6 +185,7 @@ Dates follow the language too. The calendar's tooltip used a fixed English patte
 - Widgets are slots with a life cycle and a theme. The panel draws CDE's look in the colours of the current theme.
 - Drawers fill themselves from desktop entries by category, so a package that installs a desktop entry also puts its program into the panel.
 - Programs start in a session of their own with their output in a log file, and the busy cursor shows until their window appears.
+- The busy light above EXIT blinks during a start, runs during an install and otherwise shows the disks and the network, read from `/proc` on a thread of its own.
 - Drawers fill themselves again a few seconds after programs are installed or removed.
 - A click on the current workspace's button renames it; the panel stores the names and publishes them in `_NET_DESKTOP_NAMES` for the window manager and Settings.
 - Status cells read in the background, show only when they have something to say, and take their services in the constructor so tests can fake them.
