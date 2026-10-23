@@ -47,7 +47,9 @@ The `Pen` holds the graphics, the colours and the shapes several glyphs share:
 
 *Package `swing` · introduced in [30. Fractals](30-fractals.md#the-toolbar-moves-into-amade-commons) · source: [`StandardGlyph`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/swing/StandardGlyph.java)*
 
-**What it is for.** The glyphs of the commands most programs share: `NEW`, `OPEN`, `SAVE`, `PRINT`, `CUT`, `COPY`, `PASTE`, `UNDO`, `REDO`, `FIND`, `ZOOM_IN`, `ZOOM_OUT`, `REFRESH`.
+**What it is for.** The glyphs of the commands most programs share: `NEW`, `OPEN`, `SAVE`, `PRINT`, `CUT`, `COPY`, `PASTE`, `UNDO`, `REDO`, `FIND`, `ZOOM_IN`, `ZOOM_OUT`, `REFRESH`; for lists of records `EDIT`, `DELETE`, `IMPORT`, `EXPORT` and `MAIL`; for pictures `ZOOM_FIT`, `ZOOM_ACTUAL`, `ROTATE_LEFT`, `ROTATE_RIGHT`, `FULL_SCREEN` and `LEAVE_FULL_SCREEN`.
+
+The second and third row came with the Contacts program: Imagescan, Image Viewer and Fractals each had drawn their own turn, fit and full-screen arrows, and Contacts needed *Export* like Fractals. Now all four use these.
 
 ```java title="amade-commons · swing/StandardGlyph.java"
 --8<-- "amade-commons/src/main/java/eu/amadeos/commons/swing/StandardGlyph.java:paint"
@@ -59,6 +61,12 @@ The `Pen` holds the graphics, the colours and the shapes several glyphs share:
 
 ```java title="amade-commons · swing/StandardGlyph.java"
 --8<-- "amade-commons/src/main/java/eu/amadeos/commons/swing/StandardGlyph.java:open"
+```
+
+*Import* and *Export* are one drawing: a tray with an arrow that points into it or out of it.
+
+```java title="amade-commons · swing/StandardGlyph.java"
+--8<-- "amade-commons/src/main/java/eu/amadeos/commons/swing/StandardGlyph.java:tray"
 ```
 
 ## Toolbar buttons: ToolButtons
