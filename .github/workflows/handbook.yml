@@ -30,6 +30,7 @@ env:
   VIDEO_COMMIT: 0aa0ed30d12a996b80aac2d86cbf1373354f5b8b
   SCREENSHOT_COMMIT: 5cf855040f5760c8a9d7788bb885da5da66fdccd
   CALCULATOR_COMMIT: 4010a3338ef4b5434922887929eec67287bf607c
+  IMAGEVIEWER_COMMIT: 8bebb867282e6cf49cd11199beb8a484e76b42ae
   # Part VI: the desktop modules.
   AMADEOS_SYSTEM_COMMIT: 3d3356a9d82241bb9566784235ce621cd224407e
 
@@ -100,6 +101,11 @@ jobs:
           repository: datazuul/amade-calculator
           ref: ${{ env.CALCULATOR_COMMIT }}
           path: amade-calculator
+      - uses: actions/checkout@v7
+        with:
+          repository: datazuul/amade-imageviewer
+          ref: ${{ env.IMAGEVIEWER_COMMIT }}
+          path: amade-imageviewer
       - uses: actions/checkout@v7
         with:
           repository: datazuul/amadeos-system
