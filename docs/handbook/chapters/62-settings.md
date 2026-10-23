@@ -1,6 +1,6 @@
 # 62. Settings
 
-Every application of this book follows the desktop theme ([chapter 42](42-look.md#following-the-desktop-themestore)). This chapter is the other end: Settings, amadeOS's successor of CDE's Style Manager (dtstyle), where the user picks the theme, the text size, the backdrop, keyboard, mouse, bell, screen saver, window behaviour and clipboard. It is a desktop module, so it starts without Guice and talks to X11. It writes the files the applications and the window manager follow, and it applies some settings by running the X server's own tools.
+Every application of this book follows the desktop theme ([chapter 42](42-look.md#following-the-desktop-themestore)). This chapter is the other end: Settings, amadeOS's successor of CDE's Style Manager (dtstyle), where the user picks the theme, the text size, the backdrop, the workspace names and the Front Panel, keyboard, mouse, bell, screen saver, window behaviour, clipboard and what starts at login, and, for the system, the keyring, the updates, the language and the time zone. It is a desktop module, so it starts without Guice and talks to X11. It writes the files the applications and the window manager follow, and it applies some settings by running the X server's own tools.
 
 ![Settings: a sidebar of controls, the page of the selected one on the right](images/desktop/settings.jpg)
 
@@ -10,10 +10,11 @@ Every application of this book follows the desktop theme ([chapter 42](42-look.m
 - How the desktop writes the theme and the text size that `ThemeStore` reads in every application, and why it writes atomically.
 - How the window manager and the panel hear about a new theme without watching files, and how the window manager follows `window.conf`.
 - Applying input settings with `xset`, `xmodmap` and `xrdb`, from pure functions that tests can check.
+- How pages that reach the keyring, the package manager and the time zone stay testable, and how a user switches off a service of the system without touching a file of a package.
 
 ## Pages, a sidebar and a search
 
-CDE's Style Manager was a row of buttons, each opening a small dialog. That works for a handful of controls, and amadeOS has more of them every release, so Settings shows them in a sidebar in three groups, *Appearance*, *Input and Sound* and *Desktop*, with the page of the selected control on the right. The controls are an enum, `SettingsCategory`, in CDE's order; each knows its group, whether amadeOS has it yet (Startup does not, and is shown dimmed with a tooltip) and the words a search finds it by:
+CDE's Style Manager was a row of buttons, each opening a small dialog. That works for a handful of controls, and amadeOS has more of them every release, so Settings shows them in a sidebar in four groups, *Appearance*, *Input and Sound*, *Desktop* and *System*, with the page of the selected control on the right. The controls are an enum, `SettingsCategory`, in CDE's order; each knows its group, whether amadeOS has it yet (a control that is not ready is shown dimmed with a tooltip) and the words a search finds it by:
 
 ```java title="amadeos-system · settings/SettingsCategory.java"
 --8<-- "amadeos-system/settings/src/main/java/eu/amadeos/system/settings/SettingsCategory.java"
@@ -137,6 +138,44 @@ The settings are a record in `base`, so that Settings and the window manager sha
 
 `WindowSettingsStore` reads and writes `~/.config/amadeos/window.conf` (`focus=click` or `pointer`, `raise.when.active`, `move.contents`), with the defaults for a missing or broken file. The window manager reads the store at start and follows the file with a `ConfigWatcher` ([chapter 44](44-settings.md#following-a-file-configwatcher)), so *Apply* takes effect on the next click. With pointer focus it selects `EnterNotify` on each frame and makes the window under the pointer active, ignoring the crossings caused by a move, a grab or a child window. A click into a window raises it only if *Raise window when made active* is on; a click on the title bar always does. With *Show contents during move*, the drag moves the frame itself with `XMoveWindow` instead of drawing the XOR outline CDE used.
 
+## Workspaces and Front Panel: files the panel follows
+
+The *Workspaces* page names the four workspaces, the *Front Panel* page chooses an analog or a digital clock and whether the network and updates cells are shown. Neither page talks to the panel. They write `workspaces.conf` and `panel.conf`, and the panel follows both files with one `ConfigWatcher`, as the window manager follows `window.conf`. The settings of the panel are a record in `base`, beside the store that reads and writes them:
+
+```java title="amadeos-system · base/panel/PanelSettings.java"
+--8<-- "amadeos-system/base/src/main/java/eu/amadeos/system/base/panel/PanelSettings.java"
+```
+
+The panel had a file of its own for the clock, `clock.conf`, written by the clock's context menu. `PanelSettingsStore` reads it when `panel.conf` has no clock yet, and the menu now writes `panel.conf`, so the page and the menu always agree. For the workspace names the panel stays the only writer of `_NET_DESKTOP_NAMES` ([chapter 63](63-front-panel.md#workspace-names)): when `workspaces.conf` changes, it reloads the names and publishes them again, and Settings never touches the root window.
+
+## Startup: switching off without changing a package
+
+The session runs the scripts of `/etc/amadeos/autostart.d` at login. They belong to packages, and a user must not edit them. So the Startup page writes the names of the scripts the user switched off into `~/.config/amadeos/startup.conf` (`disabled=40-amadeos-clipboard`), and `amadeos-session` skips them. Some scripts the desktop cannot do without, the input settings, the polkit agent and the screen lock; the page shows them checked and greyed out.
+
+![The Startup page](images/desktop/settings-startup.jpg)
+
+The user's own programs follow the freedesktop.org autostart convention: a desktop entry in `~/.config/autostart/` per program, the folder other desktops use too. *Add…* copies the entry of an installed program there, *Remove* deletes the copy. After the scripts, the session runs `amadeos-session autostart`, which launches the entries with `XdgDesktopEntry.launch()`, so field codes such as `%U` are handled like a start from the Front Panel, and skips entries whose program is gone.
+
+## The System pages: keyring, packages and time zone
+
+*Passwords*, *Updates* and *Language* reach beyond the files of the user: the login keyring on the session bus, the package manager through `pkexec`, the computer's time zone through `timedatectl`. The window gets all of that as one record, so a test hands in stand-ins and never needs a keyring, apt or root:
+
+```java title="amadeos-system · settings/SystemAccess.java"
+--8<-- "amadeos-system/settings/src/main/java/eu/amadeos/system/settings/SystemAccess.java"
+```
+
+The keyring is an interface in the session module, which already depends on dbus-java for the polkit agent:
+
+```java title="amadeos-system · session/keyring/Keyring.java"
+--8<-- "amadeos-system/session/src/main/java/eu/amadeos/system/keyring/Keyring.java"
+```
+
+![The Passwords page](images/desktop/settings-passwords.jpg)
+
+`SecretServiceKeyring` reads the default collection's `Locked` and `Items` properties through the freedesktop.org Secret Service, and locks with its `Lock` method. The Secret Service has no method to unlock with a password or to change one: a client asks for a *prompt*, and the keyring shows its own window. amadeOS wants the question in its own Motif dialog, so for these two it uses GNOME Keyring's own interface, `UnlockWithMasterPassword` and `ChangeWithMasterPassword`. The password travels as a Secret Service secret in a `plain` session on the user's own session bus, and the byte array is overwritten as soon as the call returns. A wrong password comes back as an error, which the page shows on its status line.
+
+All three pages do their work in a `SwingWorker`: reading the keyring, asking apt for the waiting updates, switching automatic security updates (which asks for the administrator's password) and setting the time zone. `apply()` returns a status line such as *saving…* at once, and the worker puts the result there when it is done.
+
 ## Five languages without Guice
 
 Settings speaks the five languages of the applications. Its texts are in `messages.properties` and its translations, with the menu letters marked by `&` ([chapter 43](43-languages.md#texts-messages)). What a tool program gets from Guice, Settings does itself in a small class: it resolves the language once, the way `CommonsModule` does for the applications, from the desktop language in `locale.conf` and then from the environment:
@@ -152,7 +191,7 @@ Everything with a name asks it: `SettingsCategory.label()` reads `category.keybo
 ## Exercises
 
 1. **Following the language switch.** Settings reads the language at start. Let it follow the panel's language button while it is open: `LocaleStore` can watch `locale.conf`. Which texts are already on the screen, and how do you replace them?
-2. **Startup.** Implement the Startup page: list the scripts of `/etc/amadeos/autostart.d` and `~/.config/amadeos/autostart.d` that `amadeos-session` runs at login, and let the user switch them off. How do you switch off a script of the system for one user without changing a file of a package?
+2. **Resuming the session.** Let the Startup page offer CDE's *Resume current session*: at logout, record the programs whose windows are open (`WM_COMMAND`, or the desktop entry of their `WM_CLASS`), and at the next login start them again from `amadeos-session autostart`. Which programs cannot be resumed that way, and what should the page say about them?
 3. **A theme editor.** Add *New…* to the Color page: pick a base colour, derive the rest with `DesktopTheme.fromBase`, show the palette and write `~/.config/amadeos/themes/<id>/theme.properties`.
 
 ## Summary
@@ -161,6 +200,8 @@ Everything with a name asks it: `SettingsCategory.label()` reads `category.keybo
 - One set of pages serves two views, the sidebar with a search and CDE's row of buttons; the controls are an enum with groups and translated keywords.
 - It writes `theme.conf` through `ThemeManager`, atomically, because a dozen programs read the file within milliseconds of a change.
 - The window manager and the panel also follow the root window property `_AMADEOS_THEME`; the applications follow the file alone.
-- The text size travels with the theme in `font.conf`; the window settings are a record in `base` that the window manager follows through `window.conf`.
+- The text size travels with the theme in `font.conf`; the window settings are a record in `base` that the window manager follows through `window.conf`, and the panel follows `panel.conf` and `workspaces.conf` the same way.
+- Startup switches off a script of the system in a file of the user's, `startup.conf`, and keeps the user's programs as desktop entries in `~/.config/autostart`.
+- The System pages get the keyring, the package manager and the time zone as one record, so tests hand in stand-ins; the keyring is unlocked through GNOME Keyring's own interface, in Settings' own dialog.
 - Settings of the X server are files first and commands second, so the session can apply them again at every login.
 - Without Guice, a small class resolves the language from `locale.conf` and loads the texts; status lines are built from translated parts.
