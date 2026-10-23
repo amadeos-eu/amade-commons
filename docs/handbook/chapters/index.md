@@ -48,7 +48,7 @@ Boxes point out things worth remembering:
 |---|---|---|
 | I. First steps | Pad, Web | Start-up, Model-View-Presenter, files and encodings, background work, five languages, desktop themes, Debian packages, opening links safely |
 | II. Office | Files, Calendar, Mail, WritePad, Calculator | Settings files, two-pane layouts, the trash, dates and calendars, printing, passwords in the keyring, network protocols, rich text and document formats, exact numbers and an expression parser |
-| III. Graphics and media | Fractals, Imagescan, Video, Audio, Screenshot | Drawing with Java2D, calculations on many threads, toolbars with drawn icons, external programs, native libraries, sound, the screen and the X11 clipboard |
+| III. Graphics and media | Fractals, Imagescan, Video, Audio, Screenshot, Image Viewer | Drawing with Java2D, calculations on many threads, toolbars with drawn icons, external programs, native libraries, sound, the screen and the X11 clipboard, photo metadata, map tiles and full screen |
 
 [Part IV](40-commons.md), the manual of amade-commons, comes after the applications. It describes the library by subsystem rather than by application: what each part is for, when to choose it, how it works, and which chapter introduced it. Part V shows how a program is packaged and shipped. [Part VI](60-desktop.md) turns to the desktop itself: the Front Panel, Settings, Software and System Information, and how to write a module of your own.
 
