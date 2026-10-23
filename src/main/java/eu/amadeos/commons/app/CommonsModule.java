@@ -3,6 +3,7 @@ package eu.amadeos.commons.app;
 import com.google.inject.AbstractModule;
 import eu.amadeos.commons.config.AppDirectories;
 import eu.amadeos.commons.config.XdgDirectories;
+import eu.amadeos.commons.contacts.ContactDirectory;
 import eu.amadeos.commons.desktop.DesktopLauncher;
 import eu.amadeos.commons.desktop.PasswordStore;
 import eu.amadeos.commons.desktop.SecretToolPasswordStore;
@@ -19,7 +20,8 @@ import java.util.concurrent.ExecutorService;
  * Bindings every amadeOS application gets: {@link AppInfo}, {@link AppDirectories}, the background
  * {@link ExecutorService} (virtual threads), {@link EdtExecutor} (also as the {@link Ui} executor), {@link ThemeStore}, {@link DesktopLauncher}
  * a {@link PasswordStore} in the keyring under the application id, and the language: {@link LocaleSettings}
- * and the {@link Locale} the application runs in.
+ * and the {@link Locale} the application runs in; and the address books as a read-only
+ * {@link ContactDirectory}.
  */
 public final class CommonsModule extends AbstractModule {
     private final AppInfo app;
@@ -58,6 +60,7 @@ public final class CommonsModule extends AbstractModule {
         bind(LocaleSettings.class).toInstance(locales);
         bind(LocaleStore.class).toInstance(locales.desktop());
         bind(Locale.class).toInstance(locales.locale());
+        bind(ContactDirectory.class).toInstance(ContactDirectory.of(xdg));
     }
     // --8<-- [end:configure]
 }
