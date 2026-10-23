@@ -85,6 +85,14 @@ The translation from settings to commands is a pure function, so tests check the
 
 The **Backdrop** control paints the root window: an image (fill, fit, stretch, tile or centre), a plain colour, or one of CDE's pattern backdrops, X bitmaps coloured with the backdrop colour of the theme. `WallpaperManager` in `base` stores the choice in `~/.config/amadeos/wallpaper.conf` and exports the picture as the root pixmap, so that programs with transparent windows see it too.
 
+As in CDE, each workspace can have a backdrop of its own. The dialog opens on the current workspace, which it reads from `_NET_CURRENT_DESKTOP`, and lists the four under the names the Front Panel published in `_NET_DESKTOP_NAMES` ([chapter 63](63-front-panel.md#workspace-names)), with *All workspaces* first. The file keeps the common backdrop as before (`wallpaper`, `mode`, `color`) and the same three keys under `workspace.2.` for each workspace with one of its own; `WallpaperManager.backdropOf(int)` returns a `Backdrop` record, falling back to the common one. The Style Manager paints the root window only when the workspace it changed is the current one. The window manager does the rest at each switch: it reads the file anew, because the Style Manager is another program, renders each backdrop once into a server pixmap and from then on only swaps pixmaps:
+
+```java title="amadeos-system · wm/x11/X11WindowManagerService.java"
+--8<-- "amadeos-system/wm/src/main/java/eu/amadeos/system/wm/x11/X11WindowManagerService.java:backdrop"
+```
+
+The `Backdrop` record is the key of the cache: when the user picks another picture, scaling or colour for a workspace, its record changes, the next switch renders the new one and the pixmap nobody uses any more is freed. *Refresh Desktop* in the root menu empties the cache, for a picture that changed on disk under the same name.
+
 The **Screen** control sets the screen saver of the session module: which saver (Qix, Swarm, Starfield, Floating Logo, Blank), after how many minutes it starts and whether it locks. The dialog previews the chosen saver while you pick it, and *Test* runs it on the whole screen.
 
 ## Five languages without Guice
