@@ -114,7 +114,7 @@ The orientation tag is one 16-bit number in the TIFF structure inside the JPEG's
 --8<-- "amade-imageviewer/src/main/java/eu/amadeos/apps/imageviewer/service/ExifOrientation.java:find"
 ```
 
-The test runs the real `jpegtran` on a picture whose left half is red and right half blue, with orientation 6, and a turn right by the user: a half turn in all, so blue must now be on the left.
+The test runs the real `jpegtran` on a picture whose left half is red and right half blue, with orientation 6, and a turn right by the user: a half turn in all, so blue must now be on the left. Where `jpegtran` is not installed, the test skips itself instead of failing, so building the application never needs it; to really run it, install `libjpeg-turbo-progs` (CI does). The package of the application only *recommends* it: without it, turning a JPEG still works on screen, and saving the turn says that `jpegtran` is missing.
 
 ```java title="amade-imageviewer · test · service/RotationSaverTest.java"
 --8<-- "amade-imageviewer/src/test/java/eu/amadeos/apps/imageviewer/service/RotationSaverTest.java:jpegtran-test"

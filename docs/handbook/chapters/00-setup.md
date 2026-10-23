@@ -114,6 +114,16 @@ A few tests open real windows and skip themselves on a machine without a screen.
 xvfb-run --auto-servernum ./gradlew test
 ```
 
+Some applications call other programs, and their tests run the real program. Those tests skip themselves when the program is missing, so the build still passes, but they only test something once it is installed. CI installs them; on your own machine, install them for the applications you work on:
+
+| Application | Program | Debian/Ubuntu package |
+|---|---|---|
+| amade-imageviewer | `jpegtran` (turns JPEGs without loss, [chapter 35](35-imageviewer.md)) | `libjpeg-turbo-progs` |
+
+```bash
+sudo apt install libjpeg-turbo-progs
+```
+
 The test report is in `build/reports/tests/test/index.html`: open it in a browser to see every test and its result.
 
 !!! tip "Tip"
@@ -177,6 +187,7 @@ The editor then appears in the *Text & Office* drawer of the Front Panel, and `a
 | `Cannot find a Java installation ... matching languageVersion=25` | No JDK 25 installed. Install it as above. |
 | `Could not resolve com.github.datazuul:amade-commons` | amade-commons is not checked out next to the application and JitPack cannot be reached. Clone `amade-commons` next to it. |
 | `Cannot expand ZIP .../amade-commons/build/libs/amade-commons-0.1.0.jar` when building the jar | The fat jar wants the library's jar before Gradle built it. Run `./gradlew jar` in amade-commons once, then again in the application. |
+| `JpegtranMissingException` in `RotationSaverTest` | amade-imageviewer from before the tests skipped themselves, and `jpegtran` is not installed. Install `libjpeg-turbo-progs` as above, or update the checkout. |
 | Window tests fail with odd screen sizes | An old virtual X server is still running on that display. Find it with `pgrep -a Xvfb` and end it. |
 | Everything is tiny on a high-resolution screen | Start with `-Dsun.java2d.uiScale=2`, e.g. `JAVA_TOOL_OPTIONS=-Dsun.java2d.uiScale=2 ./gradlew run`. |
 | The application starts in the wrong language | amadeOS programs follow their own language setting, then the desktop's, then `LANG`. Try `LANG=en_US.UTF-8 ./gradlew run`, and look into `~/.config/amadeos/pad/language.conf`. |
