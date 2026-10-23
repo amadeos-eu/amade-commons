@@ -41,6 +41,22 @@ class AmadeUITest {
     // --8<-- [end:stylers]
 
     @Test
+    void fontSizeScalesTheLookAndFeelFontsWithoutCompounding() {
+        AmadeUI.install(DesktopTheme.WARM_MOTIF);
+        float normal = UIManager.getFont("Label.font").getSize2D();
+        assertEquals(1f, AmadeUI.fontScale());
+
+        AmadeUI.install(DesktopTheme.WARM_MOTIF.withFontSize(7));
+        assertEquals(Math.round(normal * 1.5f), UIManager.getFont("Label.font").getSize2D());
+        AmadeUI.install(DesktopTheme.WARM_MOTIF.withFontSize(7));
+        assertEquals(Math.round(normal * 1.5f), UIManager.getFont("Label.font").getSize2D(), "installing twice");
+        assertEquals(18f, AmadeUI.scaled(12f));
+
+        AmadeUI.install(DesktopTheme.WARM_MOTIF);
+        assertEquals(normal, UIManager.getFont("Label.font").getSize2D());
+    }
+
+    @Test
     void colorDotHasTheRequestedSize() {
         assertEquals(10, AmadeUI.colorDot(Color.RED, 10).getIconWidth());
     }

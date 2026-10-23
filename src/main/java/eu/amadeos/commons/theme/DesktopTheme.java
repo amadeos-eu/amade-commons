@@ -16,6 +16,14 @@ public final class DesktopTheme {
      */
     public static final String DEFAULT_ICON_THEME = "NsCDE";
 
+    /**
+     * The font sizes, CDE's font groups 1 (smallest) to 7 (largest); size 4 keeps the look and feel's own
+     * fonts. Chosen in the desktop's Settings and stored in {@code ~/.config/amadeos/font.conf}.
+     */
+    public static final int MIN_FONT_SIZE = 1;
+    public static final int MAX_FONT_SIZE = 7;
+    public static final int DEFAULT_FONT_SIZE = 4;
+
     private final String id;
     private final String name;
     private final Color base;
@@ -33,6 +41,7 @@ public final class DesktopTheme {
     private final Color panelFrameHighlight;
     private final Color panelFrameShadow;
     private final List<Color> workspaceColors;
+    private final int fontSize;
 
     /** Number of workspace colours in a theme: CDE's palettes colour four workspaces, then repeat. */
     public static final int WORKSPACE_COLORS = 4;
@@ -64,6 +73,16 @@ public final class DesktopTheme {
                         Color inactiveTitleBg, Color textActive, Color textInactive, String iconTheme,
                         Color panelFrameBg, Color panelFrameHighlight, Color panelFrameShadow,
                         List<Color> workspaceColors) {
+        this(id, name, base, highlight, softHighlight, shadow, darkShadow, sunkenBg,
+                activeTitleBg, inactiveTitleBg, textActive, textInactive, iconTheme,
+                panelFrameBg, panelFrameHighlight, panelFrameShadow, workspaceColors, DEFAULT_FONT_SIZE);
+    }
+
+    private DesktopTheme(String id, String name, Color base, Color highlight, Color softHighlight,
+                         Color shadow, Color darkShadow, Color sunkenBg, Color activeTitleBg,
+                         Color inactiveTitleBg, Color textActive, Color textInactive, String iconTheme,
+                         Color panelFrameBg, Color panelFrameHighlight, Color panelFrameShadow,
+                         List<Color> workspaceColors, int fontSize) {
         this.id = Objects.requireNonNull(id, "id");
         this.name = Objects.requireNonNull(name, "name");
         this.base = Objects.requireNonNull(base, "base");
@@ -81,6 +100,7 @@ public final class DesktopTheme {
         this.panelFrameHighlight = panelFrameHighlight != null ? panelFrameHighlight : derivePanelFrameHighlight(this.panelFrameBg);
         this.panelFrameShadow = panelFrameShadow != null ? panelFrameShadow : derivePanelFrameShadow(this.panelFrameBg);
         this.workspaceColors = deriveWorkspaceColors(workspaceColors);
+        this.fontSize = Math.clamp(fontSize, MIN_FONT_SIZE, MAX_FONT_SIZE);
     }
 
     /**
@@ -105,7 +125,14 @@ public final class DesktopTheme {
     public DesktopTheme withIconTheme(String newIconTheme) {
         return new DesktopTheme(id, name, base, highlight, softHighlight, shadow, darkShadow, sunkenBg,
                 activeTitleBg, inactiveTitleBg, textActive, textInactive, newIconTheme,
-                panelFrameBg, panelFrameHighlight, panelFrameShadow, workspaceColors);
+                panelFrameBg, panelFrameHighlight, panelFrameShadow, workspaceColors, fontSize);
+    }
+
+    /** The same theme with another font size ({@link #MIN_FONT_SIZE} to {@link #MAX_FONT_SIZE}). */
+    public DesktopTheme withFontSize(int newFontSize) {
+        return new DesktopTheme(id, name, base, highlight, softHighlight, shadow, darkShadow, sunkenBg,
+                activeTitleBg, inactiveTitleBg, textActive, textInactive, iconTheme,
+                panelFrameBg, panelFrameHighlight, panelFrameShadow, workspaceColors, newFontSize);
     }
 
     // Built-in theme definitions
@@ -217,6 +244,8 @@ public final class DesktopTheme {
     public Color textActive() { return textActive; }
     public Color textInactive() { return textInactive; }
     public String iconTheme() { return iconTheme; }
+    /** The font size, {@link #MIN_FONT_SIZE} to {@link #MAX_FONT_SIZE}; {@link #DEFAULT_FONT_SIZE} by default. */
+    public int fontSize() { return fontSize; }
     public Color panelFrameBg() { return panelFrameBg; }
     public Color panelFrameHighlight() { return panelFrameHighlight; }
     public Color panelFrameShadow() { return panelFrameShadow; }
@@ -271,12 +300,13 @@ public final class DesktopTheme {
 
     @Override
     public boolean equals(Object o) {
-        return o instanceof DesktopTheme other && id.equals(other.id) && iconTheme.equals(other.iconTheme);
+        return o instanceof DesktopTheme other && id.equals(other.id) && iconTheme.equals(other.iconTheme)
+                && fontSize == other.fontSize;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, iconTheme);
+        return Objects.hash(id, iconTheme, fontSize);
     }
 
     @Override
