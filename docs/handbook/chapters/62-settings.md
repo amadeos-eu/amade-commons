@@ -1,6 +1,6 @@
 # 62. Settings
 
-Every application of this book follows the desktop theme ([chapter 42](42-look.md#following-the-desktop-themestore)). This chapter is the other end: Settings, amadeOS's successor of CDE's Style Manager (dtstyle), where the user picks the theme, the text size, the backdrop, the workspace names and the Front Panel, keyboard, mouse, bell, screen saver, window behaviour, clipboard and what starts at login, and, for the system, the keyring, the updates, the language and the time zone. It is a desktop module, so it starts without Guice and talks to X11. It writes the files the applications and the window manager follow, and it applies some settings by running the X server's own tools.
+Every application of this book follows the desktop theme ([chapter 42](42-look.md#following-the-desktop-themestore)). This chapter is the other end: Settings, amadeOS's successor of CDE's Style Manager (dtstyle), where the user picks the theme, the text size, the backdrop, the workspace names and the Front Panel, keyboard, mouse, bell, the resolution and arrangement of the monitors, screen saver, window behaviour, clipboard and what starts at login, and, for the system, the keyring, the updates, the language and the time zone. It is a desktop module, so it starts without Guice and talks to X11. It writes the files the applications and the window manager follow, and it applies some settings by running the X server's own tools.
 
 ![Settings: a sidebar of controls, the page of the selected one on the right](images/desktop/settings.jpg)
 
@@ -10,6 +10,7 @@ Every application of this book follows the desktop theme ([chapter 42](42-look.m
 - How the desktop writes the theme and the text size that `ThemeStore` reads in every application, and why it writes atomically.
 - How the window manager and the panel hear about a new theme without watching files, and how the window manager follows `window.conf`.
 - Applying input settings with `xset`, `xmodmap` and `xrdb`, from pure functions that tests can check.
+- Changing the resolution with `xrandr` safely, with a countdown back to the old layout, and how the desktop follows a new screen size.
 - How pages that reach the keyring, the package manager and the time zone stay testable, and how a user switches off a service of the system without touching a file of a package.
 
 ## Pages, a sidebar and a search
@@ -48,7 +49,7 @@ An exception from `apply` becomes a status line instead of a crash, and the page
 
 A button opens the same page in a `ControlDialog` with CDE's three buttons: *OK* applies and closes, *Apply* applies and stays, *Cancel* and the window's close button call `cancelled()`. The pages do not know in which view they are. The chosen view is kept in `~/.config/amadeos/settings.conf`.
 
-The jar has more entry points: `amadeos-settings mouse` opens the window at a control, and `amadeos-settings input` applies the keyboard, mouse and bell settings without a window; the session runs the latter at login from `/etc/amadeos/autostart.d/10-amadeos-input`. The package was called `amadeos-style` before; it `Provides`, `Replaces` and `Conflicts` that name, so an update removes the old package, and a small script `/usr/bin/amadeos-style` still starts Settings.
+The jar has more entry points: `amadeos-settings mouse` opens the window at a control, and `amadeos-settings input` applies the keyboard, mouse and bell settings without a window; the session runs the latter at login from `/etc/amadeos/autostart.d/10-amadeos-input`, and `amadeos-settings display-apply` from `15-amadeos-display` (see *Display* below). The package was called `amadeos-style` before; it `Provides`, `Replaces` and `Conflicts` that name, so an update removes the old package, and a small script `/usr/bin/amadeos-style` still starts Settings.
 
 ## Writing the theme
 
@@ -138,6 +139,54 @@ The settings are a record in `base`, so that Settings and the window manager sha
 
 `WindowSettingsStore` reads and writes `~/.config/amadeos/window.conf` (`focus=click` or `pointer`, `raise.when.active`, `move.contents`), with the defaults for a missing or broken file. The window manager reads the store at start and follows the file with a `ConfigWatcher` ([chapter 44](44-settings.md#following-a-file-configwatcher)), so *Apply* takes effect on the next click. With pointer focus it selects `EnterNotify` on each frame and makes the window under the pointer active, ignoring the crossings caused by a move, a grab or a child window. A click into a window raises it only if *Raise window when made active* is on; a click on the title bar always does. With *Show contents during move*, the drag moves the frame itself with `XMoveWindow` instead of drawing the XOR outline CDE used.
 
+## Display: the monitors through xrandr
+
+The *Display* page sets the resolution, refresh rate and rotation of each monitor, which monitors are on, where they stand next to each other and which is the primary one. Like the input settings, it does not talk to the X server's RandR extension through native calls. It runs `xrandr`, from the same `x11-xserver-utils` package, and keeps the pieces apart so that tests need no monitor:
+
+![The Display page](images/desktop/settings-display.jpg)
+
+- `Xrandr.parse` reads the text of `xrandr --query` into `Output` records: the connector, whether a monitor is connected and on, its place, its current mode and rotation, its size in millimetres and the `DisplayMode`s it offers with their refresh rates (`*` marks the current one, `+` the one the monitor asks for, sometimes separated by a space). The geometry in the header line is after rotation, so a monitor turned left reports `1080x1920`; the record keeps the mode before rotation and `OutputSetting.screenWidth()` turns it again.
+- `Xrandr.command` writes the opposite direction, one call for all monitors:
+
+```java title="amadeos-system · settings/display/Xrandr.java"
+--8<-- "amadeos-system/settings/src/main/java/eu/amadeos/system/display/Xrandr.java:command"
+```
+
+One call matters: two monitors that change places in two calls would overlap in between, and X refuses a layout in which two CRTCs need more screen than it has. The positions are moved so the leftmost and topmost monitor start at 0,0, whatever the user dragged.
+
+- `DisplayApplier` runs `xrandr` like `InputApplier` runs `xset`, with a protected `run` that a test replaces by a fake xrandr that answers `--query` with the layout it was last given.
+
+### Apply, then ask
+
+A wrong resolution can leave the user with a black monitor and no way to click *Cancel*. Every desktop answers this the same way, and so does this page: *Apply* sets the new layout, then asks whether to keep it, and without an answer the old layout comes back after 15 seconds. Only a kept layout is saved:
+
+```java title="amadeos-system · settings/DisplayPage.java"
+--8<-- "amadeos-system/settings/src/main/java/eu/amadeos/system/settings/DisplayPage.java:apply"
+```
+
+The question is a `KeepQuestion` the page asks, a modeless dialog with a Swing `Timer` by default; a test sets one that answers at once. `apply()` returns `null`, so the status line waits for the answer instead of saying *applied* too early.
+
+`DisplaySettingsStore` keeps one layout per set of connected monitors in `~/.config/amadeos/display.conf`, the key being their sorted names, `eDP-1+HDMI-1.HDMI-1=1920x1080 60.00 1920 0 normal primary`. A laptop then has one layout at the desk and another on the road. At login `amadeos-settings display-apply` asks xrandr which monitors are connected and sets the layout kept for exactly those, or nothing.
+
+### The desktop follows a new size
+
+Changing the resolution changes the size of the root window, and the window manager, the backdrop and the Front Panel had read it once at start. RandR tells every client that selected `StructureNotifyMask` on the root with a `ConfigureNotify` for the root window, and the window manager already selects it. It takes the new size from the event, because Xlib's `DisplayWidth` keeps the size the connection was opened with:
+
+```java title="amadeos-system · wm/x11/X11WindowManagerService.java"
+--8<-- "amadeos-system/wm/src/main/java/eu/amadeos/system/wm/x11/X11WindowManagerService.java:resize"
+```
+
+The Front Panel is a Swing window and gets no such event for the root. It checks the screen size in the poll it runs twice a second anyway (see *Telling the desktop* above) and places itself again when it differs. `X11EwmhHelper.screenWidth()` asks the server for the root window's geometry for the same reason the window manager reads the event:
+
+```java title="amadeos-system · panel-cde/AmadeDesktopPanel.java"
+--8<-- "amadeos-system/panel-cde/src/main/java/eu/amadeos/system/panel/cde/AmadeDesktopPanel.java:place"
+```
+
+!!! tip "Testing under Xvfb"
+    Xvfb offers RandR with one mode only, so a test cannot switch resolutions. It can shrink the screen: `xrandr --fb 320x240` makes the root smaller (with an error about the CRTC, which is expected), and the window manager's integration test checks that a window moves back onto the smaller screen.
+
+All monitors together still form one root window, so a maximized window covers all of them. Maximizing on one monitor needs the window manager to know the monitors' rectangles, which `xrandr --listmonitors` or RandR's `XRRGetMonitors` provide; see the exercises.
+
 ## Workspaces and Front Panel: files the panel follows
 
 The *Workspaces* page names the four workspaces, the *Front Panel* page chooses an analog or a digital clock and whether the network and updates cells are shown. Neither page talks to the panel. They write `workspaces.conf` and `panel.conf`, and the panel follows both files with one `ConfigWatcher`, as the window manager follows `window.conf`. The settings of the panel are a record in `base`, beside the store that reads and writes them:
@@ -192,7 +241,8 @@ Everything with a name asks it: `SettingsCategory.label()` reads `category.keybo
 
 1. **Following the language switch.** Settings reads the language at start. Let it follow the panel's language button while it is open: `LocaleStore` can watch `locale.conf`. Which texts are already on the screen, and how do you replace them?
 2. **Resuming the session.** Let the Startup page offer CDE's *Resume current session*: at logout, record the programs whose windows are open (`WM_COMMAND`, or the desktop entry of their `WM_CLASS`), and at the next login start them again from `amadeos-session autostart`. Which programs cannot be resumed that way, and what should the page say about them?
-3. **A theme editor.** Add *New…* to the Color page: pick a base colour, derive the rest with `DesktopTheme.fromBase`, show the palette and write `~/.config/amadeos/themes/<id>/theme.properties`.
+3. **One monitor at a time.** With two monitors a maximized window covers both. Let the window manager ask RandR for the monitors (`XRRGetMonitors`, or `xrandr --listmonitors` at each root `ConfigureNotify`) and maximize a window on the monitor that holds its centre. Where should the Front Panel go, and what does `_NET_WORKAREA` have to say then?
+4. **A theme editor.** Add *New…* to the Color page: pick a base colour, derive the rest with `DesktopTheme.fromBase`, show the palette and write `~/.config/amadeos/themes/<id>/theme.properties`.
 
 ## Summary
 
@@ -204,4 +254,5 @@ Everything with a name asks it: `SettingsCategory.label()` reads `category.keybo
 - Startup switches off a script of the system in a file of the user's, `startup.conf`, and keeps the user's programs as desktop entries in `~/.config/autostart`.
 - The System pages get the keyring, the package manager and the time zone as one record, so tests hand in stand-ins; the keyring is unlocked through GNOME Keyring's own interface, in Settings' own dialog.
 - Settings of the X server are files first and commands second, so the session can apply them again at every login.
+- The Display page sets all monitors in one `xrandr` call, saves only a layout the user kept within 15 seconds, one per set of monitors; the window manager and the panel follow the new root size themselves.
 - Without Guice, a small class resolves the language from `locale.conf` and loads the texts; status lines are built from translated parts.
