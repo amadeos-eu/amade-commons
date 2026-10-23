@@ -71,11 +71,13 @@ A category drawer puts the installed applications first and the panel's own entr
 --8<-- "amadeos-system/panel-cde/src/main/java/eu/amadeos/system/panel/cde/AmadeDesktopPanel.java:drawer"
 ```
 
-Some drawers mix both kinds. Tools has fixed entries for the desktop's own programs and then everything that calls itself Settings or Monitor, without the ones the fixed entries already start:
+Some drawers mix both kinds. Tools has fixed entries for the desktop's own programs and then everything that calls itself Settings or Monitor, without the ones that only start what a fixed entry already starts:
 
 ```java title="amadeos-system · panel-cde/AmadeDesktopPanel.java"
 --8<-- "amadeos-system/panel-cde/src/main/java/eu/amadeos/system/panel/cde/AmadeDesktopPanel.java:tools"
 ```
+
+`startsOnly` decides what a duplicate is: an entry whose `Exec` is just one of the fixed programs, with or without its directory and field codes such as `%U`, and without `Terminal=true`. So Debian's `xterm.desktop` (`Exec=xterm`) stays out next to *Terminal*, but a user's entry `Exec=xterm -title Backup -e backup.sh` is shown. Leaving out every entry of a fixed program would hide exactly the entries users write for their own scripts.
 
 That is how *amadeOS Software* and the installer of the live image appear in the screenshot: nobody wrote them into the panel. Software's desktop entry says `Categories=System;Settings;PackageManager;`, and the panel did the rest. For the applications of this book, the desktop entry is part of the package ([chapter 50](50-packaging.md#categories-and-the-front-panel-drawers)); the right `Categories` line is all it takes to get into the right drawer.
 
@@ -91,6 +93,8 @@ A drawer that is filled once is out of date as soon as Software installs a progr
 ```
 
 `ApplicationsWatcher` in `base` is a `WatchService` with a settle time, the same pattern as the package watcher of [chapter 64](64-software.md#knowing-when-something-changed). That is why each drawer above is built from *suppliers*, not lists: `createCategoryDrawer` and `fixedDrawer` keep a small `Runnable` per drawer that asks the suppliers again and hands the result to `DrawerDockWidget.update`, which closes an open drawer, replaces its entries and, for a category drawer, the program its button starts. A new graphics program is in the Graphics drawer a few seconds after its installation, and after its removal it is gone.
+
+A directory that does not exist yet is watched too. A new user has no `~/.local/share/applications` until the first desktop entry is saved there, and a `WatchService` can only watch a directory that exists. So `ApplicationsWatcher` watches the nearest existing parent for `ENTRY_CREATE`, ignores everything else created there, and registers the directory itself as soon as it appears. After registering a parent it looks again, because `mkdir -p` may have created the next level in the meantime.
 
 ## Starting programs
 
