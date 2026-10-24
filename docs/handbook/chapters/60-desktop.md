@@ -1,6 +1,6 @@
 # 60. The Desktop and Its Modules
 
-The applications of this book run on a desktop, and the desktop is Java too: the window manager that draws the frames, the Front Panel at the bottom of the screen, the login screen, the screen lock, Settings and the small tools around them. Part VI looks at that side. This chapter is the map: which modules there are, how they start one another, which of them use amade-commons and how, and how to run them on your own computer. The chapters after it build on that map. They take the smallest tool step by step (System Information), then Settings, the Front Panel and the Software program, and end with a checklist for writing a module of your own.
+The applications of this book run on a desktop, and the desktop is Java too: the window manager that draws the frames, the Front Panel at the bottom of the screen, the login screen, the screen lock, Settings and the small tools around them. Part VI looks at that side. This chapter is the map: which modules there are, how they start one another, which of them use amade-commons and how, and how to run them on your own computer. The chapters after it build on that map. They take the smallest tool step by step (System Information), then Settings, the Front Panel, the Software program, the clipboard manager and the window manager's Alt+Tab switcher, and end with a checklist for writing a module of your own.
 
 ![The amadeOS desktop with the Front Panel at the bottom](images/desktop/desktop-with-windows.jpg)
 
@@ -19,7 +19,7 @@ The desktop lives in the repository [amadeos-system](https://github.com/datazuul
 | Module | Package | What it is |
 |---|---|---|
 | `base` | in every desktop package | The library under the desktop modules: Xlib, PAM and libc through JNA, the EWMH helper, desktop entries, icons and backdrops, launching programs |
-| `wm` | `amadeos-wm` | The window manager: Motif frames, four workspaces, the root menu |
+| `wm` | `amadeos-wm` | The window manager: Motif frames, four workspaces, the root menu, the Alt+Tab switcher ([chapter 66](66-window-switcher.md)) |
 | `panel-cde` | `amadeos-panel-cde` | The CDE Front Panel: clock, calendar, workspace switch, drawers of applications, network and updates cells |
 | `dm` | `amadeos-dm` | The display manager: starts Xorg and the login greeter, authenticates through PAM, starts the session |
 | `session` | `amadeos-session` | The session (window manager, autostart, panel), the screen lock, the screen saver, the polkit agent, the clipboard manager ([chapter 65](65-clipboard.md)) |

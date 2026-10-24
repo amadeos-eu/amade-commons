@@ -34,7 +34,8 @@ The handbook grows with the applications: a chapter is written for an applicatio
 | [63. The Front Panel](63-front-panel.md) | amadeos-panel-cde | A Swing window as an EWMH dock, drawers from desktop entries that follow installations, starting programs, status cells, the panel's language |
 | [64. Software](64-software.md) | amadeos-software, amadeos-packages | A root helper behind pkexec and polkit, apt's progress, tests with a fake apt, watching for changes |
 | [65. The Clipboard Manager](65-clipboard.md) | amadeos-session clipboard | A program without a window: XFixes instead of polling, an X thread, a worker and the EDT, taking the clipboard over, `SAVE_TARGETS`, passwords left alone |
-| [66. A Module of Your Own](66-own-module.md) | | The checklist for a new module of amadeos-system |
+| [66. The Window Switcher](66-window-switcher.md) | amadeos-wm, Alt+Tab | Global keys and an active keyboard grab, previews read from the screen without a compositor, `_NET_WM_ICON`, a Swing popup the window manager does not manage |
+| [67. A Module of Your Own](67-own-module.md) | | The checklist for a new module of amadeos-system |
 
 ## Planned
 
