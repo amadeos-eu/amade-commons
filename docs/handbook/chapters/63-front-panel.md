@@ -145,13 +145,13 @@ A double click on another button is then a switch and a rename, as in CDE. Each 
 
 ## Status cells
 
-The rightmost slot is a grid of small cells: the network, the sound and, while updates are waiting, the software updates. Battery and Bluetooth are to follow. Each cell is a `StatusCell`, and the slot shows only those that report themselves `available`:
+The rightmost slot is a grid of small cells: the network, the sound, the battery on computers that have one and, while updates are waiting, the software updates. Bluetooth is to follow. Each cell is a `StatusCell`, and the slot shows only those that report themselves `available`:
 
 ```java title="amadeos-system · panel-cde/AmadeDesktopPanel.java"
 --8<-- "amadeos-system/panel-cde/src/main/java/eu/amadeos/system/panel/cde/AmadeDesktopPanel.java:status"
 ```
 
-The cells take their services in the constructor, `NmcliNetworkService` for the network, `PactlSoundService` for the sound and `AptPackageService` for the updates ([chapter 64](64-software.md)), and the actions to open the settings, so a test builds a cell with fakes. Their texts, like all of the panel's, are in `desktop.properties` and its translations ([below](#the-panels-language)).
+The cells take their services in the constructor, `NmcliNetworkService` for the network, `PactlSoundService` for the sound, `PowerSupplies` for the battery and `AptPackageService` for the updates ([chapter 64](64-software.md)), and the actions to open the settings, so a test builds a cell with fakes. Their texts, like all of the panel's, are in `desktop.properties` and its translations ([below](#the-panels-language)).
 
 The updates cell is the most careful one, because what it reads takes time. It reads the waiting updates on a thread of its own, twenty seconds after login so the session can settle first, then every thirty minutes, and whenever the installed packages or the package lists change:
 
@@ -189,6 +189,24 @@ A slider sends a value at every pixel it moves. Starting one `pactl` per value w
 
 `pendingVolume` holds the value that waits, or -1. Only the call that finds -1 hands a task to the action thread; every later value just replaces the waiting one, and the task sends whatever is newest when it runs. While a value waits, a status read from the server does not move the cell back. The mouse wheel uses the same method in steps of 5 %, and the middle button mutes. Settings > Front Panel can hide the cell (`cell.sound` in `panel.conf`). The tests use a `FakeService` that records the calls, and the parser tests feed it the output of a real `pactl`.
 
+### The battery cell
+
+The battery cell is the simplest one, and it shows how little a cell needs when the kernel does the work. Linux describes every power source in `/sys/class/power_supply`, one directory each with small text files: `type` (`Battery` or `Mains`), `status`, `capacity`, and the energy or charge with its rate. `PowerSupplies` in `base` reads them without privileges or a daemon. It leaves out the batteries of a wireless mouse or keyboard, which the kernel marks with the scope `Device`, and empty battery bays:
+
+```java title="amadeos-system · base/power/PowerSupplies.java"
+--8<-- "amadeos-system/base/src/main/java/eu/amadeos/system/base/power/PowerSupplies.java:batteries"
+```
+
+Firmware reports either energy (`energy_now`, µWh, with `power_now` in µW) or charge (`charge_now`, µAh, with `current_now` in µA); the ratio is the same, so `PowerSupplies` takes whichever is there and adds up several batteries as one. From the rate follows the time until empty or full; without a rate it falls back to `capacity` and gives no time. The result is a `BatteryStatus` record, or empty on a desktop computer, so the test is a temporary directory with a few files, as for System Information's `/proc` ([chapter 61](61-system-information.md#linuxs-own-files)).
+
+Reading sysfs takes microseconds, so `BatteryCell` reads once in its constructor and the slot is laid out right from the first frame; after that a thread reads every 20 seconds. Like the updates cell it lays out the slot only when the battery comes or goes:
+
+```java title="amadeos-system · panel-cde/status/BatteryCell.java"
+--8<-- "amadeos-system/panel-cde/src/main/java/eu/amadeos/system/panel/cde/status/BatteryCell.java:show"
+```
+
+`BatteryIcons` draws a lying battery filled to the charge, in green above 50 %, yellow down to 21 % and red at 20 % and below. The three colours are fixed rather than taken from the theme, because they carry a meaning, like the red of security updates. A bolt shows mains power. There is nothing to click; the tooltip gives the percentage and the time.
+
 ## The panel's language
 
 Everything the panel says is in `desktop.properties` and its four translations: the drawer titles and the fixed entries, the tooltips, the Application Manager and its tabs, the clock and the calendar, the workspace names. `PanelTexts` loads them once, in the language of the session. That is deliberate: the session exports the language of `locale.conf` as `LANG` at login, and the panel's language button says that the panel follows at the next login, like the terminals. So `PanelTexts` resolves the language from the environment only ([chapter 43](43-languages.md#which-language-localeresolution)), where Settings, a program started later, reads `locale.conf` itself ([chapter 62](62-settings.md#five-languages-without-guice)).
@@ -198,7 +216,7 @@ Dates follow the language too. The calendar's tooltip used a fixed English patte
 ## Exercises
 
 1. **A drawer per user.** Let users add their own entries to a drawer, stored in `~/.config/amadeos/panel.conf` with `PropertiesFile`. How does such an entry survive a refill?
-2. **A battery cell.** Write a `StatusCell` that reads `/sys/class/power_supply/BAT0/capacity` and `status` every minute and is `available` only when there is a battery. Test it with a temporary directory in place of `/sys`, as System Information does with `/proc` ([chapter 61](61-system-information.md#linuxs-own-files)).
+2. **A low battery warning.** Let `BatteryCell` show a dialog once when the battery falls to 10 % while it runs the computer, and not again until it has been charged. Where do you keep that the warning was given, and how do you test it without waiting for a real battery to run down?
 3. **Twice in one drawer.** WritePad says `Office;WordProcessor;`. Why does it appear once in the Text & Office drawer and not twice? Find the line that makes sure, and what would happen without it.
 
 ## Summary
