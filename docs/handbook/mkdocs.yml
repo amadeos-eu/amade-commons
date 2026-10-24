@@ -100,5 +100,6 @@ nav:
       - 63. The Front Panel: 63-front-panel.md
       - 64. Software: 64-software.md
       - 65. The Clipboard Manager: 65-clipboard.md
-      - 66. A Module of Your Own: 66-own-module.md
+      - 66. The Window Switcher: 66-window-switcher.md
+      - 67. A Module of Your Own: 67-own-module.md
   - The Road Ahead: roadmap.md
