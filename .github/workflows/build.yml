@@ -22,7 +22,7 @@ jobs:
           # The version is computed from the history since the last release tag.
           fetch-depth: 0
       - id: version
-        uses: datazuul/amadeos/.github/actions/version@main
+        uses: datazuul/amadeos-ci/version@main
       - uses: actions/setup-java@v6
         with:
           distribution: temurin
@@ -52,7 +52,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: datazuul/amadeos/.github/actions/release@main
+      - uses: datazuul/amadeos-ci/release@main
         with:
           version: ${{ needs.test.outputs.version }}
 
@@ -63,4 +63,4 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: datazuul/amadeos/.github/actions/check-commits@main
+      - uses: datazuul/amadeos-ci/check-commits@main

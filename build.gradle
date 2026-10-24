@@ -7,7 +7,7 @@ plugins {
 // composite build (includeBuild '../amade-commons') replace the JitPack dependency automatically.
 group = 'com.github.datazuul'
 // CI computes the version from the Conventional Commits since the last release tag and passes it as
-// -PappVersion (datazuul/amadeos scripts/ci/next-version.sh); a build without it is a local development build.
+// -PappVersion (datazuul/amadeos-ci scripts/next-version.sh); a build without it is a local development build.
 // Apps take released versions from JitPack by tag (com.github.datazuul:amade-commons:v1.0.0).
 version = findProperty('appVersion') ?: '0.0.0-dev.0'
 

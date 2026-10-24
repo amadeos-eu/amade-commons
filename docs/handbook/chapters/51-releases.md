@@ -33,7 +33,7 @@ Say you fix a bug in Pad, and the last release of amade-pad is 1.1.0.
 
 1. **You commit** with a subject in the Conventional Commits form: `fix(pad): keep the cursor after Undo`. You open a pull request against `develop`. CI tests it, builds a package `1.1.1-dev.203` for you to try, and checks that every commit subject has the right form.
 2. **The pull request is merged.** CI builds develop again: `amade-pad_1.1.1~dev.204_all.deb`. Once the apt repository exists, this lands in the suite `dev`.
-3. **Promote to release.** When enough has come together, you run *Actions → Promote → Run workflow* in the amadeos repository, with "to: release". release now holds your fix, and CI builds `1.1.1-pre.205`. This build goes into QEMU or onto a laptop for testing.
+3. **Promote to release.** When enough has come together, you run *Actions → Promote → Run workflow* in the amadeos-ci repository, with "to: release". release now holds your fix, and CI builds `1.1.1-pre.205`. This build goes into QEMU or onto a laptop for testing.
 4. **Promote to main.** The tests pass, so you run Promote again, with "to: main". CI builds `1.1.1`, tags the commit `v1.1.1` and publishes a GitHub Release with release notes and the package. Users get the update.
 
 If the test in step 3 finds a bug, fix it on develop and promote to release again. The next pre build carries the fix. Nothing is ever taken back from release.
@@ -60,10 +60,10 @@ What does "breaking" mean? For a library like amade-commons, it is a change that
 
 ## How the number is worked out
 
-CI runs a small script from the amadeos repository at the start of every build. It finds the newest tag `vX.Y.Z`, reads the commits after it and applies the table above:
+CI runs a small script from the repository [amadeos-ci](https://github.com/datazuul/amadeos-ci) at the start of every build. It finds the newest tag `vX.Y.Z`, reads the commits after it and applies the table above:
 
-```bash title="amadeos · scripts/ci/next-version.sh"
---8<-- "amadeos/scripts/ci/next-version.sh"
+```bash title="amadeos-ci · scripts/next-version.sh"
+--8<-- "amadeos-ci/scripts/next-version.sh"
 ```
 
 - A repository without any tag starts at **1.0.0**. The commits from before the switch, which are not Conventional Commits, do not matter: the first release is 1.0.0 whatever they say.
@@ -71,7 +71,7 @@ CI runs a small script from the amadeos repository at the start of every build. 
 - Builds on your own machine have no run number and become `-dev.0`, lower than any CI build of the same version.
 - Only plain `vX.Y.Z` tags count as releases.
 
-You can run it yourself in any repository, for example `../amadeos/scripts/ci/next-version.sh dev` in amade-calculator, to see what the next build would be called.
+You can run it yourself in any repository, for example `../amadeos-ci/scripts/next-version.sh dev` in amade-calculator, to see what the next build would be called.
 
 ### Why Debian packages use ~ instead of -
 
@@ -96,7 +96,7 @@ and uses `debVersion` in the control file and the file name of the package. CI p
 
 ## What CI does on each branch
 
-The build workflow of amade-calculator starts with the full history, because the script needs the tags and commits, and lets the `version` action of amadeos work out the number:
+The build workflow of amade-calculator starts with the full history, because the script needs the tags and commits, and lets the `version` action of amadeos-ci work out the number:
 
 ```yaml title="amade-calculator · .github/workflows/build.yml (job test)"
 --8<-- "amade-calculator/.github/workflows/build.yml:version"
@@ -164,14 +164,14 @@ Code excerpts in the handbooks are pinned to commits too, in `handbook.yml`. A f
 
 ## Promoting
 
-Promote runs in the amadeos repository, for all repositories at once or for a list of them:
+Promote runs in the amadeos-ci repository, for all repositories at once or for a list of them:
 
 - *Actions → Promote → Run workflow*, with "to" set to `release` or `main` and "repositories" empty for all of `repositories.list` (libraries first) plus amadeos.
-- Or on your own machine: `scripts/ci/promote.sh release amade-calculator`. It uses your own git credentials.
+- Or on your own machine: `scripts/promote.sh release amade-calculator` in a checkout of amadeos-ci. It uses your own git credentials.
 
 For each repository, the script checks that the move is a fast-forward and that the pins are releases (for main only). Then it pushes the branch, which starts the build there. Repositories without release branches are skipped. A ruleset on main and release blocks force pushes and deletion, and since a push that is not a fast-forward counts as a force push, GitHub itself makes sure these branches only move forward.
 
-The workflow needs a token that may push to all the repositories, workflow files included. Pushes made with the built-in token of a workflow would also start no further workflows. So the token is a fine-grained personal access token of the owner, stored as the secret `PROMOTE_TOKEN`, with *Contents* and *Workflows* set to read and write, in the amadeos repository only.
+The workflow needs a token that may push to all the repositories, workflow files included. Pushes made with the built-in token of a workflow would also start no further workflows. So the token is a fine-grained personal access token of the owner, stored as the secret `PROMOTE_TOKEN`, with *Contents* and *Workflows* set to read and write, in the amadeos-ci repository only.
 
 ### A hotfix that cannot wait
 
@@ -182,9 +182,9 @@ Sometimes release needs a fix while develop already holds half-finished work. Th
 Each repository needs a one-time setup, which the owner does with the GitHub CLI (`gh auth login` first):
 
 ```console
-$ cd amadeos
-$ scripts/ci/setup-release-branches.sh                       # all repositories
-$ scripts/ci/setup-release-branches.sh amade-calculator      # or just some
+$ cd amadeos-ci
+$ scripts/setup-release-branches.sh                       # all repositories
+$ scripts/setup-release-branches.sh amade-calculator      # or just some
 ```
 
 The script creates develop and release at the current main, makes develop the default branch and adds the ruleset. It skips repositories that have develop already, so it can run again. Merge open pull requests first, or change their base branch to develop afterwards.
@@ -197,7 +197,7 @@ Then, per repository, the build workflow gets the version, release and commit jo
 |---|---|
 | ship a bug fix | `fix(scope): ...`, pull request to develop, merge, then promote to release and to main |
 | add a feature | `feat(scope): ...`; the next release raises the minor version |
-| know the next version | `../amadeos/scripts/ci/next-version.sh release` in the repository |
+| know the next version | `../amadeos-ci/scripts/next-version.sh release` in the repository |
 | try the newest state | install the package of the latest develop build (Actions → Build → artifacts) |
 | test before a release | promote to release, test the `-pre` build in QEMU |
 | release everything | Promote to main with "repositories" empty |
