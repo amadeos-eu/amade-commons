@@ -6,7 +6,10 @@ plugins {
 // JitPack publishes under com.github.<owner>; using the same coordinates locally lets an app's
 // composite build (includeBuild '../amade-commons') replace the JitPack dependency automatically.
 group = 'com.github.datazuul'
-version = '0.1.0'
+// CI computes the version from the Conventional Commits since the last release tag and passes it as
+// -PappVersion (datazuul/amadeos-ci scripts/next-version.sh); a build without it is a local development build.
+// Apps take released versions from JitPack by tag (com.github.datazuul:amade-commons:v1.0.0).
+version = findProperty('appVersion') ?: '0.0.0-dev.0'
 
 java {
     toolchain {
@@ -82,7 +85,9 @@ def handbookVersion = {
     } catch (IOException ignored) {
         // No git: the plain version.
     }
-    stamp ? "${project.version}+${stamp}" : project.version
+    // Debian sorts 1.1.0~dev.0 before 1.1.0 (with - it would sort after it).
+    def debVersion = project.version.toString().replace('-', '~')
+    stamp ? "${debVersion}+${stamp}" : debVersion
 }
 
 tasks.register('handbookDeb', Exec) {

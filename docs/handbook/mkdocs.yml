@@ -93,6 +93,7 @@ nav:
       - 47. Programs, JSON and the Network: 47-programs-json-network.md
   - "Part V: Shipping Applications":
       - 50. Packaging and Installers: 50-packaging.md
+      - 51. Versions and Releases: 51-releases.md
   - "Part VI: Desktop Modules":
       - 60. The Desktop and Its Modules: 60-desktop.md
       - 61. System Information: 61-system-information.md
