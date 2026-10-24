@@ -145,13 +145,13 @@ A double click on another button is then a switch and a rename, as in CDE. Each 
 
 ## Status cells
 
-The rightmost slot is a grid of small cells: the network and, while updates are waiting, the software updates. Sound, battery and Bluetooth are to follow. Each cell is a `StatusCell`, and the slot shows only those that report themselves `available`:
+The rightmost slot is a grid of small cells: the network, the sound and, while updates are waiting, the software updates. Battery and Bluetooth are to follow. Each cell is a `StatusCell`, and the slot shows only those that report themselves `available`:
 
 ```java title="amadeos-system · panel-cde/AmadeDesktopPanel.java"
 --8<-- "amadeos-system/panel-cde/src/main/java/eu/amadeos/system/panel/cde/AmadeDesktopPanel.java:status"
 ```
 
-The cells take their services in the constructor, `NmcliNetworkService` for the network and `AptPackageService` for the updates ([chapter 64](64-software.md)), and the actions to open the settings, so a test builds a cell with fakes. Their texts, like all of the panel's, are in `desktop.properties` and its translations ([below](#the-panels-language)).
+The cells take their services in the constructor, `NmcliNetworkService` for the network, `PactlSoundService` for the sound and `AptPackageService` for the updates ([chapter 64](64-software.md)), and the actions to open the settings, so a test builds a cell with fakes. Their texts, like all of the panel's, are in `desktop.properties` and its translations ([below](#the-panels-language)).
 
 The updates cell is the most careful one, because what it reads takes time. It reads the waiting updates on a thread of its own, twenty seconds after login so the session can settle first, then every thirty minutes, and whenever the installed packages or the package lists change:
 
@@ -166,6 +166,28 @@ The updates cell is the most careful one, because what it reads takes time. It r
 ```
 
 The number on the cell is red when security updates are among them. A click opens a menu with the first eight updates, *Install all*, *Install security updates only*, *Check now*, and *Show updates*, which starts the Software program on its Updates tab.
+
+### The sound cell
+
+The sound cell shows a loudspeaker with one to three waves for the volume, and an X when the output is muted. Its menu has a volume slider, the outputs and the inputs:
+
+![The sound cell's menu: volume slider with mute button, outputs, inputs and Mute microphone](images/desktop/sound-cell.jpg)
+
+amadeOS plays sound through PipeWire, and PipeWire also speaks the PulseAudio protocol (`pipewire-pulse`). So the cell needs no library: `PactlSoundService` in `base` runs `pactl`, the PulseAudio command line client, the way the network cell runs `nmcli`. `pactl list sinks` lists the outputs and `pactl list sources` the inputs, each as a block of indented lines. The parser keeps only the fields of the device itself, one tab deep, and leaves out the *monitors*: every output has a source of that name through which a program can record what it plays, which is no microphone:
+
+```java title="amadeos-system · base/sound/Pactl.java"
+--8<-- "amadeos-system/base/src/main/java/eu/amadeos/system/base/sound/Pactl.java:devices"
+```
+
+`pactl` runs with `LC_ALL=C.UTF-8`, so the field names are English whatever the session's language, and the descriptions keep their accents. Volume and mute are set on `@DEFAULT_SINK@`, the output in use, so they follow when the user picks another device. Picking one sets the default with `pactl set-default-sink` and moves the streams that are playing with `move-sink-input`, because WirePlumber moves only the streams that follow the default, not those a program sent to one device. `pactl subscribe` reports every change, also those another program makes; the cell refreshes on the lines about devices and the server and ignores the many about single streams.
+
+A slider sends a value at every pixel it moves. Starting one `pactl` per value would queue dozens of processes, and the volume would trail behind the mouse. So the cell shows the new volume at once and keeps only the newest value to send:
+
+```java title="amadeos-system · panel-cde/status/SoundCell.java"
+--8<-- "amadeos-system/panel-cde/src/main/java/eu/amadeos/system/panel/cde/status/SoundCell.java:volume"
+```
+
+`pendingVolume` holds the value that waits, or -1. Only the call that finds -1 hands a task to the action thread; every later value just replaces the waiting one, and the task sends whatever is newest when it runs. While a value waits, a status read from the server does not move the cell back. The mouse wheel uses the same method in steps of 5 %, and the middle button mutes. Settings > Front Panel can hide the cell (`cell.sound` in `panel.conf`). The tests use a `FakeService` that records the calls, and the parser tests feed it the output of a real `pactl`.
 
 ## The panel's language
 
@@ -189,4 +211,5 @@ Dates follow the language too. The calendar's tooltip used a fixed English patte
 - Drawers fill themselves again a few seconds after programs are installed or removed.
 - A click on the current workspace's button renames it; the panel stores the names and publishes them in `_NET_DESKTOP_NAMES` for the window manager and Settings.
 - Status cells read in the background, show only when they have something to say, and take their services in the constructor so tests can fake them.
+- The sound cell talks to PipeWire through `pactl`, follows `pactl subscribe`, and sends only the newest volume while the slider moves.
 - The panel's texts and dates are in the session's language, resolved once at start.
