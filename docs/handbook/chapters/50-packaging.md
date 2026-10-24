@@ -84,7 +84,7 @@ The desktop entry and the metainfo are files in `packaging/`, copied unchanged. 
 ```
 
 - **Package** is the name for `apt install` and `dpkg -l`. The amade programs use their repository name.
-- **Version** comes from `version` in `build.gradle`. apt installs a package over an installed one only when the version is higher, so raise it with every release you hand out. `0.1.0-SNAPSHOT` sorts *after* `0.1.0` for dpkg, not before; for a pre-release write `0.1.0~beta1`, which sorts before `0.1.0`.
+- **Version** comes from `version` in `build.gradle`. apt installs a package over an installed one only when the version is higher, so it must grow with every release. `0.1.0-SNAPSHOT` sorts *after* `0.1.0` for dpkg, not before; for a pre-release write `0.1.0~beta1`, which sorts before `0.1.0`. CI now works the version out from the commits and writes it the Debian way ([chapter 51](51-releases.md)).
 - **Section** sorts the package in package managers: `graphics`, `editors`, `mail`, `sound`, `video`, `web`, `utils`, `games`.
 - **Architecture: all** says that the package runs on every processor. A jar does; a package with a native library would need one package per architecture.
 - **Depends** names what must be installed first. `openjdk-25-jre | java-runtime (>= 25)` takes Debian's OpenJDK or any package that provides a Java 25 runtime. Name every other program you start: Imagescan depends on `sane-utils` for `scanimage`, Video on `libmpv2`.
@@ -275,13 +275,13 @@ An MSI under 30 MB has no Java runtime inside and would not run on a machine wit
 
 ## Checklist for a new program
 
-1. `version`, `jar` with `Main-Class` and the signature excludes, as above.
+1. `version` from `appVersion` and `debVersion` ([chapter 51](51-releases.md)), `jar` with `Main-Class` and the signature excludes, as above.
 2. A 48 × 48 icon in `src/main/resources/icons/<name>.png`, set as the window icon, and `packaging/windows/<name>.ico` with the sizes 16 to 256.
 3. `packaging/<name>.desktop` with names in five languages, `Icon=<name>`, `Exec=/usr/bin/<name> %F` and the categories of the drawer it belongs to. `desktop-file-validate` reports no errors.
 4. `packaging/eu.amadeos.apps.<name>.metainfo.xml` (or `eu.amadeos.games.<name>`) with names, summaries and descriptions in five languages, the screenshot address and an OARS rating. `appstreamcli validate --no-net` passes.
 5. `docs/screenshots/<name>.png`, taken on amadeOS with the program in use.
 6. The tasks `deb` (with the right `Section` and `Depends`), `installToAmadeOs` and `windowsInstaller` with a new upgrade UUID.
-7. The CI jobs for both packages, with the file list of the package check.
+7. The CI jobs for both packages, with the file list of the package check, and the version, release and commit jobs of [chapter 51](51-releases.md).
 8. The repository name in `amadeos/repositories.list`.
 9. Install the package on amadeOS: the program is in its drawer with its icon, starts, and Software shows its description and screenshot.
 
@@ -290,13 +290,13 @@ An MSI under 30 MB has no Java runtime inside and would not run on a machine wit
 1. **More icon sizes.** Install the icon in 32, 64 and 128 pixels as well, made by the same tool. What changes in the `deb` task, and which size does Software take now?
 2. **A smaller installer.** Build the Windows installer with a runtime from `jlink` that has only the modules Fractals needs. `jdeps --print-module-deps` on the fat jar tells you which. How much smaller is the MSI, and what happens when a module is missing?
 3. **A man page.** Debian programs that can be started from a terminal have a manual page. Write a short one for `amade-fractals` (in the `man` format or with `pandoc` from Markdown), install it as `/usr/share/man/man1/amade-fractals.1.gz`, and check it with `man amade-fractals`.
-4. **The version in one place.** The version is in `build.gradle`, and the metainfo could list releases (`<releases><release version="0.1.0" date="..."/></releases>`), which Software shows as "what's new". Let the `deb` task write the current version into the staged metainfo file instead of keeping it by hand.
+4. **A desktop entry check in CI.** Install `desktop-file-utils` in the build job and let `desktop-file-validate` check `packaging/amade-fractals.desktop`. Which mistakes does it catch that the Front Panel would silently ignore?
 5. **Package checks with lintian.** Run `lintian` on the package. Which of its complaints matter for a program that is part of amadeOS, and which are about rules for packages in Debian itself?
 
 ## Summary
 
 - One fat jar holds the program and its libraries; leave the signatures of signed libraries out.
-- A Debian package is the installed files plus `DEBIAN/control`. The amade programs put the jar into `/opt/<name>`, a two-line start script into `/usr/bin`, and the desktop entry, the 48-pixel icon, the AppStream metadata and the licence into `/usr/share`. `dpkg-deb --root-owner-group --build` packs it; raise the version with every release.
+- A Debian package is the installed files plus `DEBIAN/control`. The amade programs put the jar into `/opt/<name>`, a two-line start script into `/usr/bin`, and the desktop entry, the 48-pixel icon, the AppStream metadata and the licence into `/usr/share`. `dpkg-deb --root-owner-group --build` packs it. CI sets the version ([chapter 51](51-releases.md)).
 - The desktop entry's `Categories` decide the Front Panel drawer; its `Icon` is a name looked up in the `hicolor` icon theme.
 - AppStream metadata gives Software the name, summary, description and screenshot in five languages. The same files will feed the catalogue of an amadeOS package repository.
 - `installToAmadeOs` and a line in `repositories.list` put a program into the amadeOS image; `buildDistribution.sh` builds them all.
