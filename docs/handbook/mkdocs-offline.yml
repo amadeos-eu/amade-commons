@@ -3,6 +3,10 @@
 # directories, search without a server, and the fonts and scripts the pages load from the web
 # (Mermaid) stored next to the pages.
 INHERIT: mkdocs.yml
+# No site URL: the privacy plugin then points the pages and the theme's script at the stored copies
+# with relative paths. With the URL of the published handbook, the Mermaid script was looked up there,
+# so the diagrams stayed code without a network.
+site_url: ""
 use_directory_urls: false
 plugins:
   - search
