@@ -10,7 +10,7 @@
 # which must be checked out next to amade-commons. The excerpts are taken at the commits pinned in
 # .github/workflows/handbook.yml, as CI does, not from the checkouts as they are: an application's
 # main branch may already have moved or removed code a chapter shows. Missing commits are fetched.
-# MkDocs comes from requirements.txt, installed into .venv here if no mkdocs is on the PATH. Prints the
+# MkDocs comes from requirements.txt, installed into .venv here if no complete mkdocs is on the PATH. Prints the
 # path of the package as its last line.
 set -euo pipefail
 
@@ -23,7 +23,9 @@ workflow="$commons_dir/.github/workflows/handbook.yml"
 package=amade-app-handbook
 
 mkdocs=mkdocs
-if ! command -v mkdocs >/dev/null 2>&1; then
+# The mkdocs on the PATH only counts when python3 also has the theme and extensions of mkdocs.yml: the
+# plain Debian package mkdocs comes without them.
+if ! command -v mkdocs >/dev/null 2>&1 || ! python3 -c 'import material, pymdownx' 2>/dev/null; then
     if [ ! -x "$handbook_dir/.venv/bin/mkdocs" ]; then
         python3 -m venv "$handbook_dir/.venv"
         "$handbook_dir/.venv/bin/pip" install --quiet -r "$handbook_dir/requirements.txt"
