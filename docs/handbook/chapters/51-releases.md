@@ -173,6 +173,77 @@ For each repository, the script checks that the move is a fast-forward and that 
 
 The workflow needs a token that may push to all the repositories, workflow files included. Pushes made with the built-in token of a workflow would also start no further workflows. So the token is a fine-grained personal access token of the owner, stored as the secret `PROMOTE_TOKEN`, with *Contents* and *Workflows* set to read and write, in the amadeos-ci repository only. [Setting it up once](#the-token-for-promote) shows how to create it.
 
+### Step by step
+
+A promotion always goes in two rounds: first to release, which gives a `-pre` build to test, then to main, which makes the release. Here it is with amade-commons and amade-calculator, the first two repositories, as the example.
+
+**Before you start**
+
+1. Merge or close the open pull requests of the repositories, so that develop has everything that should go out.
+2. Check that the last Build on develop is green in each repository (*Actions → Build*, branch develop).
+3. Have a look at what will be released: `../amadeos-ci/scripts/next-version.sh release` in a checkout of the repository prints the version, `../amadeos-ci/scripts/release-notes.sh "$(git describe --tags --abbrev=0 2>/dev/null)" HEAD` the notes (empty before the first release, which then takes the whole history).
+
+**Round 1: develop to release**
+
+1. Open the amadeos-ci repository on github.com, tab **Actions**, workflow **Promote** on the left.
+2. **Run workflow** (on the right), branch `main` (Promote itself always runs from main).
+3. **Promote to:** `release`. **Repositories:** `amade-commons amade-calculator`, separated by spaces. Leave it empty to promote all of them.
+4. **Run workflow**, and open the run that appears. Its log has one block for each repository, with the commits that move and the new position of the branch:
+
+    ```console
+    == amade-commons
+      4f2c81d feat(texts): plural forms
+      release moved to 4f2c81d0a9
+    == amade-calculator
+      9b03e7c fix(programmer): shift by 64 bits
+      release moved to 9b03e7c412
+    ```
+
+    `release is up to date` means there was nothing new; `no develop or release branch yet` means the repository is not set up yet and was skipped.
+
+5. Each push starts the Build workflow on release in that repository. When it is green, its version is `1.0.0-pre.N` and the package artifact is called `amade-calculator_1.0.0~pre.N_all.deb`.
+6. Install that package in QEMU (or from the testing suite once the apt repository exists) and try it. If you find a bug, fix it on develop and run round 1 again.
+
+**Round 2: release to main**
+
+1. Same place: **Actions → Promote → Run workflow**, but **Promote to:** `main`, with the same repositories.
+2. Promote handles the libraries first. For amade-commons it pushes main and then waits until the Build on main has tagged the release:
+
+    ```console
+    == amade-commons
+      main moved to 4f2c81d0a9
+      amade-commons is released as v1.0.0
+    == amade-calculator
+      main moved to 9b03e7c412
+    ```
+
+    Before moving amade-calculator, it checks that the commons pin of the calculator is in a release, which v1.0.0 now is. For programs it does not wait: their Build on main tags them a few minutes after the run has ended.
+
+3. When the run is green, check each repository: under **Releases** (right column of the start page) there is now **v1.0.0**, with the release notes and the package `amade-calculator_1.0.0_all.deb` attached, and under **Tags** there is `v1.0.0`.
+4. From now on the next version counts from this tag: the next develop build after a `fix:` is `1.0.1-dev.N`, after a `feat:` it is `1.1.0-dev.N`.
+
+Running it from your own machine works the same way, with your own git credentials and without the token:
+
+```console
+$ cd amadeos-ci
+$ scripts/promote.sh release amade-commons amade-calculator
+$ scripts/promote.sh main amade-commons amade-calculator
+```
+
+### When Promote stops
+
+Promote never forces anything: a repository with a problem is left as it was, the log says why, and the run ends red with `Not promoted:` and the list of those repositories. The others were promoted. Only when a library gets no release tag does Promote stop right there, because the repositories after it may pin it. Fix the cause and run Promote again with the same inputs; repositories that are already up to date are skipped.
+
+| Message | What it means | What to do |
+|---|---|---|
+| `The secret PROMOTE_TOKEN is missing` | amadeos-ci has no secret of that name | create it, see [the token for Promote](#the-token-for-promote) |
+| `Authentication failed`, `403` or `Permission denied` | the token has expired, was deleted or lacks a permission | create a new token, replace the secret |
+| `release has commits that develop lacks; merge release into develop first` | someone merged into release or main directly, not through Promote | merge release (or main) into develop with a pull request, then promote again |
+| `pins amade-commons at ..., which is in no release of amade-commons yet` | the app pins a commons commit that is not released | promote amade-commons to main first, then raise the pin to its tag in a `build(deps):` pull request on develop, and promote the app |
+| `pins amade-commons ..., which does not exist` | the pin names a commit or tag that is not in amade-commons | correct the pin in `build.gradle` |
+| `no release tag on main after 40 minutes; check its Build workflow` | the Build on main of a library failed or is still waiting for a runner | open that Build, fix what failed on develop, and promote again |
+| `merging main back into develop has conflicts; do it by hand` | after a hotfix, main and develop changed the same lines | merge main into develop with a pull request and resolve the conflict there |
+
 ### A hotfix that cannot wait
 
 Sometimes release needs a fix while develop already holds half-finished work. Then branch from release, fix the bug, open the pull request against `release` and merge it. Promote to main as usual. Because main now has a commit that develop lacks, Promote merges main back into develop right away. The next promotion to release is a fast-forward again. Use this only when you have to: the normal path is always develop first.
@@ -236,7 +307,7 @@ Then, per repository, the build workflow gets the version, release and commit jo
 | know the next version | `../amadeos-ci/scripts/next-version.sh release` in the repository |
 | try the newest state | install the package of the latest develop build (Actions → Build → artifacts) |
 | test before a release | promote to release, test the `-pre` build in QEMU |
-| release everything | Promote to main with "repositories" empty |
+| release everything | Promote to release, test, then Promote to main, with "repositories" empty ([step by step](#step-by-step)) |
 | use a new commons method in an app | pin the commons commit on develop; release commons and pin its tag before the app goes to main |
 | fix a commit message in your pull request | `git rebase -i`, reword, `git push --force-with-lease` |
 | mark a breaking change | `feat(scope)!: ...` or a `BREAKING CHANGE:` line in the body |
