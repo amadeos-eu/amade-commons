@@ -205,7 +205,25 @@ $ scripts/setup-release-branches.sh                       # all repositories
 $ scripts/setup-release-branches.sh amade-calculator      # or just some
 ```
 
-The script creates develop and release at the current main, makes develop the default branch and adds the ruleset. It skips repositories that have develop already, so it can run again. Merge open pull requests first, or change their base branch to develop afterwards.
+The script does four things in each repository:
+
+1. **Pull request settings:** merge commits only. Squash merging and rebase merging are switched off.
+2. It creates `develop` and `release` at the current main.
+3. It makes `develop` the default branch, so new pull requests target it.
+4. It adds the ruleset that blocks force pushes and deletion on main and release.
+
+The pull request settings are applied on every run. The branches of a repository that has develop already are left alone, so the script can run again, for example after a new repository was added. Merge open pull requests first, or change their base branch to develop afterwards.
+
+To check a repository by hand, or set it up without the script:
+
+| Where on github.com | Setting |
+|---|---|
+| *Settings → General → Pull Requests* | **Allow merge commits** on; **Allow squash merging** and **Allow rebase merging** off |
+| *Settings → General → Default branch* | `develop` |
+| *Settings → Rules → Rulesets* | "Release branches": target branches `main` and `release`, rules **Block force pushes** and **Restrict deletions** |
+
+!!! note "Why merge commits only?"
+    The version comes from the commits since the last tag, one Conventional Commit for each change. A squash merge would turn a pull request into a single commit with the pull request's title, and a rebase merge would give its commits new hashes. Both would break the commit pins of the handbooks (`handbook.yml`) and of the apps (amade-commons by commit), which must reach develop unchanged.
 
 Then, per repository, the build workflow gets the version, release and commit jobs shown above, and `build.gradle` gets `appVersion` and `debVersion`. amade-calculator and amade-commons were the first. A new program starts with them from day one: add them to the checklist of [chapter 50](50-packaging.md#checklist-for-a-new-program).
 
