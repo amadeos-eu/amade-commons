@@ -13,12 +13,13 @@ Each chapter of this part covers one area. Each section in it describes one part
 | [45. Desktop Integration](45-desktop.md) | `desktop` | Opening links and files in other programs, the busy cursor, passwords in the keyring |
 | [46. Toolbars, Icons and Printing](46-toolbars-and-printing.md) | `swing`, `print` | Icons drawn in code, toolbar buttons, a player's transport buttons, paper sizes, printing and PostScript |
 | [47. Programs, JSON and the Network](47-programs-json-network.md) | `process`, `json` | Running other programs, testing without them, reading and writing JSON, how the programs talk to web services |
+| [48. Video Playback](48-video-playback.md) | `mpv` | Playing video and streams with libmpv in a Swing window, its events, the video output for this machine |
 
 ## What amade-commons is, and is not
 
 amade-commons is a library, not a framework. It calls your program exactly once, in `AmadeApplication.launch`, and from then on only when you hand it something to call: a styler, a listener, an action. There is no base class for windows and no application object to extend.
 
-It holds only what at least two programs share. Everything in it came from a program that needed it first and moved in when a second program needed the same thing: `PasswordStore` from Mail, printing from Calendar and WritePad, `Json` from Mail and Audio. Pad's text decoding, Files' trash, Video's libmpv binding and Audio's sound engine stay in their programs, because no second program needs them yet. The rule is in [chapter 10](10-pad.md#what-amade-commons-gives-pad), and every chapter since ends with a table of what the program takes from the library and what stays.
+It holds only what at least two programs share. Everything in it came from a program that needed it first and moved in when a second program needed the same thing: `PasswordStore` from Mail, printing from Calendar and WritePad, `Json` from Mail and Audio. Pad's text decoding, Files' trash and Audio's sound engine stay in their programs, because no second program needs them yet; Video's libmpv binding moved in when TV became its second user. The rule is in [chapter 10](10-pad.md#what-amade-commons-gives-pad), and every chapter since ends with a table of what the program takes from the library and what stays.
 
 The desktop's own tools (the Front Panel, Settings, Software) use amade-commons too. [Part VI](roadmap.md) shows how to write one.
 
@@ -82,6 +83,8 @@ A few rules hold for nearly every class. Knowing them makes the rest of the manu
 | Tests that do not depend on installed programs | `FinishedProcess` | [47](47-programs-json-network.md#tests-without-programs-finishedprocess) |
 | To read a web service's answer or write a small JSON file | `Json` | [47](47-programs-json-network.md#json) |
 | To call a web service | `java.net.http.HttpClient`, as the programs do | [47](47-programs-json-network.md#the-network) |
+| To play video or a stream in a window | `Mpv` | [48](48-video-playback.md#a-player-in-a-swing-window-mpv) |
+| To read mpv's events in a `switch` | `MpvEvent` | [48](48-video-playback.md#events-mpvevent) |
 
 ## Which chapter introduced what
 

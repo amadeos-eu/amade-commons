@@ -194,6 +194,10 @@ DVDs have one surprise: mpv numbers their titles from 0, while people and the `d
 ### And what stays in Video
 
 - **Everything about mpv**: `LibMpv`, `MpvEvent`, `MpvPlayer`, `VideoOutput`. No other program of the book loads a native library this way; Audio reads CDs through libcdio with JNA, but in a different way, and two different uses are not one shared part.
+
+!!! note "Later: TV"
+    When TV became the second program to play with libmpv, `LibMpv`, `MpvEvent`, `VideoOutput` and the core of `MpvPlayer` (loading, options, the event thread, closing) moved into amade-commons as `Mpv`. Video's `MpvPlayer` now keeps only its `PlayerState` on top. The code in this chapter shows Video as it was before; [chapter 48](48-video-playback.md) describes the shared part.
+
 - **`PlayerState`** and its transitions. Audio has a state of its own for its player, and the two have little in common beyond play and pause.
 - **`TransportIcon`**, the symbols on the transport buttons. Audio has a copy with three more symbols (record, eject, favourite). Chapter 33 moves the symbols into amade-commons, as glyphs for the `ToolIcon` of chapter 30.
 
