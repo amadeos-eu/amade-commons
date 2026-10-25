@@ -171,13 +171,31 @@ Promote runs in the amadeos-ci repository, for all repositories at once or for a
 
 For each repository, the script checks that the move is a fast-forward and that the pins are releases (for main only). Then it pushes the branch, which starts the build there. Repositories without release branches are skipped. A ruleset on main and release blocks force pushes and deletion, and since a push that is not a fast-forward counts as a force push, GitHub itself makes sure these branches only move forward.
 
-The workflow needs a token that may push to all the repositories, workflow files included. Pushes made with the built-in token of a workflow would also start no further workflows. So the token is a fine-grained personal access token of the owner, stored as the secret `PROMOTE_TOKEN`, with *Contents* and *Workflows* set to read and write, in the amadeos-ci repository only.
+The workflow needs a token that may push to all the repositories, workflow files included. Pushes made with the built-in token of a workflow would also start no further workflows. So the token is a fine-grained personal access token of the owner, stored as the secret `PROMOTE_TOKEN`, with *Contents* and *Workflows* set to read and write, in the amadeos-ci repository only. [Setting it up once](#the-token-for-promote) shows how to create it.
 
 ### A hotfix that cannot wait
 
 Sometimes release needs a fix while develop already holds half-finished work. Then branch from release, fix the bug, open the pull request against `release` and merge it. Promote to main as usual. Because main now has a commit that develop lacks, Promote merges main back into develop right away. The next promotion to release is a fast-forward again. Use this only when you have to: the normal path is always develop first.
 
 ## Setting it up once
+
+### The token for Promote
+
+The Promote workflow pushes branches in all the repositories, so it needs a token of the owner. A workflow reads it from a *secret*, which is a password stored in the repository. Nobody can read a secret back, not even the owner, and workflows only see it while they run. Creating the token and the secret takes a few minutes, once:
+
+1. On github.com, signed in as the owner: profile picture → **Settings** → **Developer settings** (at the bottom left) → **Personal access tokens** → **Fine-grained tokens** → **Generate new token**.
+2. Token name `amadeOS Promote`, an expiration date (one year, or none if GitHub offers that), resource owner **datazuul**.
+3. Repository access: **All repositories**. A new game repository then works without changing the token.
+4. Repository permissions: **Contents** *Read and write* and **Workflows** *Read and write*. GitHub adds *Metadata* read-only by itself. Everything else stays at *No access*.
+5. **Generate token**, and copy it right away: GitHub shows it only once.
+6. In the repository amadeos-ci: **Settings** → **Secrets and variables** → **Actions** → **New repository secret**, name `PROMOTE_TOKEN`, the token as the secret, **Add secret**.
+
+The token goes nowhere else: not into a file, a chat or an issue. If it does leak, delete it under *Fine-grained tokens* and create a new one. When it expires, Promote stops with an authentication error. Then create a new token the same way and replace the secret, under the same name.
+
+!!! note "Why not the workflow's own token?"
+    Every workflow run gets a token of its own, `GITHUB_TOKEN`, but it may only write to the repository the workflow runs in. It also may not push commits that change files under `.github/workflows`, and pushes made with it start no further workflows. Promote needs all three, so it uses the owner's token.
+
+### The release branches
 
 Each repository needs a one-time setup, which the owner does with the GitHub CLI (`gh auth login` first):
 
