@@ -2,7 +2,7 @@
 
 Every other program in this book works on the user's files. This one is there for the day they are gone: a broken disk, a stolen laptop, a letter overwritten by mistake. A backup program has to be the most careful program on the computer. When it fails, nobody notices until the day it is needed, and when it is wrong, it takes the user's trust with it. So most of this chapter is about care: an engine that is not ours behind an interface of our own, a disk that is found again wherever it is mounted, restoring that never overwrites a file without asking, and a sync that shows what it will do before it does it.
 
-amade-backup has about 7,800 lines of Java and 2,600 lines of tests. Some of the tests run the real restic program. Nothing moves into amade-commons with it. It is the third program that writes the freedesktop.org trash, after Files and Image Viewer, which makes the trash the next candidate.
+amade-backup has about 8,800 lines of Java and 3,200 lines of tests. Some of the tests run the real restic program. Nothing moves into amade-commons with it. It is the third program that writes the freedesktop.org trash, after Files and Image Viewer, which makes the trash the next candidate.
 
 ## What you build
 
@@ -14,6 +14,7 @@ amade-backup has about 7,800 lines of Java and 2,600 lines of tests. Some of the
 - **The password in the keyring**, a password made up for the user on request, and a **recovery sheet** to print.
 - **Restoring** from a timeline of the backups, with a folder tree, the state of each file now, its versions, and a search over all backups.
 - **The sync preview**: every copy, update, removal and left-out file with its reason, before anything happens.
+- **A helper that starts with the session** and runs the jobs at their times, makes up missed ones, starts a job when its disk is plugged in, and reminds the user only when something needs them.
 - **Five languages**, following the desktop.
 
 The pictures in this chapter are taken from the program's real windows, on a test scene with real restic backups ([below](#pictures-from-the-real-windows)).
@@ -26,6 +27,7 @@ The pictures in this chapter are taken from the program's real windows, on a tes
 - How to restore files without ever overwriting one silently, through a staging folder on the same disk.
 - How to plan a sync first and run it second, and why FAT sticks need two seconds of tolerance.
 - How to write into the trash of any disk, not only the home trash.
+- How to write a background helper that decides what is due without threads or disks, so it can be tested with a clock that the test moves on.
 - How to test against the real tool, and take the README's pictures from the real windows.
 
 ## The structure
@@ -39,9 +41,10 @@ The pictures in this chapter are taken from the program's real windows, on a tes
 | `run` | `BackupRunner`, `Restorer`, `SyncRunner`, `Places`, `Passwords`, `Readme`, `JobLock` |
 | `sync` | `SyncPlanner`, `SyncPlan`, `SyncAction`, `SyncExecutor`, `Patterns`, `Trash`, `FileSystemInfo` |
 | `repository` | `JobStore` (`jobs.json`), `HistoryStore` (the runs and logs of each job) |
-| `ui` | `main`, `assistant`, `restore`, `sync`, `edit`, `common` |
+| `agent` | `BackupAgent`, `Planner`, `AgentState` (`agent.json`), `Power`, `AgentLauncher`, `AgentMain` |
+| `ui` | `main`, `assistant`, `restore`, `sync`, `edit`, `notice` (the helper's windows), `common` |
 
-The windows never see restic, and the runners never see Swing. `BackupRunner` and `SyncRunner` take a job and return a `RunRecord`, whoever starts them. Today that is the window. Later it will be the helper that starts with the session and runs the scheduled jobs.
+The windows never see restic, and the runners never see Swing. `BackupRunner` and `SyncRunner` take a job and return a `RunRecord`, whoever starts them: the window, or the helper that starts with the session and runs the scheduled jobs ([below](#the-helper-that-starts-with-the-session)).
 
 ## An engine behind an interface
 
@@ -177,7 +180,7 @@ The assistant does not go on until the user ticks *I have written down or printe
 --8<-- "amade-backup/src/main/java/eu/amadeos/apps/backup/run/BackupRunner.java:run"
 ```
 
-`JobLock` is a lock file in the job's history folder. When the helper of step 2 starts a scheduled backup while the user clicks *Back Up Now* in the window, one of the two gets the lock and the other ends at once. The numbers of removed files come from `restic diff` against the previous backup, since restic's summary only counts new and changed ones.
+`JobLock` is a lock file in the job's history folder. When the helper starts a scheduled backup while the user clicks *Back Up Now* in the window, one of the two gets the lock and the other ends at once. The numbers of removed files come from `restic diff` against the previous backup, since restic's summary only counts new and changed ones.
 
 ## Restoring
 
@@ -241,6 +244,78 @@ In the trash of another disk, the `Path=` of the `.trashinfo` file is relative t
 
 The planner leaves the trash folder of the target alone, so a mirror does not remove its own trash at the next run.
 
+## The helper that starts with the session
+
+A schedule is only a promise until something keeps it. The helper is the same program without a window, `amade-backup --agent`. The session starts it at login from `/etc/amadeos/autostart.d/60-amade-backup`, at low priority with `nice -n 10 ionice -c3`, and restarts it if it crashes. Other desktops start it from `/etc/xdg/autostart`. Both files are in the package and are conffiles. Settings > Startup lists the script like the desktop's own services, so the user can switch it off.
+
+### Deciding without a clock on the wall
+
+The rules are the part that must be right, so they live in a class without threads, disks or windows. `Planner.trigger` gets the job, its history, the time and two facts: whether the disk is there and whether it has just appeared:
+
+```java title="amade-backup · agent/Planner.java"
+--8<-- "amade-backup/src/main/java/eu/amadeos/apps/backup/agent/Planner.java:trigger"
+```
+
+The schedule tells the newest time at which the job was due:
+
+```java title="amade-backup · domain/Schedule.java"
+--8<-- "amade-backup/src/main/java/eu/amadeos/apps/backup/domain/Schedule.java:slot"
+```
+
+There is no timer per job and no list of planned runs. The question is always the same: *was there a run since the last time it was due?* That one question covers the computer that was off at nine, the disk that was in a drawer for a week, and a clock that jumped. A failed run counts as an attempt, so a full disk does not start restic every 30 seconds. A run on a missing disk does not count, so it is made up when the disk comes back. `knownSince` keeps a new job from starting the moment it is saved because yesterday's nine o'clock was missed.
+
+### One look every 30 seconds
+
+`BackupAgent.tick` reads the jobs and the disks again each time. A file the window wrote a second ago is seen at the next look, and nothing has to tell the helper:
+
+```java title="amade-backup · agent/BackupAgent.java"
+--8<-- "amade-backup/src/main/java/eu/amadeos/apps/backup/agent/BackupAgent.java:tick"
+```
+
+A disk is *plugged in* when the job's target was absent at the last look and is there now. That is the exercise of reading `/proc/self/mounts` every few seconds, done through `Places`, so it works for disks found by UUID and for folders alike. The runs happen one after another on the helper's own thread, so two jobs never fight over the same disk. `Power` reads `/sys/class/power_supply`, the same source as the Front Panel's battery cell: below 20 % on battery, nothing starts.
+
+A sync that would remove files must not do that while nobody is looking. The helper keeps the window's promise:
+
+```java title="amade-backup · agent/BackupAgent.java"
+--8<-- "amade-backup/src/main/java/eu/amadeos/apps/backup/agent/BackupAgent.java:sync"
+```
+
+The preview is the same `SyncPreviewDialog` as in the window. `Notices.offerSync` returns at once, and the answer comes back on the helper's thread. A preview that waits for a user who has gone for lunch holds up only its own job, not the nine o'clock backup.
+
+### Speaking only when needed
+
+A backup program that reports every success teaches the user to click its windows away. The helper says nothing after a run that worked. It speaks when a run failed, and when a backup is overdue and its disk is away:
+
+```java title="amade-backup · agent/BackupAgent.java"
+--8<-- "amade-backup/src/main/java/eu/amadeos/apps/backup/agent/BackupAgent.java:remind"
+```
+
+![The helper's reminder](images/backup/reminder.png)
+
+`overdue` is the same rule as the yellow dot in the window, now in `Schedule`, so the two never disagree. The time of the last reminder is kept in `~/.local/state/amadeos/backup/agent.json`, together with `knownSince` and the last weekly check, so a new login does not bring the same reminder again. Once a week, after a backup, the helper runs `restic check --read-data-subset=5%`.
+
+### One helper, started when needed
+
+The helper ends as soon as no job has a schedule, so a computer without backups does not keep a Java process for nothing. It holds a lock, the same `JobLock` as the jobs, on its own folder. A second helper ends at once with exit code 3:
+
+```java title="amade-backup · agent/AgentMain.java"
+--8<-- "amade-backup/src/main/java/eu/amadeos/apps/backup/agent/AgentMain.java:start"
+```
+
+The reference in `held` is not decoration: a `FileChannel` that nothing refers to any more may be closed by the garbage collector, and its lock goes with it. When the user saves a job with a schedule, the window looks at the lock. If no helper holds it and Settings > Startup has not switched it off, the window starts one:
+
+```java title="amade-backup · agent/AgentLauncher.java"
+--8<-- "amade-backup/src/main/java/eu/amadeos/apps/backup/agent/AgentLauncher.java:process"
+```
+
+`setsid` gives the helper a session of its own, so closing the window, or the terminal it was started from, does not end it. In the other direction, the window shows the helper's runs while it is open. Every five seconds it compares the newest time of the history files with the one it last read, and reloads only when they differ.
+
+The Front Panel shows a running backup without talking to the helper at all. Its busy light already walks `/proc` for dpkg. It now also looks for a `restic` process whose command line says `backup`, `forget`, `prune`, `check`, `restore` or `dump`, and then runs a violet chaser from right to left. That works for the window, for the helper and for restic typed into a terminal.
+
+### Tests with a clock that moves
+
+`BackupAgentTest` runs the real helper with the real restic, a `Clock` whose `instant()` the test sets, and a recorder in place of the windows. *It is 20:00, nothing runs; an hour later the backup runs as "schedule"; half an hour later nothing again.* The disk is a folder the test moves away and back. The battery is three files in a temporary `/sys`. The same days that would take a week to try by hand run in a few seconds.
+
 ## Pictures from the real windows
 
 The README, the AppStream metadata and this chapter need pictures with a believable home folder, five backups over six weeks, a changed report and a deleted letter. Drawing them by hand would show a program that does not exist. Making them on a real machine is slow, and they would show the author's own files. The tests already have what the pictures need: `Scene` builds a home folder, a fake mounted disk and real restic backups with times in the past. restic sets a backup's time with `--time`:
@@ -280,8 +355,8 @@ The README, the AppStream metadata and this chapter need pictures with a believa
 ## Exercises
 
 1. **The trash in amade-commons.** Compare `Trash` here with Files' `TrashService` and Image Viewer's `Trash`. Write `eu.amadeos.commons.files.Trash` with `moveToTrash` for the home trash and the trash of other disks, and tests with a temporary folder as home. Which of the three programs needs which part, and what stays in Files?
-2. **Backup when the disk comes.** Watch `/proc/self/mounts` (it signals changes through `poll` with `POLLPRI`, or simply read it every few seconds) and start the jobs whose disk has just appeared and whose schedule says *also when the disk is connected*. Where does the code belong, so that the helper of step 2 can use it without a window?
-3. **Check now and then.** `restic check --read-data-subset=5%` reads a twentieth of the data. Run it after every tenth backup, and show the result in the history. How long does it take on a stick, and is that acceptable after a backup?
+2. **A cell in the Front Panel.** The busy light shows a running backup, but not one that is overdue. Design a status cell that reads `history.json` and `agent.json` and shows the state of the backups. The status slot already has four cells. Which one could share its place, and what would the cell show in the 23 hours of a day when everything is fine?
+3. **Pause on battery.** Today the helper only does not *start* on a low battery. Stop a running backup when the battery falls below 10 %, and make it up when the charger is plugged in. What does restic leave behind when it is stopped, and does the next backup mind?
 4. **Restore a deleted folder.** *Show → Deleted* lists deleted files. Make it list a deleted folder as one entry, with the number of files in it, and restore it with one click.
 5. **A second password.** restic repositories can have several keys (`restic key add`). Offer a second password for the recovery sheet, so the one in the keyring can be changed without printing a new sheet. What happens to the old sheet?
 
@@ -294,4 +369,5 @@ The README, the AppStream metadata and this chapter need pictures with a believa
 - Describe the home folder in areas the user understands, and compute the excludes at every run.
 - Restore through a staging folder on the same disk, never overwrite silently, and put replaced files into the trash.
 - Plan a sync first and show the plan; on FAT and exFAT, times within two seconds are equal. Removed files go into the trash of their own disk.
+- A background helper asks one question again and again (*was there a run since it was due?*) instead of keeping timers. It speaks only when the user has to act. Test it with a clock that the test moves on.
 - Test with canned output for what the program makes of an answer, and with the real tool for what the tool really says. Take the pictures from the real windows.
