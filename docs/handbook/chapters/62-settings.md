@@ -225,6 +225,35 @@ The keyring is an interface in the session module, which already depends on dbus
 
 All three pages do their work in a `SwingWorker`: reading the keyring, asking apt for the waiting updates, switching automatic security updates (which asks for the administrator's password) and setting the time zone. `apply()` returns a status line such as *saving…* at once, and the worker puts the result there when it is done.
 
+## Network: one proxy for every program
+
+The proxy is the one setting of the System group that the applications read too. So its store is not in Settings but in amade-commons, `ProxyStore` with `proxy.conf` and the password in the keyring ([chapter 47](47-programs-json-network.md#the-proxy-of-the-desktop-network)); the Network page only edits it.
+
+![The Network page](images/desktop/settings-network.jpg)
+
+The page reaches three places, each in its own way:
+
+| Who | How the proxy gets there |
+|---|---|
+| The applications | They follow `proxy.conf` through `ConfigWatcher`, and change their `ProxySelector` while they run. |
+| Everything started at login | `amadeos-session` turns the file into `http_proxy`, `https_proxy` and `no_proxy` with `/usr/libexec/amadeos-proxy-env`, before it starts the window manager and the panel. |
+| Programs started later | `ProcessLauncher`, which the panel and the drawers use, writes the proxy as it is now into each program's environment, so a change needs no new login. |
+| apt | With *Also for installing software and updates*, the package helper writes `/etc/apt/apt.conf.d/80amadeos-proxy`. |
+
+apt runs as root, so the proxy goes through the same helper as the updates, behind polkit. A password in the proxy URL must not show in the process list, where every user can read command lines; the helper therefore reads the URLs from standard input and checks them strictly before they go into apt's configuration, because a `"` in a URL would end apt's string:
+
+```bash title="amadeos-system · packages/packaging/root/usr/libexec/amadeos-packages"
+--8<-- "amadeos-system/packages/packaging/root/usr/libexec/amadeos-packages:commands"
+```
+
+`apply()` writes the file and the keyring first and calls the helper only when the part apt sees has changed, so pressing Apply twice asks for the administrator's password once:
+
+```java title="amadeos-system · settings/NetworkPage.java"
+--8<-- "amadeos-system/settings/src/main/java/eu/amadeos/system/settings/NetworkPage.java:apply"
+```
+
+*Test* hands the settings, not yet saved, to `ProxyCheck` from amade-commons, which asks `deb.debian.org` through them; the page turns the outcome (works, password needed, password refused, HTTP error, no connection) into a translated line.
+
 ## Five languages without Guice
 
 Settings speaks the five languages of the applications. Its texts are in `messages.properties` and its translations, with the menu letters marked by `&` ([chapter 43](43-languages.md#texts-messages)). What a tool program gets from Guice, Settings does itself in a small class: it resolves the language once, the way `CommonsModule` does for the applications, from the desktop language in `locale.conf` and then from the environment:
@@ -253,6 +282,7 @@ Everything with a name asks it: `SettingsCategory.label()` reads `category.keybo
 - The text size travels with the theme in `font.conf`; the window settings are a record in `base` that the window manager follows through `window.conf`, and the panel follows `panel.conf` and `workspaces.conf` the same way.
 - Startup switches off a script of the system in a file of the user's, `startup.conf`, and keeps the user's programs as desktop entries in `~/.config/autostart`.
 - The System pages get the keyring, the package manager and the time zone as one record, so tests hand in stand-ins; the keyring is unlocked through GNOME Keyring's own interface, in Settings' own dialog.
+- The Network page edits the proxy that amade-commons keeps for every program; the session exports it at login, the launcher at every start, and the package helper writes apt's copy from standard input.
 - Settings of the X server are files first and commands second, so the session can apply them again at every login.
 - The Display page sets all monitors in one `xrandr` call, saves only a layout the user kept within 15 seconds, one per set of monitors; the window manager and the panel follow the new root size themselves.
 - Without Guice, a small class resolves the language from `locale.conf` and loads the texts; status lines are built from translated parts.

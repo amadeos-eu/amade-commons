@@ -7,6 +7,7 @@ import eu.amadeos.commons.config.XdgDirectories;
 import eu.amadeos.commons.i18n.LocaleSettings;
 import eu.amadeos.commons.i18n.LocaleStore;
 import eu.amadeos.commons.i18n.Messages;
+import eu.amadeos.commons.net.Network;
 import eu.amadeos.commons.swing.AmadeUI;
 import eu.amadeos.commons.theme.ThemeStore;
 import org.slf4j.LoggerFactory;
@@ -21,7 +22,7 @@ import java.util.function.Consumer;
 
 /**
  * Starts an amadeOS application the same way everywhere: in the language of the desktop (or the
- * application's own language setting), on the EDT, with the desktop theme installed and followed, a
+ * application's own language setting), with the desktop's network proxy ({@link Network}), on the EDT, with the desktop theme installed and followed, a
  * virtual-thread executor for background work and a Guice injector with the
  * {@link CommonsModule} plus the application's own modules.
  *
@@ -46,6 +47,8 @@ public final class AmadeApplication {
                 xdg.appConfig(app.configName()), System.getenv());
         Locale locale = locales.locale();
         Locale.setDefault(locale);
+        // Before the first connection: the proxy of Settings > Network, followed while the program runs.
+        Network.install();
         LoggerFactory.getLogger(AmadeApplication.class).info("{} runs in {} (from {})", app.id(),
                 locale.toLanguageTag(), locales.applied().source());
         SwingUtilities.invokeLater(() -> {

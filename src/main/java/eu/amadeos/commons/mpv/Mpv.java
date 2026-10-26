@@ -2,6 +2,8 @@ package eu.amadeos.commons.mpv;
 
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
+import eu.amadeos.commons.net.Network;
+import eu.amadeos.commons.net.ProxySettings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -96,6 +98,7 @@ public final class Mpv implements AutoCloseable {
         output.keySet().removeAll(overrides.keySet());
         fastProfile = "fast".equals(output.get("profile"));
         output.forEach(this::outputOption);
+        proxyOption(options);
         options.forEach(this::option);
         overrides.forEach(this::option);
         check(mpv.mpv_initialize(h), "mpv_initialize");
@@ -239,6 +242,18 @@ public final class Mpv implements AutoCloseable {
     }
 
     // ---- helpers ---------------------------------------------------------------------------------
+
+    /**
+     * libmpv runs inside this program and reads {@code http_proxy} as it was when the program started; a
+     * proxy set in Settings &gt; Network since then, or a manual one, goes in as {@code http-proxy}, which mpv
+     * also hands to yt-dlp. A program's own {@code http-proxy} option wins.
+     */
+    private void proxyOption(Map<String, String> options) {
+        if (options.containsKey("http-proxy")) return;
+        var proxy = Network.proxy();
+        if (proxy.settings().mode() != ProxySettings.Mode.MANUAL) return;
+        proxy.endpoint(true).ifPresent(e -> option("http-proxy", e.url()));
+    }
 
     private void option(String name, String value) {
         check(mpv.mpv_set_option_string(handle, name, value), "option " + name + "=" + value);

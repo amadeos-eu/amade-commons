@@ -358,7 +358,7 @@ What did not move is as instructive as what did:
 | `AmadeUI`, `DesktopTheme` | chapter 10 | the colours of the racks and the LCD glow |
 | `AppDirectories`, `PropertiesFile` | chapter 20 | `audio.conf`, the favourites, the cache of CD titles and covers |
 | `LanguageChooser` | chapter 21 | the language in the settings |
-| `PasswordStore` | chapter 22 | the proxy password, in the desktop keyring |
+| `Network` | chapter 47 | the proxy of the desktop for streams, radio-browser.info, MusicBrainz and covers |
 | `Texts` | chapter 22 | the texts, through `tr("...")` |
 | `CommandRunner` | chapter 31 | `wpctl` and `pactl` for the sound server, `eject` |
 | `Json` | **this chapter** | MusicBrainz, radio-browser.info, the favourites and the title cache |

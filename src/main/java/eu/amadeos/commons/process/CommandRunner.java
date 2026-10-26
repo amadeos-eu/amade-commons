@@ -1,5 +1,8 @@
 package eu.amadeos.commons.process;
 
+import eu.amadeos.commons.net.Network;
+import eu.amadeos.commons.net.NetworkProxy;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,11 +32,16 @@ public interface CommandRunner {
     Process start(List<String> command) throws IOException;
 
     // --8<-- [start:system]
-    /** Starts real processes, with the environment of this program. */
+    /**
+     * Starts real processes, with the environment of this program and the current proxy of the desktop
+     * ({@code http_proxy} and friends, see {@link NetworkProxy#applyTo}).
+     */
     static CommandRunner system() {
         return command -> {
             try {
-                return new ProcessBuilder(command).start();
+                ProcessBuilder builder = new ProcessBuilder(command);
+                Network.proxy().applyTo(builder.environment());
+                return builder.start();
             } catch (IOException e) {
                 throw ProgramMissingException.check(command.getFirst(), e);
             }
