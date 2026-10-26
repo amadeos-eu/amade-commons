@@ -34,6 +34,7 @@ env:
   IMAGEVIEWER_COMMIT: bc237ed749bf165926f45198fbfa5cf449e8ac2f
   PDFVIEWER_COMMIT: ed5cdfe43962a515620a267d99b6e68eda4f7985
   BOOKS_COMMIT: e7316c86be713d08dcc9916ae3798814c48f918f
+  TV_COMMIT: 6859fdde21ae9285d67924b16e90e454cac79374
   # Part VI: the desktop modules.
   AMADEOS_SYSTEM_COMMIT: c7cc0fbc21f97086fa89a6f9d50ce465ba6266d8
   # Chapter 51: the version and release scripts.
@@ -126,6 +127,11 @@ jobs:
           repository: datazuul/amade-books
           ref: ${{ env.BOOKS_COMMIT }}
           path: amade-books
+      - uses: actions/checkout@v7
+        with:
+          repository: datazuul/amade-tv
+          ref: ${{ env.TV_COMMIT }}
+          path: amade-tv
       - uses: actions/checkout@v7
         with:
           repository: datazuul/amadeos-system

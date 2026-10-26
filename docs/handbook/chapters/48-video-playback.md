@@ -1,10 +1,10 @@
 # 48. Video Playback
 
-Two programs of the book play video: Video plays files, streams and DVDs ([chapter 32](32-video.md)), TV plays the live streams of the broadcasters (amade-tv, whose chapter comes next). Both leave the decoding and the picture to *libmpv*, the library form of the mpv player, and both drive it the same way. When TV came, that shared part moved into amade-commons as the package `mpv`. What the events mean for a program, its player state, stays in the program.
+Two programs of the book play video: Video plays files, streams and DVDs ([chapter 32](32-video.md)), TV plays the live streams of the broadcasters ([chapter 38](38-tv.md)). Both leave the decoding and the picture to *libmpv*, the library form of the mpv player, and both drive it the same way. When TV came, that shared part moved into amade-commons as the package `mpv`. What the events mean for a program, its player state, stays in the program.
 
 ## A player in a Swing window: Mpv
 
-*Package `mpv` · introduced in [32. Video](32-video.md#a-c-library-as-a-java-interface), moved to amade-commons for TV · source: [`Mpv`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/mpv/Mpv.java)*
+*Package `mpv` · introduced in [32. Video](32-video.md#a-c-library-as-a-java-interface), moved to amade-commons for [38. TV](38-tv.md#what-moves-in-with-tv) · source: [`Mpv`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/mpv/Mpv.java)*
 
 **What it is for.** Playing video and sound with libmpv into the native window of an AWT `Canvas`: loading the library, creating the player with the right options for this machine, the event thread, commands and properties, and closing it all in the right order.
 
@@ -25,6 +25,8 @@ implementation 'net.java.dev.jna:jna:5.14.0'
 ```
 
 and its launcher starts Java with `--enable-native-access=ALL-UNNAMED`, as Video's and TV's do. The Debian package depends on `libmpv2`.
+
+**Linux only, for now.** `LibMpv.NAMES` also has the Windows names (`libmpv-2.dll`, `mpv-2.dll`), so `Mpv` would load the library there, and `wid` takes a window handle (HWND) as well as an X11 window id. But Windows has no libmpv to depend on: a Windows installer would have to bring `libmpv-2.dll` and its FFmpeg libraries along, in the jpackage image of [chapter 50](50-packaging.md). Video and TV do not do that yet, so their CI builds only the Debian package, and their READMEs say so. Without the library, `isAvailable()` is false and the program shows its message instead of a picture.
 
 | Method | For |
 |---|---|
@@ -62,7 +64,7 @@ The listener is called on that thread, so a program updates its state there and 
 --8<-- "amade-commons/src/main/java/eu/amadeos/commons/mpv/Mpv.java:close"
 ```
 
-The last line is the fix for a crash TV found. An X11 program has one error handler for the whole process. AWT installs one that only logs: X errors such as `BadWindow` happen in normal work, for example when a window is disposed while the window manager still asks about it. mpv's video output replaces it with its own while it runs, and when the video output closes, mpv sets the handler back to Xlib's default. That one ends the process at the first error. So a program that disposed its windows after `mpv.close()` ended with an X error instead of quietly. `Mpv` reads AWT's handler before mpv starts, and puts it back after the player is destroyed and whenever mpv goes idle (after **Stop** or at the end of a stream), because mpv has closed the video output by then. This is done by the package-private `XErrors`, with JNA and libX11, and only under the X11 toolkit.
+The last line is the fix for a crash TV found ([chapter 38](38-tv.md#quitting)). An X11 program has one error handler for the whole process. AWT installs one that only logs: X errors such as `BadWindow` happen in normal work, for example when a window is disposed while the window manager still asks about it. mpv's video output replaces it with its own while it runs, and when the video output closes, mpv sets the handler back to Xlib's default. That one ends the process at the first error. So a program that disposed its windows after `mpv.close()` ended with an X error instead of quietly. `Mpv` reads AWT's handler before mpv starts, and puts it back after the player is destroyed and whenever mpv goes idle (after **Stop** or at the end of a stream), because mpv has closed the video output by then. This is done by the package-private `XErrors`, with JNA and libX11, and only under the X11 toolkit.
 
 So the order in a program's `quit` is always: `mpv.close()`, then dispose the windows.
 
