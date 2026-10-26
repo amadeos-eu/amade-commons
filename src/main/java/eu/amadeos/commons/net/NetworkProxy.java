@@ -82,7 +82,7 @@ public final class NetworkProxy extends ProxySelector {
     public void configure(ProxySettings newSettings, String newPassword) {
         settings = newSettings == null ? ProxySettings.DEFAULT : newSettings;
         password = newPassword == null ? "" : newPassword;
-        LOG.info("Network proxy: {}", describe());
+        LOG.info("Network proxy ({}): {}", settings.mode(), describe().orElse("direct"));
     }
 
     public ProxySettings settings() {
