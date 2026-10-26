@@ -1,5 +1,7 @@
 package eu.amadeos.commons.desktop;
 
+import eu.amadeos.commons.net.Network;
+
 import java.awt.Desktop;
 import java.io.IOException;
 import java.net.URI;
@@ -49,8 +51,11 @@ public class DesktopLauncher {
     // --8<-- [start:xdg-open]
     private static boolean xdgOpen(String target) {
         try {
-            new ProcessBuilder("xdg-open", target).redirectErrorStream(true)
-                    .redirectOutput(ProcessBuilder.Redirect.DISCARD).start();
+            ProcessBuilder builder = new ProcessBuilder("xdg-open", target).redirectErrorStream(true)
+                    .redirectOutput(ProcessBuilder.Redirect.DISCARD);
+            // The browser started now gets the proxy as it is now, not as it was when this program started.
+            Network.proxy().applyTo(builder.environment());
+            builder.start();
             return true;
         } catch (IOException e) {
             return false; // xdg-open not installed

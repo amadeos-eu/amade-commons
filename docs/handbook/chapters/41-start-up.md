@@ -25,10 +25,11 @@ public static void main(String[] args) {
 ```
 
 1. **The language first**, on the main thread and before any Swing class is used. `Locale.setDefault` then reaches the JDK's own texts (*OK*, *Cancel*, the file chooser) and every date and number format. Which language it is, is decided by [`LocaleSettings`](43-languages.md#the-language-setting-localesettings-and-languagechooser).
-2. **Everything else on the EDT**: the components' default locale, the look in the current theme's colours, and the order to follow the theme ([chapter 42](42-look.md#following-the-desktop-themestore)).
-3. **One executor** of virtual threads for the program's background work, created here so that the program and the library share it.
-4. **The injector** from `CommonsModule` and the program's modules, handed to the start function, still on the EDT, where the program may create its first window.
-5. **A failed start** is logged and shown in a message box in the user's language. Without it, a program clicked in the Front Panel would silently not appear.
+2. **The network proxy**, still before any connection: [`Network.install()`](47-programs-json-network.md#the-proxy-of-the-desktop-network) makes the proxy of Settings > Network the JVM's default and follows it.
+3. **Everything else on the EDT**: the components' default locale, the look in the current theme's colours, and the order to follow the theme ([chapter 42](42-look.md#following-the-desktop-themestore)).
+4. **One executor** of virtual threads for the program's background work, created here so that the program and the library share it.
+5. **The injector** from `CommonsModule` and the program's modules, handed to the start function, still on the EDT, where the program may create its first window.
+6. **A failed start** is logged and shown in a message box in the user's language. Without it, a program clicked in the Front Panel would silently not appear.
 
 !!! warning "Pitfall: work in `main` before `launch`"
     Anything that touches Swing before `launch`, even a `JOptionPane` for a quick check, loads Swing's classes in the JVM's own locale and the old look. Put such code into the start function, where the language and the look are already set.
