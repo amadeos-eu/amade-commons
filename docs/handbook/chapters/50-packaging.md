@@ -33,7 +33,7 @@ docs/screenshots/amade-fractals.png           the screenshot Software shows
 - Which icon sizes a program needs and how to make them.
 - How AppStream metadata gives Software a name, a description and a screenshot in five languages.
 - How a package gets into the amadeOS image.
-- How jpackage and WiX build a Windows installer that needs no Java on the user's machine.
+- How jpackage and WiX build a Windows installer that needs no Java on the user's machine, and which programs get one.
 - How CI checks every package, so that a broken one never reaches a user.
 
 ## One jar with everything
@@ -249,6 +249,26 @@ gradlew windowsInstaller -PinstallerType=app-image
 !!! tip "Tip: test the installed program, not the build"
     Install the MSI on a Windows that has never seen Java, start the program from the Start menu, open a file, and uninstall it again in *Settings → Apps*. The installed program runs with a different working directory than Gradle and without your user's Java settings, and that is where paths and resources that worked during development break.
 
+## Which programs run on Windows
+
+Not every amade program is built for Windows. A program gets the `windowsInstaller` task and the Windows CI job only when it runs there, and the release job then attaches the MSI and the ZIP next to the `.deb` ([chapter 51](51-releases.md)). The others ship only the Debian package, and their README should say so in a short *Platforms* section, so that nobody looks for an installer that does not exist.
+
+| Program | Windows | What it depends on |
+|---|---|---|
+| Web, WritePad, Fractals | MSI and ZIP | Java only |
+| Imagescan | MSI and ZIP | SANE on Linux, Windows Image Acquisition on Windows ([chapter 31](31-imagescan.md)) |
+| Audio | MSI and ZIP | libcdio on Linux, the Windows CD-ROM driver on Windows ([chapter 33](33-audio.md)) |
+| the games | MSI and ZIP | Java only, gamepads through XInput on Windows |
+| Pad, Calculator, Contacts, Books, PDF Viewer | not built yet | Java only: a Windows build needs only the task and the CI job |
+| Calendar, Mail | not built yet | Java only; handing an invitation or a contact to the other program starts it by its Linux command name |
+| Image Viewer | not built yet | Java; lossless JPEG rotation calls `jpegtran` |
+| Files | no | `/proc/self/mounts` for the disks, the freedesktop.org trash, `xdg-open` |
+| Screenshot | no | X11 for the window list and the clipboard hand-off |
+| Video, TV | no | libmpv, embedded in an X11 window ([chapter 48](48-video-playback.md)); libmpv exists for Windows as `libmpv-2.dll` |
+| Backup & Sync | no | restic, `/proc/mounts` and `/dev/disk/by-uuid` for the disks, the freedesktop.org trash, the Secret Service keyring; restic itself exists for Windows |
+
+A program moves from *no* to *MSI and ZIP* when each Linux part has a Windows counterpart behind the same interface, as Imagescan's scanner backends and Audio's CD drives have. A native program it needs, such as `restic.exe` or `libmpv-2.dll`, goes into the installer with jpackage's `--input` folder, because Windows has no package manager that would bring it along.
+
 ## Checking it in CI
 
 A package nobody tried is a package that may be broken. Each repository's CI builds the packages on every push and pull request and checks what is in them. On Linux, after the tests:
@@ -280,7 +300,7 @@ An MSI under 30 MB has no Java runtime inside and would not run on a machine wit
 3. `packaging/<name>.desktop` with names in five languages, `Icon=<name>`, `Exec=/usr/bin/<name> %F` and the categories of the drawer it belongs to. `desktop-file-validate` reports no errors.
 4. `packaging/eu.amadeos.apps.<name>.metainfo.xml` (or `eu.amadeos.games.<name>`) with names, summaries and descriptions in five languages, the screenshot address and an OARS rating. `appstreamcli validate --no-net` passes.
 5. `docs/screenshots/<name>.png`, taken on amadeOS with the program in use.
-6. The tasks `deb` (with the right `Section` and `Depends`), `installToAmadeOs` and `windowsInstaller` with a new upgrade UUID.
+6. The tasks `deb` (with the right `Section` and `Depends`), `installToAmadeOs` and, if the program runs on Windows, `windowsInstaller` with a new upgrade UUID. Otherwise a *Platforms* section in the README says that it is Linux only, and why.
 7. The CI jobs for both packages, with the file list of the package check, and the version, release and commit jobs of [chapter 51](51-releases.md).
 8. The repository name in `amadeos/repositories.list`.
 9. Install the package on amadeOS: the program is in its drawer with its icon, starts, and Software shows its description and screenshot.
@@ -300,5 +320,5 @@ An MSI under 30 MB has no Java runtime inside and would not run on a machine wit
 - The desktop entry's `Categories` decide the Front Panel drawer; its `Icon` is a name looked up in the `hicolor` icon theme.
 - AppStream metadata gives Software the name, summary, description and screenshot in five languages. The same files will feed the catalogue of an amadeOS package repository.
 - `installToAmadeOs` and a line in `repositories.list` put a program into the amadeOS image; `buildDistribution.sh` builds them all.
-- jpackage with WiX builds a Windows MSI with its own Java runtime; the upgrade UUID never changes.
+- jpackage with WiX builds a Windows MSI with its own Java runtime; the upgrade UUID never changes. Only programs that run on Windows get one; the others say *Linux only* in their README.
 - CI builds both packages on every change, checks their contents, and keeps them for download.
