@@ -26,6 +26,9 @@ repositories {
 dependencies {
     api 'com.google.inject:guice:7.0.0'
     api 'org.slf4j:slf4j-api:2.0.17'
+    // Only the programs that play with libmpv (eu.amadeos.commons.mpv) need JNA; they declare it themselves.
+    compileOnly 'net.java.dev.jna:jna:5.14.0'
+    testImplementation 'net.java.dev.jna:jna:5.14.0'
 
     testImplementation platform('org.junit:junit-bom:5.10.2')
     testImplementation 'org.junit.jupiter:junit-jupiter'
