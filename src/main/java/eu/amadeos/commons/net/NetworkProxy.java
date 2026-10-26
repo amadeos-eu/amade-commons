@@ -142,10 +142,14 @@ public final class NetworkProxy extends ProxySelector {
         };
     }
 
-    /** True if the host is reached directly: loopback, or listed in the no-proxy list. */
+    /**
+     * True if the host is reached directly: loopback, an address of the local network (a printer, a NAS), or
+     * listed in the no-proxy list.
+     */
     public boolean bypass(String host) {
         String h = host.toLowerCase(Locale.ROOT);
         if (h.equals("localhost") || h.startsWith("127.") || h.equals("::1") || h.equals("[::1]")) return true;
+        if (isLocalAddress(h)) return true;
         List<String> rules = settings.mode() == ProxySettings.Mode.SYSTEM
                 ? ProxySettings.split(env("no_proxy")) : settings.noProxyHosts();
         for (String rule : rules) {
@@ -155,6 +159,19 @@ public final class NetworkProxy extends ProxySelector {
             if (r.startsWith(".") ? h.endsWith(r) || h.equals(r.substring(1)) : h.equals(r) || h.endsWith("." + r)) return true;
         }
         return false;
+    }
+
+    /** An IP address of a private or link-local network, written as such (no name lookup). */
+    static boolean isLocalAddress(String host) {
+        String h = host.startsWith("[") && host.endsWith("]") ? host.substring(1, host.length() - 1) : host;
+        if (h.matches("\\d{1,3}(\\.\\d{1,3}){3}")) {
+            String[] parts = h.split("\\.");
+            int a = Integer.parseInt(parts[0]);
+            int b = Integer.parseInt(parts[1]);
+            return a == 10 || (a == 172 && b >= 16 && b <= 31) || (a == 192 && b == 168) || (a == 169 && b == 254);
+        }
+        return h.contains(":") && (h.startsWith("fc") || h.startsWith("fd") || h.startsWith("fe8") || h.startsWith("fe9")
+                || h.startsWith("fea") || h.startsWith("feb"));
     }
 
     // --8<-- [start:apply-to]

@@ -40,6 +40,10 @@ class NetTest {
         assertEquals("DIRECT", target(proxy.select(URI.create("http://intranet.example/x"))));
         assertEquals("DIRECT", target(proxy.select(URI.create("http://nas.music.lan/x"))));
         assertEquals("DIRECT", target(proxy.select(URI.create("http://127.0.0.1:8000/x"))));
+        assertEquals("DIRECT", target(proxy.select(URI.create("http://192.168.1.20:631/ipp/print"))));
+        assertEquals("DIRECT", target(proxy.select(URI.create("http://[fe80::1]/x"))));
+        assertEquals("plain.example:8080", target(proxy.select(URI.create("http://8.8.8.8/x"))));
+        assertEquals("plain.example:8080", target(proxy.select(URI.create("http://172.32.0.1/x"))));
         assertEquals("p@ss", proxy.endpoint(true).orElseThrow().password());
         assertEquals("secure.example:3128", proxy.describe().orElseThrow());
     }
