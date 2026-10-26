@@ -265,6 +265,7 @@ Not every amade program is built for Windows. A program gets the `windowsInstall
 | Files | no | `/proc/self/mounts` for the disks, the freedesktop.org trash, `xdg-open` |
 | Screenshot | no | X11 for the window list and the clipboard hand-off |
 | Video, TV | no | libmpv, embedded in an X11 window ([chapter 48](48-video-playback.md)); libmpv exists for Windows as `libmpv-2.dll` |
+| News | not built yet | Java only: a Windows build needs only the task and the CI job |
 | Backup & Sync | no | restic, `/proc/mounts` and `/dev/disk/by-uuid` for the disks, the freedesktop.org trash, the Secret Service keyring; restic itself exists for Windows |
 
 A program moves from *no* to *MSI and ZIP* when each Linux part has a Windows counterpart behind the same interface, as Imagescan's scanner backends and Audio's CD drives have. A native program it needs, such as `restic.exe` or `libmpv-2.dll`, goes into the installer with jpackage's `--input` folder, because Windows has no package manager that would bring it along.
