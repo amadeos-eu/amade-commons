@@ -42,7 +42,9 @@ The constructor takes the environment and the home directory as parameters, and 
 
 **When to choose it.** As the place a program saves pictures without asking, as Screenshot does, and as the folder a file chooser for pictures opens first, as in Fractals and Imagescan. The folder may not exist yet: create it before saving, or fall back to `home()` in a file chooser.
 
-**How it works.** It reads the line `XDG_PICTURES_DIR=` and accepts the two forms the file may contain, `"$HOME/Bilder"` and an absolute path. Without the file or the line, the answer is `~/Pictures`:
+`videos()` does the same for the videos folder (`XDG_VIDEOS_DIR`, else `~/Videos`). TV saves its recordings there ([chapter 38](38-tv.md)).
+
+**How it works.** It reads the line `XDG_PICTURES_DIR=` (or `XDG_VIDEOS_DIR=`) and accepts the two forms the file may contain, `"$HOME/Bilder"` and an absolute path. Without the file or the line, the answer is `~/Pictures` (or `~/Videos`):
 
 ```java title="amade-commons · config/XdgDirectories.java"
 --8<-- "amade-commons/src/main/java/eu/amadeos/commons/config/XdgDirectories.java:pictures"
