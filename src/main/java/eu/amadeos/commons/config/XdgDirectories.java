@@ -60,13 +60,23 @@ public final class XdgDirectories {
      * exist yet; a program that saves into it creates it, a file chooser falls back to the home folder.
      */
     public Path pictures() {
+        return userDirectory("XDG_PICTURES_DIR", "Pictures");
+    }
+
+    /** The user's videos folder, {@code XDG_VIDEOS_DIR} ({@code ~/Videos}, {@code ~/Vidéos}), like {@link #pictures()}. */
+    public Path videos() {
+        return userDirectory("XDG_VIDEOS_DIR", "Videos");
+    }
+
+    /** A folder of {@code user-dirs.dirs}, written as {@code "$HOME/Bilder"} or as an absolute path. */
+    private Path userDirectory(String variable, String fallback) {
         Path home = Path.of(userHome);
         try {
             Path dirs = configHome().resolve("user-dirs.dirs");
             if (Files.isRegularFile(dirs)) {
                 for (String line : Files.readAllLines(dirs)) {
                     line = line.strip();
-                    if (!line.startsWith("XDG_PICTURES_DIR=")) continue;
+                    if (!line.startsWith(variable + "=")) continue;
                     String value = line.substring(line.indexOf('=') + 1).replace("\"", "");
                     if (value.startsWith("$HOME")) return home.resolve(value.substring(5).replaceFirst("^/+", ""));
                     if (value.startsWith("/")) return Path.of(value);
@@ -75,7 +85,7 @@ public final class XdgDirectories {
         } catch (IOException | RuntimeException e) {
             // an unreadable file counts as no file
         }
-        return home.resolve("Pictures");
+        return home.resolve(fallback);
     }
     // --8<-- [end:pictures]
 
