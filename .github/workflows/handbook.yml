@@ -36,6 +36,7 @@ env:
   BOOKS_COMMIT: e7316c86be713d08dcc9916ae3798814c48f918f
   TV_COMMIT: 6ff5dafc74fad1ea7e1f089875514627ec15b88a
   BACKUP_COMMIT: 5e923dfd8b24263ba2492514b92740df306a3a71
+  NEWS_COMMIT: 2161f48ca22e54cfd293e5e8f15fa15362b2f1cd
   # Part VI: the desktop modules.
   AMADEOS_SYSTEM_COMMIT: b007e3c86e8c379ea3df92b3fc48ffac42d2e5ab
   # Chapter 51: the version and release scripts.
@@ -138,6 +139,11 @@ jobs:
           repository: datazuul/amade-backup
           ref: ${{ env.BACKUP_COMMIT }}
           path: amade-backup
+      - uses: actions/checkout@v7
+        with:
+          repository: datazuul/amade-news
+          ref: ${{ env.NEWS_COMMIT }}
+          path: amade-news
       - uses: actions/checkout@v7
         with:
           repository: datazuul/amadeos-system
