@@ -142,4 +142,4 @@ amade-commons has no network package, and that is deliberate. Mail and Audio bot
 - **Never online by itself.** A program goes online when the user asked for something that needs it: a CD lookup, a station search, images in a message. Web, the documentation viewer, never goes online at all ([chapter 11](11-web.md#never-online-by-itself)).
 - **Answers are read with `Json`'s forgiving helpers**, because a member that a service leaves out must not break the program.
 
-When a third program needs the same client, the shared part (time limits, `User-Agent`, the proxy) will move into amade-commons, as every other part of it did.
+When a third program needs the same client, the shared part (time limits, `User-Agent`, the proxy) will move into amade-commons, as every other part of it did. TV is that third program ([chapter 38](38-tv.md#and-what-stays-in-tv)), so the network is the next part to move.
