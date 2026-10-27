@@ -167,6 +167,8 @@ The updates cell is the most careful one, because what it reads takes time. It r
 
 The number on the cell is red when security updates are among them. A click opens a menu with the first eight updates, *Install all*, *Install security updates only*, *Check now*, and *Show updates*, which starts the Software program on its Updates tab.
 
+An installation opens `UpdateProgressWindow`, a small window with what apt does just now (the message of each `Progress`), a progress bar and, behind *Details*, apt's and dpkg's lines as the `ProgressListener` hands them on. The cell hands both to the EDT and keeps its own thin bar at the bottom edge. *Hide* only hides the window; while the installation runs, the cell's menu offers *Show progress…*. At the end the window shows the outcome itself, with the log opened on a failure, and only when the user has hidden it does the cell fall back to a message dialog. The window is made through a `Supplier<ProgressView>`, so the tests pass a view of their own and need no screen, and a headless session gets a view that shows nothing.
+
 ### The sound cell
 
 The sound cell shows a loudspeaker with one to three waves for the volume, and an X when the output is muted. Its menu has a volume slider, the outputs and the inputs:
