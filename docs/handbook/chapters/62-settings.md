@@ -1,6 +1,6 @@
 # 62. Settings
 
-Every application of this book follows the desktop theme ([chapter 42](42-look.md#following-the-desktop-themestore)). This chapter is the other end: Settings, amadeOS's successor of CDE's Style Manager (dtstyle), where the user picks the theme, the text size, the backdrop, the workspace names and the Front Panel, keyboard, mouse, bell, the resolution and arrangement of the monitors, screen saver, window behaviour, clipboard and what starts at login, and, for the system, the keyring, the updates, the language and the time zone. It is a desktop module, so it starts without Guice and talks to X11. It writes the files the applications and the window manager follow, and it applies some settings by running the X server's own tools.
+Every application of this book follows the desktop theme ([chapter 42](42-look.md#following-the-desktop-themestore)). This chapter is the other end: Settings, amadeOS's successor of CDE's Style Manager (dtstyle), where the user picks the theme, the text size, the backdrop, the workspace names and the Front Panel, keyboard, mouse, bell, the resolution and arrangement of the monitors, screen saver, window behaviour, clipboard and what starts at login, the network, Bluetooth, the printers and the sound devices, and, for the system, the keyring, the updates, the language and the time zone. It is a desktop module, so it starts without Guice and talks to X11. It writes the files the applications and the window manager follow, and it applies some settings by running the X server's own tools.
 
 ![Settings: a sidebar of controls, the page of the selected one on the right](images/desktop/settings.jpg)
 
@@ -12,10 +12,11 @@ Every application of this book follows the desktop theme ([chapter 42](42-look.m
 - Applying input settings with `xset`, `xmodmap` and `xrdb`, from pure functions that tests can check.
 - Changing the resolution with `xrandr` safely, with a countdown back to the old layout, and how the desktop follows a new screen size.
 - How pages that reach the keyring, the package manager and the time zone stay testable, and how a user switches off a service of the system without touching a file of a package.
+- Pages that act at once on NetworkManager, PipeWire, BlueZ and CUPS, and a Bluetooth pairing agent of your own over D-Bus.
 
 ## Pages, a sidebar and a search
 
-CDE's Style Manager was a row of buttons, each opening a small dialog. That works for a handful of controls, and amadeOS has more of them every release, so Settings shows them in a sidebar in four groups, *Appearance*, *Input and Sound*, *Desktop* and *System*, with the page of the selected control on the right. The controls are an enum, `SettingsCategory`, in CDE's order; each knows its group, whether amadeOS has it yet (a control that is not ready is shown dimmed with a tooltip) and the words a search finds it by:
+CDE's Style Manager was a row of buttons, each opening a small dialog. That works for a handful of controls, and amadeOS has more of them every release, so Settings shows them in a sidebar in five groups, *Appearance*, *Input and Sound*, *Desktop*, *Network and Devices* and *System*, with the page of the selected control on the right. The controls are an enum, `SettingsCategory`, in CDE's order; each knows its group, whether amadeOS has it yet (a control that is not ready is shown dimmed with a tooltip) and the words a search finds it by:
 
 ```java title="amadeos-system · settings/SettingsCategory.java"
 --8<-- "amadeos-system/settings/src/main/java/eu/amadeos/system/settings/SettingsCategory.java"
@@ -225,13 +226,74 @@ The keyring is an interface in the session module, which already depends on dbus
 
 All three pages do their work in a `SwingWorker`: reading the keyring, asking apt for the waiting updates, switching automatic security updates (which asks for the administrator's password) and setting the time zone. `apply()` returns a status line such as *saving…* at once, and the worker puts the result there when it is done.
 
+## Devices: pages that act at once
+
+Most pages collect changes and save them on *Apply*. The device pages do not: joining a WLAN, choosing a loudspeaker, pairing a mouse or adding a printer happens in the system the moment the user clicks, and there is nothing to keep back. `SettingsCategory.immediate()` names them, *Sound*, *Bluetooth* and *Printers*; the sidebar view hides *Apply* and *Reset* for them, and `ControlDialog` in the compact view offers only *Close*. The Network page is both: its *Connections* tab acts at once, its *Proxy* tab waits for *Apply* as before. They live in a new group, *Network and Devices*, with *Sound* in *Input and Sound*.
+
+Each page gets its backend from `SystemAccess` (above), as an interface, so `DevicePagesTest` builds all four with the fakes of `FakeDevices` and never needs NetworkManager, PipeWire, BlueZ or CUPS. Each backend talks to the system the way the rest of amadeOS already does:
+
+| Page | Interface | Implementation | Talks to |
+|---|---|---|---|
+| Network, *Connections* | `NetworkService` (`base`) | `NmcliNetworkService` | NetworkManager through `nmcli`, like the network cell |
+| Sound | `SoundService` (`base`), `SoundCheck` | `PactlSoundService`, `PulseSoundCheck` | PipeWire through `pactl`, `paplay` and `parec`, like the sound cell ([chapter 63](63-front-panel.md#the-sound-cell)) |
+| Bluetooth | `BluetoothService` (`base`) | `BluezBluetoothService` | `bluetoothd` on the system bus, with dbus-java |
+| Printers | `PrinterService` | `CupsPrinterService` | CUPS through `CupsClient` of the print module (IPP) and `lpadmin`, `lpinfo`, `lpoptions`, `lp` |
+
+All calls run off the event dispatch thread, and each page shows *busy* while one is out, so a slow `nmcli --wait` or a pairing that waits for the user never freezes the window. The pages read their state again after every action, and the Bluetooth page also follows the signals of BlueZ.
+
+![The Network page with its Connections tab](images/desktop/settings-network.jpg)
+
+### Network: the rest of nmcli
+
+`NetworkService` grew default methods for the page: `devices()` lists the wired and wireless devices, `details(device)` parses `nmcli device show` into a `DeviceDetails` record (addresses, gateway, DNS, hardware address, speed), and `connectHidden(ssid, password)` joins a network that does not announce itself with `nmcli device wifi connect … hidden yes`. As in the cell, the password is an argument of `nmcli`, briefly visible in the process list; the ROADMAP keeps a D-Bus client as the fix.
+
+### Sound: profiles and a test tone
+
+![The Sound page](images/desktop/settings-sound.jpg)
+
+Beyond the cell, the page sets the volume of any device (`set-sink-volume` with the device's name instead of `@DEFAULT_SINK@`), up to 150 %, and the *profile* of each card, which decides whether HDMI or the analog jacks, or for a Bluetooth headset good sound or the microphone, are offered. `Pactl.parseCards` reads `pactl list cards`; a profile line looks like `output:hdmi-stereo: Digital Stereo (HDMI) Output (sinks: 1, sources: 0, priority: 5900, available: no)`, and descriptions may contain parentheses themselves, so the parser takes the last bracket that starts with `sinks:`, `sources:` or `priority:`. Profiles that are not available, an HDMI port with no screen, stay in the list but are marked.
+
+`PulseSoundCheck` builds a short WAV of two soft rising tones, on the left, the right or both channels, writes it to a temporary file and plays it with `paplay --device=<sink>`. The level meter starts `parec` on the chosen source with raw 16-bit samples at 8000 Hz and shows the loudest sample of each tenth of a second; the process ends when the page is hidden.
+
+### Bluetooth: an agent of our own
+
+![The Bluetooth page](images/desktop/settings-bluetooth.jpg)
+
+BlueZ has no command line that a program should parse, `bluetoothctl` is interactive, so the page speaks D-Bus like the polkit agent of the session. `BluezObjects` turns `GetManagedObjects` of `org.bluez` into `BluetoothStatus`: the adapter (`Adapter1`) and the devices (`Device1`) with their name, icon, paired, connected and, from `Battery1`, the charge. The Front Panel uses the same service, so it is in `base`, and `base` depends on dbus-java now.
+
+Pairing needs an *agent*: bluetoothd asks it to compare a number, to show a passkey to type on a keyboard, or for a PIN. Desktops register one for the session; amadeOS has none running, so the page registers its own for the length of one pairing, with the capability `KeyboardDisplay`:
+
+```java title="amadeos-system · base/bluetooth/BluezBluetoothService.java"
+--8<-- "amadeos-system/base/src/main/java/eu/amadeos/system/base/bluetooth/BluezBluetoothService.java:pair"
+```
+
+`Pair` is called asynchronously with a timeout of 90 seconds, because it returns only when the user has answered on both devices; when the time is up, `CancelPairing` ends it. A paired device is set `Trusted`, so headphones switched on later connect by themselves. The agent itself only forwards the questions to a `PairingAgent`, which the page implements with Motif dialogs:
+
+```java title="amadeos-system · base/bluetooth/BluezBluetoothService.java"
+--8<-- "amadeos-system/base/src/main/java/eu/amadeos/system/base/bluetooth/BluezBluetoothService.java:agent"
+```
+
+A refusal goes back to bluetoothd as a D-Bus error. dbus-java names the error after the exception class, so `org.bluez.Error.Rejected` is a class `Rejected` nested in `org.bluez.Error`, in a package of that name in `base`.
+
+### Printers: driverless only
+
+![The Printers page](images/desktop/settings-printers.jpg)
+
+The list comes from CUPS over IPP, through `CupsClient` of the print module, the same code as the Print Manager. Everything that changes CUPS goes through its own tools, which members of the group `lpadmin` may run without a password:
+
+```java title="amadeos-system · settings/printers/Lpadmin.java"
+--8<-- "amadeos-system/settings/src/main/java/eu/amadeos/system/printers/Lpadmin.java:commands"
+```
+
+`lpinfo --include-schemes dnssd` finds the printers announced in the network and the USB printers that `ipp-usb` makes look like network printers; `lpadmin -m everywhere` asks the printer itself for its abilities and writes a PPD from the answer. So the page needs no driver database, and printers that need a driver are left to the CUPS web pages. A typed host becomes `ipp://host/ipp/print`, the path of IPP Everywhere. The defaults for paper and two-sided printing are `lpadmin -o PageSize-default=…` and `Duplex-default=…`, which every program's print dialog starts from.
+
 ## Network: one proxy for every program
 
-The proxy is the one setting of the System group that the applications read too. So its store is not in Settings but in amade-commons, `ProxyStore` with `proxy.conf` and the password in the keyring ([chapter 47](47-programs-json-network.md#the-proxy-of-the-desktop-network)); the Network page only edits it.
+The proxy is the one setting of Settings that the applications read too. So its store is not in Settings but in amade-commons, `ProxyStore` with `proxy.conf` and the password in the keyring ([chapter 47](47-programs-json-network.md#the-proxy-of-the-desktop-network)); the Network page only edits it.
 
-![The Network page](images/desktop/settings-network.jpg)
+![The Proxy tab of the Network page](images/desktop/settings-proxy.jpg)
 
-The page reaches three places, each in its own way:
+The *Proxy* tab reaches three places, each in its own way:
 
 | Who | How the proxy gets there |
 |---|---|
@@ -271,7 +333,8 @@ Everything with a name asks it: `SettingsCategory.label()` reads `category.keybo
 1. **Following the language switch.** Settings reads the language at start. Let it follow the panel's language button while it is open: `LocaleStore` can watch `locale.conf`. Which texts are already on the screen, and how do you replace them?
 2. **Resuming the session.** Let the Startup page offer CDE's *Resume current session*: at logout, record the programs whose windows are open (`WM_COMMAND`, or the desktop entry of their `WM_CLASS`), and at the next login start them again from `amadeos-session autostart`. Which programs cannot be resumed that way, and what should the page say about them?
 3. **One monitor at a time.** With two monitors a maximized window covers both. Let the window manager ask RandR for the monitors (`XRRGetMonitors`, or `xrandr --listmonitors` at each root `ConfigureNotify`) and maximize a window on the monitor that holds its centre. Where should the Front Panel go, and what does `_NET_WORKAREA` have to say then?
-4. **A theme editor.** Add *New…* to the Color page: pick a base colour, derive the rest with `DesktopTheme.fromBase`, show the palette and write `~/.config/amadeos/themes/<id>/theme.properties`.
+4. **Fixed addresses.** Add a *Settings…* button to the wired connection of the Network page: IPv4 automatic or manual, address with prefix, gateway and DNS, written with `nmcli connection modify <name> ipv4.method manual ipv4.addresses … ipv4.gateway … ipv4.dns …`. How do you test the command without NetworkManager, and what has to happen to the active connection afterwards?
+5. **A theme editor.** Add *New…* to the Color page: pick a base colour, derive the rest with `DesktopTheme.fromBase`, show the palette and write `~/.config/amadeos/themes/<id>/theme.properties`.
 
 ## Summary
 
@@ -282,6 +345,7 @@ Everything with a name asks it: `SettingsCategory.label()` reads `category.keybo
 - The text size travels with the theme in `font.conf`; the window settings are a record in `base` that the window manager follows through `window.conf`, and the panel follows `panel.conf` and `workspaces.conf` the same way.
 - Startup switches off a script of the system in a file of the user's, `startup.conf`, and keeps the user's programs as desktop entries in `~/.config/autostart`.
 - The System pages get the keyring, the package manager and the time zone as one record, so tests hand in stand-ins; the keyring is unlocked through GNOME Keyring's own interface, in Settings' own dialog.
+- *Sound*, *Bluetooth* and *Printers* act at once and have no *Apply*; their backends are interfaces in `SystemAccess`, over `pactl`, BlueZ on D-Bus with an agent of their own, and CUPS with `lpadmin -m everywhere`.
 - The Network page edits the proxy that amade-commons keeps for every program; the session exports it at login, the launcher at every start, and the package helper writes apt's copy from standard input.
 - Settings of the X server are files first and commands second, so the session can apply them again at every login.
 - The Display page sets all monitors in one `xrandr` call, saves only a layout the user kept within 15 seconds, one per set of monitors; the window manager and the panel follow the new root size themselves.

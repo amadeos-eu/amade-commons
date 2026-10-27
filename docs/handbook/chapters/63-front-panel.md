@@ -145,13 +145,13 @@ A double click on another button is then a switch and a rename, as in CDE. Each 
 
 ## Status cells
 
-The rightmost slot is a grid of small cells: the network, the sound, the battery on computers that have one and, while updates are waiting, the software updates. Bluetooth is to follow. Each cell is a `StatusCell`, and the slot shows only those that report themselves `available`:
+The rightmost slot is a grid of small cells: the network, the sound, the battery on computers that have one, Bluetooth on computers with an adapter and, while updates are waiting, the software updates. Each cell is a `StatusCell`, and the slot shows only those that report themselves `available`:
 
 ```java title="amadeos-system · panel-cde/AmadeDesktopPanel.java"
 --8<-- "amadeos-system/panel-cde/src/main/java/eu/amadeos/system/panel/cde/AmadeDesktopPanel.java:status"
 ```
 
-The cells take their services in the constructor, `NmcliNetworkService` for the network, `PactlSoundService` for the sound, `PowerSupplies` for the battery and `AptPackageService` for the updates ([chapter 64](64-software.md)), and the actions to open the settings, so a test builds a cell with fakes. Their texts, like all of the panel's, are in `desktop.properties` and its translations ([below](#the-panels-language)).
+The cells take their services in the constructor, `NmcliNetworkService` for the network, `PactlSoundService` for the sound, `PowerSupplies` for the battery, `BluezBluetoothService` for Bluetooth and `AptPackageService` for the updates ([chapter 64](64-software.md)), and the actions to open the settings, so a test builds a cell with fakes. Their texts, like all of the panel's, are in `desktop.properties` and its translations ([below](#the-panels-language)).
 
 The updates cell is the most careful one, because what it reads takes time. It reads the waiting updates on a thread of its own, twenty seconds after login so the session can settle first, then every thirty minutes, and whenever the installed packages or the package lists change:
 
@@ -207,6 +207,26 @@ Reading sysfs takes microseconds, so `BatteryCell` reads once in its constructor
 
 `BatteryIcons` draws a lying battery filled to the charge, in green above 50 %, yellow down to 21 % and red at 20 % and below. The three colours are fixed rather than taken from the theme, because they carry a meaning, like the red of security updates. A bolt shows mains power. There is nothing to click; the tooltip gives the percentage and the time.
 
+### The Bluetooth cell
+
+The Bluetooth cell shows only on a computer with an adapter: `available()` is false while `BluezBluetoothService` finds none, and the cell asks the slot to lay itself out again when an adapter appears or goes. Its rune is blue while Bluetooth is on, with a dot per connected device, and grey with a slash while it is off. It follows the `PropertiesChanged` and `InterfacesAdded` signals of BlueZ, and reads the state again every 30 seconds in case a signal got lost. The menu switches Bluetooth, and connects or disconnects the paired devices with one click; pairing stays in Settings, which the last entry opens:
+
+```java title="amadeos-system · panel-cde/status/BluetoothCell.java"
+--8<-- "amadeos-system/panel-cde/src/main/java/eu/amadeos/system/panel/cde/status/BluetoothCell.java:menu"
+```
+
+### A second slot
+
+CDE's slot holds four cells, and a laptop with Bluetooth while updates wait has five to show. `StatusDockWidget` therefore opens a second slot of four beside the first when more than four cells are available, and closes it again when they fit into one:
+
+```java title="amadeos-system · panel-cde/status/StatusDockWidget.java"
+--8<-- "amadeos-system/panel-cde/src/main/java/eu/amadeos/system/panel/cde/status/StatusDockWidget.java:slots"
+```
+
+![Five cells in two slots](images/desktop/status-slot-two.png)
+
+The order is fixed, network, sound, battery, Bluetooth, updates, so the updates cell, which comes and goes, is the one that moves. A cell that is hidden or unavailable leaves no gap.
+
 ## The panel's language
 
 Everything the panel says is in `desktop.properties` and its four translations: the drawer titles and the fixed entries, the tooltips, the Application Manager and its tabs, the clock and the calendar, the workspace names. `PanelTexts` loads them once, in the language of the session. That is deliberate: the session exports the language of `locale.conf` as `LANG` at login, and the panel's language button says that the panel follows at the next login, like the terminals. So `PanelTexts` resolves the language from the environment only ([chapter 43](43-languages.md#which-language-localeresolution)), where Settings, a program started later, reads `locale.conf` itself ([chapter 62](62-settings.md#five-languages-without-guice)).
@@ -230,4 +250,5 @@ Dates follow the language too. The calendar's tooltip used a fixed English patte
 - A click on the current workspace's button renames it; the panel stores the names and publishes them in `_NET_DESKTOP_NAMES` for the window manager and Settings.
 - Status cells read in the background, show only when they have something to say, and take their services in the constructor so tests can fake them.
 - The sound cell talks to PipeWire through `pactl`, follows `pactl subscribe`, and sends only the newest volume while the slider moves.
+- The Bluetooth cell follows BlueZ's signals on the system bus; more than four cells open a second slot.
 - The panel's texts and dates are in the session's language, resolved once at start.

@@ -38,7 +38,7 @@ env:
   BACKUP_COMMIT: 5e923dfd8b24263ba2492514b92740df306a3a71
   NEWS_COMMIT: 2161f48ca22e54cfd293e5e8f15fa15362b2f1cd
   # Part VI: the desktop modules.
-  AMADEOS_SYSTEM_COMMIT: b007e3c86e8c379ea3df92b3fc48ffac42d2e5ab
+  AMADEOS_SYSTEM_COMMIT: 24efca33f4ae9afb3453f301169042cf89257f4c
   # Chapter 51: the version and release scripts.
   AMADEOS_CI_COMMIT: c5d64042b79c899bb73df6034dbe366bc06e782a
 
