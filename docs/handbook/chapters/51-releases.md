@@ -293,6 +293,23 @@ To check a repository by hand, or set it up without the script:
 | *Settings → General → Default branch* | `develop` |
 | *Settings → Rules → Rulesets* | "Release branches": target branches `main` and `release`, rules **Block force pushes** and **Restrict deletions** |
 
+### A new repository
+
+A new program or game gets its repository and its release branches before the first pull request, so that the first change already goes to `develop` and nothing reaches main unpromoted. The owner does it, in this order:
+
+1. On github.com: **New repository** under **datazuul**, named `amade-<name>` (or `amade-<name>-game`), with a licence file, so that main has a first commit. Nothing else goes on main.
+2. The release branches, with the script or in the browser:
+    - **With the script:** `scripts/setup-release-branches.sh amade-<name>` in amadeos-ci. It does all of the steps below.
+    - **In the browser:**
+        1. *Settings → General → Pull Requests*: tick only **Allow merge commits**.
+        2. On the repository's front page, open the branch menu (it shows `main`), type `develop` and choose **Create branch develop from main**. Do the same for `release`.
+        3. *Settings → General → Default branch*: switch to `develop`.
+        4. *Settings → Rules → Rulesets → New ruleset → New branch ruleset*: name "Release branches", enforcement **Active**, target branches `main` and `release` (*Add target → Include by pattern*), rules **Restrict deletions** and **Block force pushes**. Rulesets need a public repository or a paid plan; without one, the convention alone protects the branches.
+3. The first pull request goes to `develop`, and the build workflow and `build.gradle` get the version, release and commit jobs from the start (see the [checklist of chapter 50](50-packaging.md#checklist-for-a-new-program)).
+
+!!! warning "Not develop first, then the script"
+    The script leaves a repository alone once it has `develop`: it only sets the merge settings. If `develop` was pushed by hand before it ran, the default branch stays main and there is no ruleset. Then do steps 2.3 and 2.4 in the browser.
+
 !!! note "Why merge commits only?"
     The version comes from the commits since the last tag, one Conventional Commit for each change. A squash merge would turn a pull request into a single commit with the pull request's title, and a rebase merge would give its commits new hashes. Both would break the commit pins of the handbooks (`handbook.yml`) and of the apps (amade-commons by commit), which must reach develop unchanged.
 
