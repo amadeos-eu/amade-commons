@@ -56,6 +56,44 @@ jobs:
         with:
           version: ${{ needs.test.outputs.version }}
 
+  # Only on main, after the release job tagged vX.Y.Z: the library to Maven Central as eu.amadeos:amade-commons.
+  # Account, signing key and the five secrets: chapter 8 of the amadeOS Betriebshandbuch. Without the secrets
+  # the job only says so, so a release still goes through before Central is set up.
+  central:
+    needs: [test, release]
+    if: needs.test.outputs.channel == 'release'
+    runs-on: ubuntu-latest
+    env:
+      ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+      ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+      ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.MAVEN_SIGNING_KEY }}
+      ORG_GRADLE_PROJECT_signingInMemoryKeyId: ${{ secrets.MAVEN_SIGNING_KEY_ID }}
+      ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.MAVEN_SIGNING_PASSPHRASE }}
+    steps:
+      - name: Check the secrets
+        id: secrets
+        run: |
+          if [ -z "$ORG_GRADLE_PROJECT_mavenCentralUsername" ] || [ -z "$ORG_GRADLE_PROJECT_signingInMemoryKey" ]; then
+            echo "::warning::Maven Central secrets are not set; the release is not published to Maven Central."
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v7
+        if: steps.secrets.outputs.publish == 'true'
+      - uses: actions/setup-java@v6
+        if: steps.secrets.outputs.publish == 'true'
+        with:
+          distribution: temurin
+          java-version: '25'
+      - uses: gradle/actions/setup-gradle@v6
+        if: steps.secrets.outputs.publish == 'true'
+        with:
+          cache-provider: basic
+      - name: Publish to Maven Central
+        if: steps.secrets.outputs.publish == 'true'
+        run: ./gradlew publishToMavenCentral --no-daemon -PmavenCentral -PappVersion=${{ needs.test.outputs.version }}
+
   commits:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest

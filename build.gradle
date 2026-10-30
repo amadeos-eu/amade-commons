@@ -1,6 +1,6 @@
 plugins {
     id 'java-library'
-    id 'maven-publish'
+    id 'com.vanniktech.maven.publish' version '0.37.0'
 }
 
 // JitPack publishes under com.github.<owner>; using the same coordinates locally lets an app's
@@ -15,8 +15,7 @@ java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(25)
     }
-    withSourcesJar()
-    withJavadocJar()
+    // The sources and javadoc jars, which Maven Central requires, come from mavenPublishing below.
 }
 
 repositories {
@@ -55,22 +54,49 @@ jar {
     }
 }
 
-publishing {
-    publications {
-        maven(MavenPublication) {
-            artifactId = 'amade-commons'
-            from components.java
-            pom {
-                name = 'amade-commons'
-                description = 'Shared theme, Motif look and application infrastructure for amadeOS Swing applications'
-                url = 'https://github.com/amadeos-eu/amade-commons'
-                licenses {
-                    license {
-                        name = 'EUPL-1.2'
-                        url = 'https://interoperable-europe.ec.europa.eu/collection/eupl/eupl-text-eupl-12'
-                    }
-                }
+// Releases from main also go to Maven Central as eu.amadeos:amade-commons (the namespace verified for
+// amadeos.eu); the release workflow passes -PmavenCentral. Every other build, JitPack's and the composite
+// builds of the apps included, keeps the JitPack coordinates above, so the apps' pins still match.
+// Operating steps (Central Portal, signing key, secrets): chapter 8 of the amadeOS Betriebshandbuch.
+def centralRelease = providers.gradleProperty('mavenCentral').isPresent()
+
+mavenPublishing {
+    coordinates(centralRelease ? 'eu.amadeos' : project.group.toString(), 'amade-commons', project.version.toString())
+    if (centralRelease) {
+        publishToMavenCentral(true)
+        signAllPublications()
+    }
+    pom {
+        name = 'amade-commons'
+        description = 'Shared theme, Motif look and application infrastructure for amadeOS Swing applications'
+        url = 'https://github.com/amadeos-eu/amade-commons'
+        licenses {
+            license {
+                name = 'EUPL-1.2'
+                url = 'https://interoperable-europe.ec.europa.eu/collection/eupl/eupl-text-eupl-12'
+                distribution = 'repo'
             }
+        }
+        developers {
+            developer {
+                id = 'datazuul'
+                name = 'Ralf Eichinger'
+                email = 'developers@datazuul.com'
+                url = 'https://github.com/datazuul'
+            }
+        }
+        organization {
+            name = 'amadeOS'
+            url = 'https://www.amadeos.eu'
+        }
+        scm {
+            url = 'https://github.com/amadeos-eu/amade-commons'
+            connection = 'scm:git:https://github.com/amadeos-eu/amade-commons.git'
+            developerConnection = 'scm:git:ssh://git@github.com/amadeos-eu/amade-commons.git'
+        }
+        issueManagement {
+            system = 'GitHub'
+            url = 'https://github.com/amadeos-eu/amade-commons/issues'
         }
     }
 }
