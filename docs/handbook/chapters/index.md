@@ -61,6 +61,6 @@ What is written so far and what comes next is listed in [The Road Ahead](roadmap
 - All code is licensed under the [EUPL-1.2](https://interoperable-europe.ec.europa.eu/collection/eupl/eupl-text-eupl-12), as is this book. Use it, change it, share it.
 
 !!! info "A sister book"
-    Games are built the same way, on the same library, with an engine of their own between game and library. The [Game Developer's Handbook](https://datazuul.github.io/amade-game-engine/) tells that story. The two books share the first chapters' ideas; you can read either one first.
+    Games are built the same way, on the same library, with an engine of their own between game and library. The [Game Developer's Handbook](https://docs.amadeos.eu/amade-game-engine/) tells that story. The two books share the first chapters' ideas; you can read either one first.
 
 Ready? Start with [setting up](00-setup.md) your machine.
