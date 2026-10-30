@@ -1,6 +1,6 @@
 # amadeOS Application Developer's Handbook
 
-The handbook teaches desktop programming in Java by building the amadeOS applications and their shared library, amade-commons, one application at a time. It is published at <https://datazuul.github.io/amade-commons/>.
+The handbook teaches desktop programming in Java by building the amadeOS applications and their shared library, amade-commons, one application at a time. It is published at <https://docs.amadeos.eu/amade-commons/>.
 
 ## Writing
 
