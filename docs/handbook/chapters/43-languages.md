@@ -4,7 +4,7 @@ amadeOS speaks English, German, French, Spanish and Italian, and so does every p
 
 ## The five languages: Language
 
-*Package `i18n` · introduced in [10. Pad](10-pad.md#five-languages) · source: [`Language`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/i18n/Language.java)*
+*Package `i18n` · introduced in [10. Pad](10-pad.md#five-languages) · source: [`Language`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/i18n/Language.java)*
 
 **What it is for.** The languages amadeOS is translated into, as an enum: `ENGLISH`, `GERMAN`, `FRENCH`, `SPANISH`, `ITALIAN`. English is the source language and the fallback for every missing text.
 
@@ -27,7 +27,7 @@ amadeOS speaks English, German, French, Spanish and Italian, and so does every p
 
 ## Which language: LocaleResolution
 
-*Package `i18n` · introduced in [10. Pad](10-pad.md#which-language) · source: [`LocaleResolution`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/i18n/LocaleResolution.java)*
+*Package `i18n` · introduced in [10. Pad](10-pad.md#which-language) · source: [`LocaleResolution`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/i18n/LocaleResolution.java)*
 
 **What it is for.** Deciding the language at start-up, and remembering why. Four places are asked in order, and the first that names a language amadeOS is translated into wins:
 
@@ -51,7 +51,7 @@ amadeOS speaks English, German, French, Spanish and Italian, and so does every p
 
 ## The desktop language: LocaleStore
 
-*Package `i18n` · introduced in [10. Pad](10-pad.md#which-language) · source: [`LocaleStore`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/i18n/LocaleStore.java)*
+*Package `i18n` · introduced in [10. Pad](10-pad.md#which-language) · source: [`LocaleStore`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/i18n/LocaleStore.java)*
 
 **What it is for.** The language of the desktop, in `~/.config/amadeos/locale.conf`: one line with a POSIX locale such as `de_DE.UTF-8`. The login greeter exports it as `LANG` for the session, so programs outside amadeOS follow it too.
 
@@ -61,7 +61,7 @@ amadeOS speaks English, German, French, Spanish and Italian, and so does every p
 
 ## The language setting: LocaleSettings and LanguageChooser
 
-*Package `i18n` · introduced in [10. Pad](10-pad.md#which-language), `LanguageChooser` in [21. Calendar](21-calendar.md#options-and-the-language) · source: [`LocaleSettings`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/i18n/LocaleSettings.java), [`LanguageChooser`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/i18n/LanguageChooser.java)*
+*Package `i18n` · introduced in [10. Pad](10-pad.md#which-language), `LanguageChooser` in [21. Calendar](21-calendar.md#options-and-the-language) · source: [`LocaleSettings`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/i18n/LocaleSettings.java), [`LanguageChooser`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/i18n/LanguageChooser.java)*
 
 **What it is for.** A program's own language, which the user may set to differ from the desktop's: `language.conf` holds `desktop` or a language code. `LocaleSettings` reads it, resolves the language with the desktop's and the environment's, and knows whether a changed setting needs a restart. `LanguageChooser` is the combo box for a settings dialog.
 
@@ -83,7 +83,7 @@ If it is true, the program says so with the text `language.restart` from amade-c
 
 ## Texts: Messages
 
-*Package `i18n` · introduced in [10. Pad](10-pad.md#five-languages) · source: [`Messages`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/i18n/Messages.java)*
+*Package `i18n` · introduced in [10. Pad](10-pad.md#five-languages) · source: [`Messages`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/i18n/Messages.java)*
 
 **What it is for.** A program's texts in one language, from `.properties` files in UTF-8: `messages.properties` in English, `messages_de.properties`, `_fr`, `_es` and `_it` next to it.
 
@@ -118,7 +118,7 @@ If it is true, the program says so with the text `language.restart` from amade-c
 
 ## Texts without injection: Texts
 
-*Package `i18n` · introduced in [22. Mail](22-mail.md#the-texts-helper-moves-into-amade-commons) · source: [`Texts`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/i18n/Texts.java)*
+*Package `i18n` · introduced in [22. Mail](22-mail.md#the-texts-helper-moves-into-amade-commons) · source: [`Texts`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/i18n/Texts.java)*
 
 **What it is for.** The program's texts for code that gets nothing injected: dialogs, table models, renderers, records with a label. A static import gives every class `tr`:
 
@@ -158,7 +158,7 @@ The texts are loaded on first use in the default locale, and loaded again when t
 
 ## Menu letters: Mnemonics
 
-*Package `i18n` · introduced in [10. Pad](10-pad.md#mnemonics) · source: [`Mnemonics`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/i18n/Mnemonics.java)*
+*Package `i18n` · introduced in [10. Pad](10-pad.md#mnemonics) · source: [`Mnemonics`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/i18n/Mnemonics.java)*
 
 **What it is for.** The underlined letter of a menu, a button or a label, chosen by each language inside its text: `&File`, `&Datei`, `&Fichier`. `&&` is a literal ampersand.
 
@@ -177,7 +177,7 @@ The texts are loaded on first use in the default locale, and loaded again when t
 
 ## A test for every translation: TranslationCheck
 
-*Package `i18n` · introduced in [10. Pad](10-pad.md#testing-the-translations) · source: [`TranslationCheck`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/i18n/TranslationCheck.java)*
+*Package `i18n` · introduced in [10. Pad](10-pad.md#testing-the-translations) · source: [`TranslationCheck`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/i18n/TranslationCheck.java)*
 
 **What it is for.** A unit test per program that compares every translation with the English file. A forgotten text is then found at build time, not by a user in a dialog that appears once a year:
 

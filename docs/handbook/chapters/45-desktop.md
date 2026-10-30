@@ -4,7 +4,7 @@ A desktop program is not alone: it hands links to the web browser and files to t
 
 ## Opening links and files: DesktopLauncher
 
-*Package `desktop` · introduced in [11. Web](11-web.md#opening-links-in-other-programs) · source: [`DesktopLauncher`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/desktop/DesktopLauncher.java)*
+*Package `desktop` · introduced in [11. Web](11-web.md#opening-links-in-other-programs) · source: [`DesktopLauncher`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/desktop/DesktopLauncher.java)*
 
 **What it is for.** Opening a link in the user's web browser and a file in the program the user chose for its type. Web opens links that leave the documentation, Mail and Calendar open links in messages and appointments, Files opens every file the user double-clicks.
 
@@ -33,7 +33,7 @@ The started program's output is discarded and the launcher does not wait for it.
 
 ## Files that could run: isRisky
 
-*Package `desktop` · introduced in [11. Web](11-web.md#files-that-are-never-opened), used for every attachment in [22. Mail](22-mail.md#attachments-that-could-run) · source: [`DesktopLauncher`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/desktop/DesktopLauncher.java)*
+*Package `desktop` · introduced in [11. Web](11-web.md#files-that-are-never-opened), used for every attachment in [22. Mail](22-mail.md#attachments-that-could-run) · source: [`DesktopLauncher`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/desktop/DesktopLauncher.java)*
 
 **What it is for.** `xdg-open` on a shell script or a `.desktop` file can run it. For a link the user clicked on purpose, that is the user's decision. For an attachment from a stranger, it is how computers get infected. `isRisky` says whether a file name is of that kind:
 
@@ -52,7 +52,7 @@ The started program's output is discarded and the launcher does not wait for it.
 
 ## The busy cursor: LaunchFeedback
 
-*Package `desktop` · introduced in [20. Files](20-files.md#the-busy-cursor) · source: [`LaunchFeedback`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/desktop/LaunchFeedback.java)*
+*Package `desktop` · introduced in [20. Files](20-files.md#the-busy-cursor) · source: [`LaunchFeedback`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/desktop/LaunchFeedback.java)*
 
 **What it is for.** Telling the amadeOS window manager that a program is starting, so that it shows the busy cursor until the new window appears, or for 20 seconds at most. Without a sign, the user double-clicks again and gets two editors. The Front Panel does this for the programs it starts; a program that starts others calls `LaunchFeedback.announce()`.
 
@@ -71,7 +71,7 @@ The started program's output is discarded and the launcher does not wait for it.
 
 ## Passwords: PasswordStore
 
-*Package `desktop` · introduced in [22. Mail](22-mail.md#the-keyring) · source: [`PasswordStore`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/desktop/PasswordStore.java), [`SecretToolPasswordStore`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/desktop/SecretToolPasswordStore.java), [`SessionPasswordStore`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/desktop/SessionPasswordStore.java)*
+*Package `desktop` · introduced in [22. Mail](22-mail.md#the-keyring) · source: [`PasswordStore`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/desktop/PasswordStore.java), [`SecretToolPasswordStore`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/desktop/SecretToolPasswordStore.java), [`SessionPasswordStore`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/desktop/SessionPasswordStore.java)*
 
 **What it is for.** Keeping passwords and tokens outside settings files, in the desktop keyring: the freedesktop *Secret Service* that gnome-keyring, KDE Wallet and KeePassXC offer, encrypted and unlocked with the login password.
 
@@ -114,7 +114,7 @@ The command gets the password on its standard input and has 30 seconds to finish
 
 ## A picture on the clipboard: ImageSelection
 
-*Package `desktop` · introduced in [34. Screenshot](34-screenshot.md#the-pictures-folder-and-the-clipboard-move-into-amade-commons), used by Fractals and Imagescan · source: [`ImageSelection`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/desktop/ImageSelection.java)*
+*Package `desktop` · introduced in [34. Screenshot](34-screenshot.md#the-pictures-folder-and-the-clipboard-move-into-amade-commons), used by Fractals and Imagescan · source: [`ImageSelection`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/desktop/ImageSelection.java)*
 
 **What it is for.** Copying a picture, the counterpart of Swing's `StringSelection` for text. Java offers the picture to the pasting program as PNG and the other image types it asks for.
 
@@ -141,7 +141,7 @@ The command gets the password on its standard input and has 30 seconds to finish
 
 ## The address books: ContactDirectory
 
-*Package `contacts` · introduced in [25. Contacts](25-contacts.md#contacts-in-other-programs), used by Mail and Calendar · source: [`ContactDirectory`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/contacts/ContactDirectory.java)*
+*Package `contacts` · introduced in [25. Contacts](25-contacts.md#contacts-in-other-programs), used by Mail and Calendar · source: [`ContactDirectory`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/contacts/ContactDirectory.java)*
 
 **What it is for.** Reading the contacts that amade-contacts keeps in `~/.local/share/amadeos/contacts`, one folder per address book and one vCard file per contact, from any program. It reads; it never writes.
 
@@ -172,7 +172,7 @@ The command gets the password on its standard input and has 30 seconds to finish
 
 ## Completing addresses: AddressCompletion
 
-*Package `contacts` · introduced in [25. Contacts](25-contacts.md#completing-an-address), used by Mail and Calendar · source: [`AddressCompletion`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/contacts/AddressCompletion.java)*
+*Package `contacts` · introduced in [25. Contacts](25-contacts.md#completing-an-address), used by Mail and Calendar · source: [`AddressCompletion`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/contacts/AddressCompletion.java)*
 
 **What it is for.** A list of suggestions under a text field that holds e-mail addresses separated by commas, as the user types.
 

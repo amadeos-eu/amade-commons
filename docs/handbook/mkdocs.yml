@@ -2,7 +2,7 @@ site_name: amadeOS Application Developer's Handbook
 site_description: Learn to write desktop applications in Java by building the amadeOS applications and their shared library, one application at a time.
 site_author: datazuul
 site_url: https://datazuul.github.io/amade-commons/
-repo_url: https://github.com/datazuul/amade-commons
+repo_url: https://github.com/amadeos-eu/amade-commons
 edit_uri: edit/main/docs/handbook/chapters/
 copyright: © 2026 datazuul.com · EUPL-1.2
 docs_dir: chapters

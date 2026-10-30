@@ -51,107 +51,107 @@ jobs:
           path: amade-commons
       - uses: actions/checkout@v7
         with:
-          repository: datazuul/amade-pad
+          repository: amadeos-eu/amade-pad
           ref: ${{ env.PAD_COMMIT }}
           path: amade-pad
       - uses: actions/checkout@v7
         with:
-          repository: datazuul/amade-web
+          repository: amadeos-eu/amade-web
           ref: ${{ env.WEB_COMMIT }}
           path: amade-web
       - uses: actions/checkout@v7
         with:
-          repository: datazuul/amade-files
+          repository: amadeos-eu/amade-files
           ref: ${{ env.FILES_COMMIT }}
           path: amade-files
       - uses: actions/checkout@v7
         with:
-          repository: datazuul/amade-calendar
+          repository: amadeos-eu/amade-calendar
           ref: ${{ env.CALENDAR_COMMIT }}
           path: amade-calendar
       - uses: actions/checkout@v7
         with:
-          repository: datazuul/amade-mail
+          repository: amadeos-eu/amade-mail
           ref: ${{ env.MAIL_COMMIT }}
           path: amade-mail
       - uses: actions/checkout@v7
         with:
-          repository: datazuul/amade-writepad
+          repository: amadeos-eu/amade-writepad
           ref: ${{ env.WRITEPAD_COMMIT }}
           path: amade-writepad
       - uses: actions/checkout@v7
         with:
-          repository: datazuul/amade-fractals
+          repository: amadeos-eu/amade-fractals
           ref: ${{ env.FRACTALS_COMMIT }}
           path: amade-fractals
       - uses: actions/checkout@v7
         with:
-          repository: datazuul/amade-imagescan
+          repository: amadeos-eu/amade-imagescan
           ref: ${{ env.IMAGESCAN_COMMIT }}
           path: amade-imagescan
       - uses: actions/checkout@v7
         with:
-          repository: datazuul/amade-audio
+          repository: amadeos-eu/amade-audio
           ref: ${{ env.AUDIO_COMMIT }}
           path: amade-audio
       - uses: actions/checkout@v7
         with:
-          repository: datazuul/amade-video
+          repository: amadeos-eu/amade-video
           ref: ${{ env.VIDEO_COMMIT }}
           path: amade-video
       - uses: actions/checkout@v7
         with:
-          repository: datazuul/amade-screenshot
+          repository: amadeos-eu/amade-screenshot
           ref: ${{ env.SCREENSHOT_COMMIT }}
           path: amade-screenshot
       - uses: actions/checkout@v7
         with:
-          repository: datazuul/amade-calculator
+          repository: amadeos-eu/amade-calculator
           ref: ${{ env.CALCULATOR_COMMIT }}
           path: amade-calculator
       - uses: actions/checkout@v7
         with:
-          repository: datazuul/amade-contacts
+          repository: amadeos-eu/amade-contacts
           ref: ${{ env.CONTACTS_COMMIT }}
           path: amade-contacts
       - uses: actions/checkout@v7
         with:
-          repository: datazuul/amade-imageviewer
+          repository: amadeos-eu/amade-imageviewer
           ref: ${{ env.IMAGEVIEWER_COMMIT }}
           path: amade-imageviewer
       - uses: actions/checkout@v7
         with:
-          repository: datazuul/amade-pdfviewer
+          repository: amadeos-eu/amade-pdfviewer
           ref: ${{ env.PDFVIEWER_COMMIT }}
           path: amade-pdfviewer
       - uses: actions/checkout@v7
         with:
-          repository: datazuul/amade-books
+          repository: amadeos-eu/amade-books
           ref: ${{ env.BOOKS_COMMIT }}
           path: amade-books
       - uses: actions/checkout@v7
         with:
-          repository: datazuul/amade-tv
+          repository: amadeos-eu/amade-tv
           ref: ${{ env.TV_COMMIT }}
           path: amade-tv
       - uses: actions/checkout@v7
         with:
-          repository: datazuul/amade-backup
+          repository: amadeos-eu/amade-backup
           ref: ${{ env.BACKUP_COMMIT }}
           path: amade-backup
       - uses: actions/checkout@v7
         with:
-          repository: datazuul/amade-news
+          repository: amadeos-eu/amade-news
           ref: ${{ env.NEWS_COMMIT }}
           path: amade-news
       - uses: actions/checkout@v7
         with:
-          repository: datazuul/amadeos-system
+          repository: amadeos-eu/amadeos-system
           ref: ${{ env.AMADEOS_SYSTEM_COMMIT }}
           path: amadeos-system
       - uses: actions/checkout@v7
         with:
-          repository: datazuul/amadeos-ci
+          repository: amadeos-eu/amadeos-ci
           ref: ${{ env.AMADEOS_CI_COMMIT }}
           path: amadeos-ci
       - uses: actions/setup-python@v7

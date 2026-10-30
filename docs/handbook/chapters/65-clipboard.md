@@ -19,7 +19,7 @@ X11 has two clipboards that matter. `CLIPBOARD` is the one of Ctrl+C and Ctrl+V.
 
 Pasting is a conversation. The pasting program asks the server to convert the selection into a *target*, a format such as `UTF8_STRING`, `text/html` or `image/png`. The server passes the request to the owner, which writes the data into a property of the requester's window and answers. The special target `TARGETS` returns the list of formats the owner offers.
 
-So when the owner closes, the copy is gone: there is nobody left to ask. That is why amade-screenshot had to keep running after its window closed ([the Screenshot tool's README](https://github.com/datazuul/amade-screenshot) calls it `KeepAlive`), and why every Java program loses its copies when it ends.
+So when the owner closes, the copy is gone: there is nobody left to ask. That is why amade-screenshot had to keep running after its window closed ([the Screenshot tool's README](https://github.com/amadeos-eu/amade-screenshot) calls it `KeepAlive`), and why every Java program loses its copies when it ends.
 
 A clipboard manager is the program that is always there to ask. It reads every copy as soon as it is made, and when the owner goes away it claims the clipboard itself and offers what it read.
 

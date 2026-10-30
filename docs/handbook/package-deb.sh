@@ -40,7 +40,7 @@ doc_dir="$staging/usr/share/doc/$package"
 mkdir -p "$doc_dir" "$staging/usr/share/applications" "$staging/DEBIAN" "$out_dir"
 
 # The sources the book is built from: amade-commons as it is checked out here, and every repository the
-# workflow checks out at the commit it pins ("repository: datazuul/<name>" followed by
+# workflow checks out at the commit it pins ("repository: amadeos-eu/<name>" followed by
 # "ref: ${{ env.<NAME>_COMMIT }}", the commit in the env block at the top).
 mkdir -p "$sources/amade-commons"
 tar -C "$commons_dir" --exclude=.venv --exclude=site -cf - docs src | tar -C "$sources/amade-commons" -xf -
@@ -56,7 +56,7 @@ while read -r repo commit; do
     git -C "$parent_dir/$repo" archive "$commit" | tar -C "$sources/$repo" -xf -
 done < <(awk '
     /^  [A-Z_]+_COMMIT:/ { name = $1; sub(":", "", name); commit[name] = $2 }
-    /repository: datazuul\// { repo = $2; sub("datazuul/", "", repo) }
+    /repository: amadeos-eu\// { repo = $2; sub("amadeos-eu/", "", repo) }
     /ref: \$\{\{ env\.[A-Z_]+_COMMIT \}\}/ && repo != "" {
         name = $0; sub(/.*env\./, "", name); sub(/ .*/, "", name)
         print repo, commit[name]; repo = ""

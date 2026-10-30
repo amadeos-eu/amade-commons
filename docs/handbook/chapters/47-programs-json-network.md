@@ -4,7 +4,7 @@ Desktop programs on Linux lean on other programs: Imagescan asks `scanimage` for
 
 ## Running a program: CommandRunner
 
-*Package `process` · introduced in [31. Imagescan](31-imagescan.md#commandrunner-in-amade-commons) · source: [`CommandRunner`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/process/CommandRunner.java)*
+*Package `process` · introduced in [31. Imagescan](31-imagescan.md#commandrunner-in-amade-commons) · source: [`CommandRunner`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/process/CommandRunner.java)*
 
 **What it is for.** Starting another program, and for short commands, running it to its end and collecting what it printed:
 
@@ -50,7 +50,7 @@ String volume = runner.output(List.of("wpctl", "get-volume", "@DEFAULT_AUDIO_SIN
 
 ## What a program printed: ProgramResult
 
-*Package `process` · introduced in [31. Imagescan](31-imagescan.md#commandrunner-in-amade-commons) · source: [`ProgramResult`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/process/ProgramResult.java)*
+*Package `process` · introduced in [31. Imagescan](31-imagescan.md#commandrunner-in-amade-commons) · source: [`ProgramResult`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/process/ProgramResult.java)*
 
 **What it is for.** The exit code and both outputs of a finished program. The outputs are bytes, because standard output may be a picture or text in any encoding; `stdoutText()` and `stderrText()` decode them as UTF-8, or in a charset you pass. `succeeded()` is true for exit code 0.
 
@@ -62,7 +62,7 @@ String volume = runner.output(List.of("wpctl", "get-volume", "@DEFAULT_AUDIO_SIN
 
 ## A program that is not installed: ProgramMissingException
 
-*Package `process` · introduced in [31. Imagescan](31-imagescan.md#a-missing-program-is-a-message-not-an-error) · source: [`ProgramMissingException`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/process/ProgramMissingException.java)*
+*Package `process` · introduced in [31. Imagescan](31-imagescan.md#a-missing-program-is-a-message-not-an-error) · source: [`ProgramMissingException`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/process/ProgramMissingException.java)*
 
 **What it is for.** Telling "the program is not installed" apart from every other failure. A missing program is a message for the user, usually with the package to install (Imagescan: "The scanning program scanimage is not installed", followed by `sudo apt install sane-utils`), not an error report.
 
@@ -76,7 +76,7 @@ String volume = runner.output(List.of("wpctl", "get-volume", "@DEFAULT_AUDIO_SIN
 
 ## Tests without programs: FinishedProcess
 
-*Package `process` · introduced in [31. Imagescan](31-imagescan.md#fakes-for-the-tests) · source: [`FinishedProcess`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/process/FinishedProcess.java)*
+*Package `process` · introduced in [31. Imagescan](31-imagescan.md#fakes-for-the-tests) · source: [`FinishedProcess`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/process/FinishedProcess.java)*
 
 **What it is for.** A `Process` that has already ended with a given output. Because `CommandRunner` has one abstract method, a test answers with a lambda that returns one:
 
@@ -93,7 +93,7 @@ SoundServer server = new SoundServer(command -> FinishedProcess.printing("Volume
 
 ## JSON
 
-*Package `json` · introduced in [33. Audio](33-audio.md#json) · source: [`Json`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/json/Json.java)*
+*Package `json` · introduced in [33. Audio](33-audio.md#json) · source: [`Json`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/json/Json.java)*
 
 **What it is for.** Reading the answers of web services and token endpoints, and reading and writing small JSON files. Mail reads its sign-in tokens with it; Audio reads MusicBrainz, the radio station directory and its favourites file.
 
@@ -127,7 +127,7 @@ String name = Json.str(Json.member(answer, "artist"), "name");  // nested: "" if
 
 ## The proxy of the desktop: Network
 
-*Package `net` · introduced in [33. Audio](33-audio.md) and moved into amade-commons for TV · source: [`Network`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/net/Network.java), [`NetworkProxy`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/net/NetworkProxy.java), [`ProxyStore`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/net/ProxyStore.java)*
+*Package `net` · introduced in [33. Audio](33-audio.md) and moved into amade-commons for TV · source: [`Network`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/net/Network.java), [`NetworkProxy`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/net/NetworkProxy.java), [`ProxyStore`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/net/ProxyStore.java)*
 
 **What it is for.** In an office or a school the way out to the internet often leads through a proxy. amadeOS has one place for it, Settings > Network ([chapter 62](62-settings.md)), and every program follows it: its own connections, the programs it starts (mpv, yt-dlp, restic, the browser) and the video it plays.
 

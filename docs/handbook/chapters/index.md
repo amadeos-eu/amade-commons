@@ -2,7 +2,7 @@
 
 This book teaches you how to write desktop applications by building them: first a text editor, then a documentation viewer, a file manager, a calendar, a mail program, a word processor, and on to graphics and media programs. While the applications grow, so does the library underneath them, **amade-commons**. You will not only use a library, you will see why each part of it exists, because you write the application that first needs it.
 
-All applications are real programs. They run on the [amadeOS](https://github.com/datazuul/amadeos) desktop, look like the rest of it, follow its colour themes and its language, and most of them run on other Linux systems and on Windows as well. Every piece of code in this book is taken from those applications. It compiles, it is tested, and you can check it out and change it.
+All applications are real programs. They run on the [amadeOS](https://github.com/amadeos-eu/amadeos) desktop, look like the rest of it, follow its colour themes and its language, and most of them run on other Linux systems and on Windows as well. Every piece of code in this book is taken from those applications. It compiles, it is tested, and you can check it out and change it.
 
 ## Who this book is for
 

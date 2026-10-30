@@ -4,7 +4,7 @@ amadeOS looks like CDE: grey-brown panels with 3D bevels, bold buttons that sink
 
 ## Colour schemes: DesktopTheme
 
-*Package `theme` · introduced in [10. Pad](10-pad.md#following-the-desktop-theme) · source: [`DesktopTheme`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/theme/DesktopTheme.java)*
+*Package `theme` · introduced in [10. Pad](10-pad.md#following-the-desktop-theme) · source: [`DesktopTheme`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/theme/DesktopTheme.java)*
 
 **What it is for.** A `DesktopTheme` is one palette: a base colour, the shades of the bevels, the title bar colours, text colours, the colours of the Front Panel's frame and of the four workspaces, and the name of the icon theme. The window manager, the Front Panel and every program use the same five built-in themes:
 
@@ -47,7 +47,7 @@ Two themes are equal when their id and icon theme are equal, so a store can tell
 
 ## Custom themes: ThemeRegistry
 
-*Package `theme` · introduced in [10. Pad](10-pad.md#following-the-desktop-theme) · source: [`ThemeRegistry`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/theme/ThemeRegistry.java)*
+*Package `theme` · introduced in [10. Pad](10-pad.md#following-the-desktop-theme) · source: [`ThemeRegistry`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/theme/ThemeRegistry.java)*
 
 **What it is for.** The themes the user can choose: the five built-in ones and any theme found in a directory of its own, `/etc/amadeos/themes/<id>/theme.properties` for the whole system and `~/.config/amadeos/themes/<id>/theme.properties` for one user. A theme file needs a single line:
 
@@ -76,7 +76,7 @@ The keys are the method names of `DesktopTheme`: `highlight`, `shadow`, `activeT
 
 ## Following the desktop: ThemeStore
 
-*Package `theme` · introduced in [10. Pad](10-pad.md#following-the-desktop-theme) · source: [`ThemeStore`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/theme/ThemeStore.java)*
+*Package `theme` · introduced in [10. Pad](10-pad.md#following-the-desktop-theme) · source: [`ThemeStore`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/theme/ThemeStore.java)*
 
 **What it is for.** The theme the user chose in Settings, and news when they choose another. Settings writes the theme's id into `~/.config/amadeos/theme.conf`, the icon theme into `icon_theme.conf` and the text size, 1 to 7, into `font.conf`; `ThemeStore` reads the three into one `DesktopTheme` and, once `watch()` was called, follows them. The text size is part of the theme value (`fontSize()`, `withFontSize(int)`), so a new size reaches a program the same way a new palette does.
 
@@ -112,7 +112,7 @@ The keys are the method names of `DesktopTheme`: `highlight`, `shadow`, `activeT
 
 ## The CDE look for Swing: AmadeUI
 
-*Package `swing` · introduced in [10. Pad](10-pad.md#following-the-desktop-theme) · source: [`AmadeUI`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/swing/AmadeUI.java)*
+*Package `swing` · introduced in [10. Pad](10-pad.md#following-the-desktop-theme) · source: [`AmadeUI`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/swing/AmadeUI.java)*
 
 **What it is for.** The look of every amadeOS program: Swing's cross-platform look and feel with its colour table filled from the theme, Motif bevels around fields, scroll panes and menus, and button UIs of its own: bold labels, lighter while the mouse is over them, sunken and shifted by a pixel while pressed. Check boxes and radio buttons are the Motif ones, drawn in the theme's colours.
 
@@ -141,7 +141,7 @@ The keys are the method names of `DesktopTheme`: `highlight`, `shadow`, `activeT
 
 ## Text size: fontScale
 
-*Package `swing` · introduced in [62. Settings](62-settings.md#font-one-number-for-every-program) · source: [`AmadeUI`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/swing/AmadeUI.java)*
+*Package `swing` · introduced in [62. Settings](62-settings.md#font-one-number-for-every-program) · source: [`AmadeUI`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/swing/AmadeUI.java)*
 
 **What it is for.** The text size the user picks on the *Font* page of Settings, seven steps from *Smallest* to *Largest*. At the default size 4 nothing changes; size 7 makes every font of the look half as big again.
 
@@ -177,7 +177,7 @@ It always starts from `UIManager.getLookAndFeelDefaults()`, never from the fonts
 
 ## Colours of your own: style
 
-*Package `swing` · introduced in [10. Pad](10-pad.md#following-the-desktop-theme) · source: [`AmadeUI`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/swing/AmadeUI.java)*
+*Package `swing` · introduced in [10. Pad](10-pad.md#following-the-desktop-theme) · source: [`AmadeUI`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/swing/AmadeUI.java)*
 
 **What it is for.** Components that need a colour Swing's table does not give them: a calendar's day grid in the field colour, a path bar in the selection colour, a highlighted status line. A *styler* is a function from theme to colours; `style` runs it now and again after every theme change.
 
@@ -203,7 +203,7 @@ AmadeUI.style(scroll.getViewport(), (viewport, theme) -> viewport.setBackground(
 
 ## Bevels and dots
 
-*Package `swing` · introduced in [10. Pad](10-pad.md#following-the-desktop-theme) · source: [`AmadeUI`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/swing/AmadeUI.java)*
+*Package `swing` · introduced in [10. Pad](10-pad.md#following-the-desktop-theme) · source: [`AmadeUI`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/swing/AmadeUI.java)*
 
 **What it is for.** The small pieces of the look that programs need in their own components:
 
@@ -215,7 +215,7 @@ AmadeUI.style(scroll.getViewport(), (viewport, theme) -> viewport.setBackground(
 
 ## Picking a date: DateChooser
 
-*Package `swing` · introduced in [21. Calendar](21-calendar.md#typing-and-picking-dates) · source: [`DateChooser`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/swing/DateChooser.java)*
+*Package `swing` · introduced in [21. Calendar](21-calendar.md#typing-and-picking-dates) · source: [`DateChooser`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/swing/DateChooser.java)*
 
 **What it is for.** A small dialog with one month as a grid of days, buttons for the previous and next month and year, *Today*, *OK* and *Cancel*. The arrow keys move the selection, Enter and a double-click accept. `button` makes the small calendar button that goes next to a date field:
 
