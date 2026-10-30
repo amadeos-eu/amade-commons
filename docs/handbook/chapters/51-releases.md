@@ -60,7 +60,7 @@ What does "breaking" mean? For a library like amade-commons, it is a change that
 
 ## How the number is worked out
 
-CI runs a small script from the repository [amadeos-ci](https://github.com/datazuul/amadeos-ci) at the start of every build. It finds the newest tag `vX.Y.Z`, reads the commits after it and applies the table above:
+CI runs a small script from the repository [amadeos-ci](https://github.com/amadeos-eu/amadeos-ci) at the start of every build. It finds the newest tag `vX.Y.Z`, reads the commits after it and applies the table above:
 
 ```bash title="amadeos-ci · scripts/next-version.sh"
 --8<-- "amadeos-ci/scripts/next-version.sh"
@@ -155,7 +155,7 @@ A dev build gets an extra entry of type `snapshot` at the top, and a pre build o
 
 ## Libraries and their pins
 
-Apps and games pin amade-commons and amade-game-engine by commit hash on JitPack (chapter 0). A release tag of a library is a JitPack version too: `com.github.datazuul:amade-commons:v1.2.0`. Two rules keep this simple:
+Apps and games pin amade-commons and amade-game-engine by commit hash on JitPack (chapter 0). A release tag of a library is a JitPack version too: `com.github.amadeos-eu:amade-commons:v1.2.0`. Two rules keep this simple:
 
 - **On develop, pin whatever you need.** An app that needs a new commons method pins the commons commit that has it, as before. Cross-repository work does not have to wait for a release.
 - **Before main, pin a release.** Promote refuses to move an app to main when its pin is a commit that no release of the library contains. Release the library first, then raise the pin to its tag, for example `build(deps): amade-commons v1.2.0`. Promote handles the libraries first and waits until their tag exists.
@@ -252,14 +252,14 @@ Sometimes release needs a fix while develop already holds half-finished work. Th
 
 ### The token for Promote
 
-The Promote workflow pushes branches in all the repositories, so it needs a token of the owner. A workflow reads it from a *secret*, which is a password stored in the repository. Nobody can read a secret back, not even the owner, and workflows only see it while they run. Creating the token and the secret takes a few minutes, once:
+The Promote workflow pushes branches in all the repositories, so it needs a token of the owner. A workflow reads it from a *secret*, a password stored in the organization amadeos-eu. Nobody can read a secret back, not even the owner, and workflows only see it while they run. Creating the token and the secret takes a few minutes, once:
 
 1. On github.com, signed in as the owner: profile picture → **Settings** → **Developer settings** (at the bottom left) → **Personal access tokens** → **Fine-grained tokens** → **Generate new token**.
-2. Token name `amadeOS Promote`, an expiration date (one year, or none if GitHub offers that), resource owner **datazuul**.
+2. Token name `amadeOS Promote`, an expiration date (one year, or none if GitHub offers that), resource owner **amadeos-eu** (the organization, not the personal account). If the organization asks for approval, approve the token under *Organization settings → Personal access tokens → Pending requests*.
 3. Repository access: **All repositories**. A new game repository then works without changing the token.
 4. Repository permissions: **Contents** *Read and write* and **Workflows** *Read and write*. GitHub adds *Metadata* read-only by itself. Everything else stays at *No access*.
 5. **Generate token**, and copy it right away: GitHub shows it only once.
-6. In the repository amadeos-ci: **Settings** → **Secrets and variables** → **Actions** → **New repository secret**, name `PROMOTE_TOKEN`, the token as the secret, **Add secret**.
+6. In the organization amadeos-eu: **Settings** → **Secrets and variables** → **Actions** → **New organization secret**, name `PROMOTE_TOKEN`, the token as the secret, repository access **Selected repositories** with only `amadeos-ci`, **Add secret**.
 
 The token goes nowhere else: not into a file, a chat or an issue. If it does leak, delete it under *Fine-grained tokens* and create a new one. When it expires, Promote stops with an authentication error. Then create a new token the same way and replace the secret, under the same name.
 
@@ -297,7 +297,7 @@ To check a repository by hand, or set it up without the script:
 
 A new program or game gets its repository and its release branches before the first pull request, so that the first change already goes to `develop` and nothing reaches main unpromoted. The owner does it, in this order:
 
-1. On github.com: **New repository** under **datazuul**, named `amade-<name>` (or `amade-<name>-game`), with a licence file, so that main has a first commit. Nothing else goes on main.
+1. On github.com: **New repository** under the organization **amadeos-eu**, named `amade-<name>` (or `amade-<name>-game`), with a licence file, so that main has a first commit. Nothing else goes on main.
 2. The release branches, with the script or in the browser:
     - **With the script:** `scripts/setup-release-branches.sh amade-<name>` in amadeos-ci. It does all of the steps below.
     - **In the browser:**

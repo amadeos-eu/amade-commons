@@ -4,7 +4,7 @@ Every program remembers something: Files its folders, Mail its accounts, Audio i
 
 ## Where files go: XdgDirectories and AppDirectories
 
-*Package `config` · `XdgDirectories` introduced in [10. Pad](10-pad.md#what-amade-commons-gives-pad), `AppDirectories` in [20. Files](20-files.md#settings-that-survive) · source: [`XdgDirectories`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/config/XdgDirectories.java), [`AppDirectories`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/config/AppDirectories.java)*
+*Package `config` · `XdgDirectories` introduced in [10. Pad](10-pad.md#what-amade-commons-gives-pad), `AppDirectories` in [20. Files](20-files.md#settings-that-survive) · source: [`XdgDirectories`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/config/XdgDirectories.java), [`AppDirectories`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/config/AppDirectories.java)*
 
 **What it is for.** The directories of the [XDG Base Directory specification](https://specifications.freedesktop.org/basedir-spec/latest/), which every Linux desktop follows, and the places of amadeOS inside them:
 
@@ -36,7 +36,7 @@ The constructor takes the environment and the home directory as parameters, and 
 
 ## The pictures folder
 
-*Package `config` · `XdgDirectories.pictures()` introduced in [34. Screenshot](34-screenshot.md#the-pictures-folder-and-the-clipboard-move-into-amade-commons), used by Fractals and Imagescan · source: [`XdgDirectories`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/config/XdgDirectories.java)*
+*Package `config` · `XdgDirectories.pictures()` introduced in [34. Screenshot](34-screenshot.md#the-pictures-folder-and-the-clipboard-move-into-amade-commons), used by Fractals and Imagescan · source: [`XdgDirectories`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/config/XdgDirectories.java)*
 
 **What it is for.** The folder where the user keeps pictures, under its name in the user's language: `~/Pictures`, `~/Bilder`, `~/Images`. The desktop's first login writes the names of these folders into `user-dirs.dirs` in the configuration directory.
 
@@ -57,7 +57,7 @@ The constructor takes the environment and the home directory as parameters, and 
 
 ## Settings files: PropertiesFile
 
-*Package `config` · introduced in [20. Files](20-files.md#settings-that-survive) · source: [`PropertiesFile`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/config/PropertiesFile.java)*
+*Package `config` · introduced in [20. Files](20-files.md#settings-that-survive) · source: [`PropertiesFile`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/config/PropertiesFile.java)*
 
 **What it is for.** Reading and writing a `.properties` file in UTF-8, safely. Files, Calendar, Mail, WritePad, Fractals, Imagescan and Audio keep their settings this way.
 
@@ -89,7 +89,7 @@ boolean hidden = Boolean.parseBoolean(p.getProperty("view.showHidden", "false"))
 
 ## Following a file: ConfigWatcher
 
-*Package `config` · introduced in [10. Pad](10-pad.md#following-the-desktop-theme) · source: [`ConfigWatcher`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/config/ConfigWatcher.java)*
+*Package `config` · introduced in [10. Pad](10-pad.md#following-the-desktop-theme) · source: [`ConfigWatcher`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/config/ConfigWatcher.java)*
 
 **What it is for.** Running an action when one of some files in a directory is created, changed or deleted. `ThemeStore` and `LocaleStore` use it to follow the desktop's settings; a program can use it for a file another program writes.
 

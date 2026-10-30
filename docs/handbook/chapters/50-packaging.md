@@ -195,7 +195,7 @@ The rest links the metadata to the package and to the web:
 - **launchable** names the desktop entry, so that Software can start the program. **icon type="stock"** is the icon name from the desktop entry.
 - **categories** repeat those of the desktop entry.
 - **url** and **developer** point to the repository and its issues, and say that the amadeOS project makes the program.
-- **screenshots**: one picture, with a caption in each language. The image is a web address, `https://raw.githubusercontent.com/datazuul/<repo>/main/docs/screenshots/<repo>.png`, so the picture lives in the repository and not in the package. Take it on amadeOS with the program doing what it is for: a document open, a fractal zoomed, a game *in play*, never a title screen or an empty window.
+- **screenshots**: one picture, with a caption in each language. The image is a web address, `https://raw.githubusercontent.com/amadeos-eu/<repo>/main/docs/screenshots/<repo>.png`, so the picture lives in the repository and not in the package. Take it on amadeOS with the program doing what it is for: a document open, a fractal zoomed, a game *in play*, never a title screen or an empty window.
 - **provides** names the command, so that a search for `amade-fractals` finds the package.
 - **content_rating** follows OARS, the Open Age Rating Service. An empty `oars-1.1` rating says "nothing to warn about"; a game with fighting says so, for example `<content_attribute id="violence-fantasy">mild</content_attribute>`.
 

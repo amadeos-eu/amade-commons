@@ -4,7 +4,7 @@ Every amadeOS program starts the same way: one call in `main` decides the langua
 
 ## Starting a program: AmadeApplication
 
-*Package `app` · introduced in [10. Pad](10-pad.md#starting-it) · source: [`AmadeApplication`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/app/AmadeApplication.java)*
+*Package `app` · introduced in [10. Pad](10-pad.md#starting-it) · source: [`AmadeApplication`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/app/AmadeApplication.java)*
 
 **What it is for.** `AmadeApplication.launch` is the whole start-up of a program. You pass who the program is, what to do once the injector exists, and the program's own Guice modules:
 
@@ -36,7 +36,7 @@ public static void main(String[] args) {
 
 ## The identity of a program: AppInfo
 
-*Package `app` · introduced in [10. Pad](10-pad.md#starting-it) · source: [`AppInfo`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/app/AppInfo.java)*
+*Package `app` · introduced in [10. Pad](10-pad.md#starting-it) · source: [`AppInfo`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/app/AppInfo.java)*
 
 **What it is for.** `AppInfo` names the program three times, for three audiences:
 
@@ -50,7 +50,7 @@ public static void main(String[] args) {
 
 ## What every program gets: CommonsModule
 
-*Package `app` · introduced in [10. Pad](10-pad.md#what-amade-commons-gives-pad) · source: [`CommonsModule`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/app/CommonsModule.java)*
+*Package `app` · introduced in [10. Pad](10-pad.md#what-amade-commons-gives-pad) · source: [`CommonsModule`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/app/CommonsModule.java)*
 
 **What it is for.** The Guice bindings every program needs, so that a presenter or a service can ask for them in its constructor:
 
@@ -84,7 +84,7 @@ public static void main(String[] args) {
 
 ## Two threads: EdtExecutor and @Ui
 
-*Package `swing` and `app` · introduced in [10. Pad](10-pad.md#work-in-the-background), `@Ui` in [30. Fractals](30-fractals.md#the-ui-executor) · source: [`EdtExecutor`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/swing/EdtExecutor.java), [`Ui`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/app/Ui.java)*
+*Package `swing` and `app` · introduced in [10. Pad](10-pad.md#work-in-the-background), `@Ui` in [30. Fractals](30-fractals.md#the-ui-executor) · source: [`EdtExecutor`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/swing/EdtExecutor.java), [`Ui`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/app/Ui.java)*
 
 **What it is for.** Swing allows its components to be touched only on the event dispatch thread, and anything slow on that thread freezes the window. So a program reads files, asks servers and computes on the background `ExecutorService`, and continues on the EDT with the result. `EdtExecutor` is the executor for that second half:
 

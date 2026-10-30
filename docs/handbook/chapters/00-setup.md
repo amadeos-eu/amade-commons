@@ -52,8 +52,8 @@ The shared library and every application live in their own Git repositories. Clo
 
 ```bash
 mkdir -p ~/projects/amade && cd ~/projects/amade
-git clone https://github.com/datazuul/amade-commons.git
-git clone https://github.com/datazuul/amade-pad.git
+git clone https://github.com/amadeos-eu/amade-commons.git
+git clone https://github.com/amadeos-eu/amade-pad.git
 ```
 
 ```text
@@ -65,7 +65,7 @@ git clone https://github.com/datazuul/amade-pad.git
 Why next to each other? An application declares amade-commons as a normal dependency, which Gradle would download from [JitPack](https://jitpack.io), a service that builds a library straight from its Git repository:
 
 ```groovy title="amade-pad · build.gradle (excerpt)"
-implementation 'com.github.datazuul:amade-commons:fac730fed3'
+implementation 'com.github.amadeos-eu:amade-commons:fac730fed3'
 ```
 
 The part after the last colon is a **commit** of amade-commons. Each application names the exact state of the library it was written and tested with. A change in amade-commons never breaks an application by surprise: the application moves to a newer commit when someone has checked that it still works.
@@ -185,7 +185,7 @@ The editor then appears in the *Text & Office* drawer of the Front Panel, and `a
 | Symptom | Cause and fix |
 |---|---|
 | `Cannot find a Java installation ... matching languageVersion=25` | No JDK 25 installed. Install it as above. |
-| `Could not resolve com.github.datazuul:amade-commons` | amade-commons is not checked out next to the application and JitPack cannot be reached. Clone `amade-commons` next to it. |
+| `Could not resolve com.github.amadeos-eu:amade-commons` | amade-commons is not checked out next to the application and JitPack cannot be reached. Clone `amade-commons` next to it. |
 | `Cannot expand ZIP .../amade-commons/build/libs/amade-commons-0.1.0.jar` when building the jar | The fat jar wants the library's jar before Gradle built it. Run `./gradlew jar` in amade-commons once, then again in the application. |
 | `JpegtranMissingException` in `RotationSaverTest` | amade-imageviewer from before the tests skipped themselves, and `jpegtran` is not installed. Install `libjpeg-turbo-progs` as above, or update the checkout. |
 | Window tests fail with odd screen sizes | An old virtual X server is still running on that display. Find it with `pgrep -a Xvfb` and end it. |

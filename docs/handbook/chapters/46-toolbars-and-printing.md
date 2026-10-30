@@ -4,7 +4,7 @@ This chapter covers two kinds of output: what a program shows in its toolbars, a
 
 ## Icons drawn in code: ToolIcon
 
-*Package `swing` · introduced in [30. Fractals](30-fractals.md#the-toolbar-moves-into-amade-commons) · source: [`ToolIcon`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/swing/ToolIcon.java)*
+*Package `swing` · introduced in [30. Fractals](30-fractals.md#the-toolbar-moves-into-amade-commons) · source: [`ToolIcon`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/swing/ToolIcon.java)*
 
 **What it is for.** Toolbar icons that need no icon theme, look sharp at every scale and change colour with the desktop theme. Lines are drawn in the button's text colour (the inactive text colour when the button is disabled), paper in the field colour, highlights in the selection colour, so an icon on Dark Slate is as readable as on Warm Motif.
 
@@ -45,7 +45,7 @@ The `Pen` holds the graphics, the colours and the shapes several glyphs share:
 
 ## The shared symbols: StandardGlyph
 
-*Package `swing` · introduced in [30. Fractals](30-fractals.md#the-toolbar-moves-into-amade-commons) · source: [`StandardGlyph`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/swing/StandardGlyph.java)*
+*Package `swing` · introduced in [30. Fractals](30-fractals.md#the-toolbar-moves-into-amade-commons) · source: [`StandardGlyph`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/swing/StandardGlyph.java)*
 
 **What it is for.** The glyphs of the commands most programs share: `NEW`, `OPEN`, `SAVE`, `PRINT`, `CUT`, `COPY`, `PASTE`, `UNDO`, `REDO`, `FIND`, `ZOOM_IN`, `ZOOM_OUT`, `REFRESH`; for lists of records `EDIT`, `DELETE`, `IMPORT`, `EXPORT` and `MAIL`; for pictures `ZOOM_FIT`, `ZOOM_ACTUAL`, `ROTATE_LEFT`, `ROTATE_RIGHT`, `FULL_SCREEN` and `LEAVE_FULL_SCREEN`.
 
@@ -71,7 +71,7 @@ The second and third row came with [25. Contacts](25-contacts.md): Imagescan, Im
 
 ## Toolbar buttons: ToolButtons
 
-*Package `swing` · introduced in [30. Fractals](30-fractals.md#the-toolbar-moves-into-amade-commons) · source: [`ToolButtons`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/swing/ToolButtons.java)*
+*Package `swing` · introduced in [30. Fractals](30-fractals.md#the-toolbar-moves-into-amade-commons) · source: [`ToolButtons`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/swing/ToolButtons.java)*
 
 **What it is for.** Square Motif buttons for a toolbar, raised in 3D like the Front Panel's: icon only, the tooltip from the action, sunken while pressed or, for a switch, while it is on.
 
@@ -91,7 +91,7 @@ toolbar.add(ToolButtons.toggle(showGrid));           // an action with SELECTED_
 
 ## A player's buttons: TransportButtons
 
-*Package `swing` · introduced in [33. Audio](33-audio.md#the-transport-buttons) · source: [`TransportButtons`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/swing/TransportButtons.java), [`TransportGlyph`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/swing/TransportGlyph.java)*
+*Package `swing` · introduced in [33. Audio](33-audio.md#the-transport-buttons) · source: [`TransportButtons`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/swing/TransportButtons.java), [`TransportGlyph`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/swing/TransportGlyph.java)*
 
 **What it is for.** The wide buttons of a player's transport bar: Previous, Next, Rewind, Forward, Stop, Play, Pause, Record and Eject. Audio and Video use them.
 
@@ -124,7 +124,7 @@ The tooltip comes from the **program's** texts under `glyph.key()`, `transport.p
 
 ## Paper: PaperSize
 
-*Package `print` · introduced in [23. WritePad](23-writepad.md#printing-moves-into-amade-commons) · source: [`PaperSize`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/print/PaperSize.java)*
+*Package `print` · introduced in [23. WritePad](23-writepad.md#printing-moves-into-amade-commons) · source: [`PaperSize`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/print/PaperSize.java)*
 
 **What it is for.** The paper sizes the programs offer, `A5`, `A4`, `LETTER` and `LEGAL`, in points (1/72 inch), the unit of `java.awt.print` and of the document formats. `media()` is the paper the printer should take.
 
@@ -138,7 +138,7 @@ The tooltip comes from the **program's** texts under `glyph.key()`, `transport.p
 
 ## Printing: PrintJobs
 
-*Package `print` · introduced in [21. Calendar](21-calendar.md#printing), moved into amade-commons with [23. WritePad](23-writepad.md#printing-moves-into-amade-commons) · source: [`PrintJobs`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/print/PrintJobs.java)*
+*Package `print` · introduced in [21. Calendar](21-calendar.md#printing), moved into amade-commons with [23. WritePad](23-writepad.md#printing-moves-into-amade-commons) · source: [`PrintJobs`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/print/PrintJobs.java)*
 
 **What it is for.** Sending a program's pages somewhere: to a printer through the system's print dialog, or to a PostScript file. The pages are a `Pageable`, usually a `java.awt.print.Book`, and decide what is drawn; `PrintJobs` only decides where it goes. Calendar and WritePad print this way.
 

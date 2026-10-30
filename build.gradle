@@ -5,10 +5,10 @@ plugins {
 
 // JitPack publishes under com.github.<owner>; using the same coordinates locally lets an app's
 // composite build (includeBuild '../amade-commons') replace the JitPack dependency automatically.
-group = 'com.github.datazuul'
+group = 'com.github.amadeos-eu'
 // CI computes the version from the Conventional Commits since the last release tag and passes it as
-// -PappVersion (datazuul/amadeos-ci scripts/next-version.sh); a build without it is a local development build.
-// Apps take released versions from JitPack by tag (com.github.datazuul:amade-commons:v1.0.0).
+// -PappVersion (amadeos-eu/amadeos-ci scripts/next-version.sh); a build without it is a local development build.
+// Apps take released versions from JitPack by tag (com.github.amadeos-eu:amade-commons:v1.0.0).
 version = findProperty('appVersion') ?: '0.0.0-dev.0'
 
 java {
@@ -63,7 +63,7 @@ publishing {
             pom {
                 name = 'amade-commons'
                 description = 'Shared theme, Motif look and application infrastructure for amadeOS Swing applications'
-                url = 'https://github.com/datazuul/amade-commons'
+                url = 'https://github.com/amadeos-eu/amade-commons'
                 licenses {
                     license {
                         name = 'EUPL-1.2'

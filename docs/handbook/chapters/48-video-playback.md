@@ -4,7 +4,7 @@ Two programs of the book play video: Video plays files, streams and DVDs ([chapt
 
 ## A player in a Swing window: Mpv
 
-*Package `mpv` · introduced in [32. Video](32-video.md#a-c-library-as-a-java-interface), moved to amade-commons for [38. TV](38-tv.md#what-moves-in-with-tv) · source: [`Mpv`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/mpv/Mpv.java)*
+*Package `mpv` · introduced in [32. Video](32-video.md#a-c-library-as-a-java-interface), moved to amade-commons for [38. TV](38-tv.md#what-moves-in-with-tv) · source: [`Mpv`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/mpv/Mpv.java)*
 
 **What it is for.** Playing video and sound with libmpv into the native window of an AWT `Canvas`: loading the library, creating the player with the right options for this machine, the event thread, commands and properties, and closing it all in the right order.
 
@@ -70,7 +70,7 @@ So the order in a program's `quit` is always: `mpv.close()`, then dispose the wi
 
 ## Events: MpvEvent
 
-*Package `mpv` · introduced in [32. Video](32-video.md#structs-without-structure) · source: [`MpvEvent`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/mpv/MpvEvent.java)*
+*Package `mpv` · introduced in [32. Video](32-video.md#structs-without-structure) · source: [`MpvEvent`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/mpv/MpvEvent.java)*
 
 `mpv_wait_event` returns a pointer into memory that mpv reuses for the next event. `MpvEvent.read` copies what it needs into a record, so the event can be handed on:
 
@@ -99,13 +99,13 @@ The layouts of the C structs are offsets in `LibMpv`. The test of `MpvEvent` bui
 
 ## The C interface: LibMpv
 
-*Package `mpv` · introduced in [32. Video](32-video.md#a-c-library-as-a-java-interface) · source: [`LibMpv`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/mpv/LibMpv.java)*
+*Package `mpv` · introduced in [32. Video](32-video.md#a-c-library-as-a-java-interface) · source: [`LibMpv`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/mpv/LibMpv.java)*
 
 The functions of `mpv/client.h` that the programs use, mapped with JNA, with the constants of the formats and events and the offsets in the structs. `LibMpv.NAMES` lists the names to load it by on Debian and Ubuntu (`mpv`, `libmpv.so.2`), Windows and macOS. A program rarely needs `LibMpv` itself: `Mpv` covers the functions, and the program uses only the format constants for `observe`.
 
 ## The video output: VideoOutput
 
-*Package `mpv` · introduced in [32. Video](32-video.md#machines-without-a-gpu-and-older-libraries) · source: [`VideoOutput`](https://github.com/datazuul/amade-commons/blob/main/src/main/java/eu/amadeos/commons/mpv/VideoOutput.java)*
+*Package `mpv` · introduced in [32. Video](32-video.md#machines-without-a-gpu-and-older-libraries) · source: [`VideoOutput`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/mpv/VideoOutput.java)*
 
 `VideoOutput.forThisMachine()` gives the options `Mpv` starts with. On Linux mpv's GPU output may only use X11 contexts (otherwise it tries the console and DRM), with `xv` and plain `x11` as fallbacks, and hardware decoding where it is safe. Without a GPU render node in `/dev/dri` (QEMU, Xvfb) it adds mpv's `fast` profile. A program can override each of them with its own options or with `-Dmpv.<option>`.
 

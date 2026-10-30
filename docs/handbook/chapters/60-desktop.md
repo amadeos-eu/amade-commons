@@ -14,7 +14,7 @@ The applications of this book run on a desktop, and the desktop is Java too: the
 
 ## One repository, one package per module
 
-The desktop lives in the repository [amadeos-system](https://github.com/datazuul/amadeos-system), a Gradle multi-project with one module and one Debian package per component. The applications (Pad, Files, Mail, ...) keep their repositories, and the [amadeos](https://github.com/datazuul/amadeos) repository builds the live image from all packages.
+The desktop lives in the repository [amadeos-system](https://github.com/amadeos-eu/amadeos-system), a Gradle multi-project with one module and one Debian package per component. The applications (Pad, Files, Mail, ...) keep their repositories, and the [amadeos](https://github.com/amadeos-eu/amadeos) repository builds the live image from all packages.
 
 | Module | Package | What it is |
 |---|---|---|

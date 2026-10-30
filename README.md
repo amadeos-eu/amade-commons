@@ -1,8 +1,8 @@
 # amade-commons
 
-Shared library of the [amadeOS](https://github.com/datazuul/amadeos) desktop and its Swing
-applications ([amade-mail](https://github.com/datazuul/amade-mail),
-[amade-pad](https://github.com/datazuul/amade-pad), ...): one desktop theme, one Motif look and the
+Shared library of the [amadeOS](https://github.com/amadeos-eu/amadeos) desktop and its Swing
+applications ([amade-mail](https://github.com/amadeos-eu/amade-mail),
+[amade-pad](https://github.com/amadeos-eu/amade-pad), ...): one desktop theme, one Motif look and the
 same start-up code everywhere.
 
 ![License](https://img.shields.io/badge/license-EUPL--1.2-blue)
@@ -96,7 +96,7 @@ public static void main(String[] args) {
 
 ### Gradle
 
-Published through [JitPack](https://jitpack.io/#datazuul/amade-commons):
+Published through [JitPack](https://jitpack.io/#amadeos-eu/amade-commons):
 
 ```groovy
 repositories {
@@ -104,7 +104,7 @@ repositories {
     maven { url 'https://jitpack.io' }
 }
 dependencies {
-    implementation 'com.github.datazuul:amade-commons:<commit or tag>'
+    implementation 'com.github.amadeos-eu:amade-commons:<commit or tag>'
 }
 ```
 
