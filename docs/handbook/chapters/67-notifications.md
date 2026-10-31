@@ -134,6 +134,38 @@ The Front Panel is a client like any other. `DesktopNotices` announces each new 
 
 The amade programs send through `eu.amadeos.commons.desktop.Notifications` ([chapter 45](45-desktop.md#notifications-notifications)). A D-Bus library in amade-commons would land in every program, including the games, so the client calls `gdbus` instead, which every Debian desktop has (package `libglib2.0-bin`), and `gdbus monitor` for the signals. That brought up one detail of the service: each `gdbus call` is a process of its own whose bus connection ends at once, so the service would take the program for gone and grey out its buttons. The client therefore sends its process id in the hint `sender-pid`, and the service ties such notifications to that process instead of the bus connection.
 
+## Who sends notifications
+
+Five amade programs use the client, each for the moment the user may not be looking at its window:
+
+| Program | When | Buttons | Chapter |
+|---|---|---|---|
+| Calendar | a *popup* reminder is due | *Snooze 5 min*; a click opens the day | [21](21-calendar.md#reminders) |
+| Mail | the inbox of an account has more unread mail than at the last check | a click opens the inbox | [22](22-mail.md) |
+| Backup | a job is overdue, or a backup failed (critical) | *Open Backup & Sync* | [26](26-backup.md) |
+| TV | a program with a reminder starts | *Watch* | [38](38-tv.md) |
+| Webcam | a photo, a burst or a video is saved while the window is in the background | *Open* | [28](28-webcam.md) |
+
+They share three rules. Every action goes to the EDT first, because the client calls it on its own thread. If `send` returns 0 (no notification service, so the client used the system tray of [chapter 45](45-desktop.md#notifications-notifications)) and there is no system tray either, the program falls back to what it did before: Calendar's and TV's dialogs, Backup's notice window. And a notification that would only repeat itself replaces the last one: Mail's count of new mail, Backup's reminder for the same job.
+
+Mail counts the unread messages of the inbox folders per account and announces only an increase, and never on the first look at an account after the start, which would greet the user with "214 new messages":
+
+```java title="amade-mail · ui/main/MainPresenter.java"
+--8<-- "amade-mail/src/main/java/eu/amadeos/apps/mail/ui/main/MainPresenter.java:new-mail"
+```
+
+Backup's helper has no window to bring forward; *Open Backup & Sync* starts the program. Reminders are `NORMAL`, failures `CRITICAL`, so a failed backup stays on the screen until the user has seen it:
+
+```java title="amade-backup · ui/notice/NoticeWindows.java"
+--8<-- "amade-backup/src/main/java/eu/amadeos/apps/backup/ui/notice/NoticeWindows.java:notice"
+```
+
+Webcam shows the opposite case: while its window is in front, the status line says "Saved Photo …" and a pop-up would be noise. It only sends when the window is not active, as after a self-timer or at the end of a time lapse, and marks the notification *transient*, so it does not fill the history:
+
+```java title="amade-webcam · ui/main/MainWindow.java"
+--8<-- "amade-webcam/src/main/java/eu/amadeos/apps/webcam/ui/main/MainWindow.java:saved"
+```
+
 ## Testing by hand
 
 Under Xvfb with a private session bus, the daemon and `notify-send` are enough:

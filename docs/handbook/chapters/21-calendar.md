@@ -232,6 +232,14 @@ A Swing `Timer` fires on the EDT, so the presenter can talk to the view directly
 
 The time comes from outside: `check(now)` takes it as a parameter, and the presenter gets a `Supplier<LocalDateTime>` in its constructor, `LocalDateTime::now` in the program and a fixed value in the tests. That is the `Clock` idea of chapter 20 again.
 
+A *popup* reminder is a desktop notification ([chapter 67](67-notifications.md)): it comes up in the corner even when the Calendar is minimized, with *Snooze 5 min*, and a click on it opens the day of the appointment. The buttons' answer comes on a background thread, so both go to the EDT first. Only where there is neither a notification service nor a system tray does the old dialog come up:
+
+```java title="amade-calendar · ui/main/MainWindow.java"
+--8<-- "amade-calendar/src/main/java/eu/amadeos/apps/calendar/ui/main/MainWindow.java:remind"
+```
+
+*Snooze* hands the reminder back to `ReminderCheck`, which returns it once more five minutes later. That is still the presenter's business and tested with the fixed clock; the window only knows that a button was pressed.
+
 ## Drawing the views
 
 The four views are components that paint themselves. There are no `JLabel`s per day: Month view paints a grid with `drawString` and `fillRect`, Week view paints columns and shaded hours. Painting is faster than hundreds of components, and the layout is exactly the one dtcm had.
