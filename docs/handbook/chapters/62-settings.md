@@ -1,6 +1,6 @@
 # 62. Settings
 
-Every application of this book follows the desktop theme ([chapter 42](42-look.md#following-the-desktop-themestore)). This chapter is the other end: Settings, amadeOS's successor of CDE's Style Manager (dtstyle), where the user picks the theme, the text size, the backdrop, the workspace names and the Front Panel, keyboard, mouse, bell, the resolution and arrangement of the monitors, screen saver, window behaviour, clipboard and what starts at login, the network, Bluetooth, the printers and the sound devices, and, for the system, the keyring, the updates, the language and the time zone. It is a desktop module, so it starts without Guice and talks to X11. It writes the files the applications and the window manager follow, and it applies some settings by running the X server's own tools.
+Every application of this book follows the desktop theme ([chapter 42](42-look.md#following-the-desktop-themestore)). This chapter is the other end: Settings, amadeOS's successor of CDE's Style Manager (dtstyle), where the user picks the theme, the text size, the backdrop, the workspace names and the Front Panel, keyboard, mouse, bell, the resolution and arrangement of the monitors, screen saver, window behaviour, clipboard and what starts at login, the network, Bluetooth, the printers and the sound devices, and, for the system, the accounts of the computer, the keyring, the updates, the language and the time zone. It is a desktop module, so it starts without Guice and talks to X11. It writes the files the applications and the window manager follow, and it applies some settings by running the X server's own tools.
 
 ![Settings: a sidebar of controls, the page of the selected one on the right](images/desktop/settings.jpg)
 
@@ -13,6 +13,7 @@ Every application of this book follows the desktop theme ([chapter 42](42-look.m
 - Changing the resolution with `xrandr` safely, with a countdown back to the old layout, and how the desktop follows a new screen size.
 - How pages that reach the keyring, the package manager and the time zone stay testable, and how a user switches off a service of the system without touching a file of a package.
 - Pages that act at once on NetworkManager, PipeWire, BlueZ and CUPS, and a Bluetooth pairing agent of your own over D-Bus.
+- Changing accounts and groups through a small root helper behind polkit, with the rules in the helper, not in the window.
 
 ## Pages, a sidebar and a search
 
@@ -287,6 +288,28 @@ The list comes from CUPS over IPP, through `CupsClient` of the print module, the
 
 `lpinfo --include-schemes dnssd` finds the printers announced in the network and the USB printers that `ipp-usb` makes look like network printers; `lpadmin -m everywhere` asks the printer itself for its abilities and writes a PPD from the answer. So the page needs no driver database, and printers that need a driver are left to the CUPS web pages. A typed host becomes `ipp://host/ipp/print`, the path of IPP Everywhere. The defaults for paper and two-sided printing are `lpadmin -o PageSize-default=…` and `Duplex-default=…`, which every program's print dialog starts from.
 
+## Users and Groups: a root helper of our own
+
+![The Users tab](images/desktop/settings-users.jpg)
+
+The *Users and Groups* page (group *System*, `immediate()` like the device pages) lists the people's accounts and the permission groups, and adds, removes and changes them. Reading needs no rights: `UserFiles` parses `/etc/passwd` and `/etc/group`, which every user may read, and keeps the accounts with a user ID from 1000 to 59999, Debian's range for people; `loginctl list-users` says who is logged in. Whether an account is *disabled* would be in `/etc/shadow`, which only root reads, so a disabled account also gets the shell `/usr/sbin/nologin`, and the page reads that.
+
+Writing needs root. amadeOS could use AccountsService, the D-Bus service of GNOME and KDE, but it knows nothing about groups other than the administrators, and the page needs all of them. So the page does what Software does ([chapter 64](64-software.md)): a short bash script, `/usr/libexec/amadeos-users`, does the work with the shadow tools, and `pkexec` runs it as root after polkit asked for an administrator's password. The polkit action `eu.amadeos.users.manage` says `auth_admin_keep`, so a second change within a few minutes asks no more; the Motif polkit agent of the session shows the prompt.
+
+```bash title="amadeos-system · settings/packaging/root/usr/libexec/amadeos-users"
+--8<-- "amadeos-system/settings/packaging/root/usr/libexec/amadeos-users:commands"
+```
+
+The rules are in the helper, not in the window, because anyone may run `pkexec /usr/libexec/amadeos-users` from a terminal: it touches only people's accounts, only the permission groups of a fixed list and the groups made on the computer, and it refuses to remove or disable the account that called it (`PKEXEC_UID`), to take away the last administrator and to remove a logged-in user. The page disables the same buttons, but only as a courtesy. Passwords go to the helper on standard input, never as arguments, which every user can read in the process list. The answer is one line, `@@done` or `@@error ID MESSAGE`, and exit code 2 for a refusal; `SystemUsers` turns it, and pkexec's own 126 (prompt closed) and 127 (not authorized), into a `UserException` with a reason the page can translate:
+
+```java title="amadeos-system · settings/users/SystemUsers.java"
+--8<-- "amadeos-system/settings/src/main/java/eu/amadeos/system/users/SystemUsers.java:helper"
+```
+
+The own password is the exception: it does not need an administrator, but the current password. The page runs `passwd` as the user and writes the current password and the new one twice to its standard input; `passwd` reads PAM's questions from there when it is not on a terminal. That way PAM checks the old password, and `pam_gnome_keyring` in Debian's `common-password` changes the login keyring with it. `passwd` runs with `LC_ALL=C.UTF-8`, so its "Authentication token manipulation error" can be recognised as a wrong current password.
+
+`UsersPageTest` runs the page against `FakeUsers`, a family computer kept as lines of `/etc/passwd` and `/etc/group`, and `UserFilesTest` runs the helper itself with `AMADEOS_USERS_RUN=echo`, which checks every rule but only prints the commands it would run.
+
 ## Network: one proxy for every program
 
 The proxy is the one setting of Settings that the applications read too. So its store is not in Settings but in amade-commons, `ProxyStore` with `proxy.conf` and the password in the keyring ([chapter 47](47-programs-json-network.md#the-proxy-of-the-desktop-network)); the Network page only edits it.
@@ -334,7 +357,8 @@ Everything with a name asks it: `SettingsCategory.label()` reads `category.keybo
 2. **Resuming the session.** Let the Startup page offer CDE's *Resume current session*: at logout, record the programs whose windows are open (`WM_COMMAND`, or the desktop entry of their `WM_CLASS`), and at the next login start them again from `amadeos-session autostart`. Which programs cannot be resumed that way, and what should the page say about them?
 3. **One monitor at a time.** With two monitors a maximized window covers both. Let the window manager ask RandR for the monitors (`XRRGetMonitors`, or `xrandr --listmonitors` at each root `ConfigureNotify`) and maximize a window on the monitor that holds its centre. Where should the Front Panel go, and what does `_NET_WORKAREA` have to say then?
 4. **Fixed addresses.** Add a *Settings…* button to the wired connection of the Network page: IPv4 automatic or manual, address with prefix, gateway and DNS, written with `nmcli connection modify <name> ipv4.method manual ipv4.addresses … ipv4.gateway … ipv4.dns …`. How do you test the command without NetworkManager, and what has to happen to the active connection afterwards?
-5. **A theme editor.** Add *New…* to the Color page: pick a base colour, derive the rest with `DesktopTheme.fromBase`, show the palette and write `~/.config/amadeos/themes/<id>/theme.properties`.
+5. **A picture for each user.** Let *Add User…* and the details offer a picture, kept as `/var/lib/AccountsService/icons/<login>` like other desktops, and let the login greeter show a list of users with their pictures. Which part runs as root, and how does the greeter read the pictures before anyone is logged in?
+6. **A theme editor.** Add *New…* to the Color page: pick a base colour, derive the rest with `DesktopTheme.fromBase`, show the palette and write `~/.config/amadeos/themes/<id>/theme.properties`.
 
 ## Summary
 
@@ -342,6 +366,7 @@ Everything with a name asks it: `SettingsCategory.label()` reads `category.keybo
 - One set of pages serves two views, the sidebar with a search and CDE's row of buttons; the controls are an enum with groups and translated keywords.
 - It writes `theme.conf` through `ThemeManager`, atomically, because a dozen programs read the file within milliseconds of a change.
 - The window manager and the panel also follow the root window property `_AMADEOS_THEME`; the applications follow the file alone.
+- Accounts and groups change through a root helper behind polkit that holds the rules itself; the window only reads `/etc/passwd` and `/etc/group`.
 - The text size travels with the theme in `font.conf`; the window settings are a record in `base` that the window manager follows through `window.conf`, and the panel follows `panel.conf` and `workspaces.conf` the same way.
 - Startup switches off a script of the system in a file of the user's, `startup.conf`, and keeps the user's programs as desktop entries in `~/.config/autostart`.
 - The System pages get the keyring, the package manager and the time zone as one record, so tests hand in stand-ins; the keyring is unlocked through GNOME Keyring's own interface, in Settings' own dialog.
