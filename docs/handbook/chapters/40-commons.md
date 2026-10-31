@@ -10,7 +10,7 @@ Each chapter of this part covers one area. Each section in it describes one part
 | [42. Look and Themes](42-look.md) | `theme`, `swing` | The desktop's colour themes, custom themes, following Settings, the CDE look, the text size, colours of your own, the date dialog |
 | [43. Languages](43-languages.md) | `i18n` | The five languages, which one a program speaks, texts and their formats, menu letters, the language setting, the translation test |
 | [44. Settings and Files](44-settings.md) | `config` | Where files go, settings files that survive a crash, following a file the desktop writes |
-| [45. Desktop Integration](45-desktop.md) | `desktop` | Opening links and files in other programs, the busy cursor, passwords in the keyring |
+| [45. Desktop Integration](45-desktop.md) | `desktop` | Opening links and files in other programs, the busy cursor, passwords in the keyring, notifications |
 | [46. Toolbars, Icons and Printing](46-toolbars-and-printing.md) | `swing`, `print` | Icons drawn in code, toolbar buttons, a player's transport buttons, paper sizes, printing and PostScript |
 | [47. Programs, JSON and the Network](47-programs-json-network.md) | `process`, `json`, `net` | Running other programs, testing without them, reading and writing JSON, the proxy of the desktop, how the programs talk to web services |
 | [48. Video Playback](48-video-playback.md) | `mpv` | Playing video and streams with libmpv in a Swing window, its events, the video output for this machine |

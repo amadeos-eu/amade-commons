@@ -191,3 +191,52 @@ The command gets the password on its standard input and has 30 seconds to finish
 
 !!! tip "Tip: Tab while the list is open"
     The field turns off Swing's focus traversal keys so that Tab reaches the completion while the list is open, and moves the focus itself when the list is closed. Shift+Tab goes back as usual.
+
+## Notifications: Notifications
+
+*Package `desktop` · introduced in [67. Notifications](67-notifications.md#the-client-in-amade-commons) · source: [`Notification`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/desktop/Notification.java), [`Notifications`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/desktop/Notifications.java)*
+
+**What it is for.** A pop-up on the desktop that tells the user something while the program's window is in the background or minimized: a reminder is due, new mail came, the backup is finished, the photo was saved. The notification also goes into the desktop's history, where the user finds it later.
+
+| Method | What it does |
+|---|---|
+| `Notification.of(summary)` | A notification with its bold line; `body`, `icon`, `action`, `defaultAction`, `urgency`, `timeout`, `category`, `transientOnly` and `replacing` return changed copies |
+| `Notifications.send(notification)` | Shows it; returns its id, or 0 when there is no notification service |
+| `Notifications.close(id)` | Takes it off the screen and out of the history |
+| `Notification.escape(text)` | Escapes `&`, `<` and `>` in text from outside, before it goes into the body |
+| `Notifications.install(app)` | Names the program; `AmadeApplication.launch` calls it |
+
+```java
+long id = Notifications.send(Notification.of(texts.get("reminder.title", event.title()))
+        .body(Notification.escape(event.place()))
+        .icon(window.getIconImage())
+        .action("snooze", texts.get("reminder.snooze"), () -> reminders.snooze(event, 5))
+        .defaultAction(() -> SwingUtilities.invokeLater(window::toFront)));
+```
+
+**When to choose it.** For news the user did not ask for at that moment. An answer to something the user just did (a file could not be saved) belongs in the program's window, as a dialog or in the status line. A confirmation the history need not keep ("Copied") is `transientOnly()`.
+
+**How it works.** On Linux it calls the desktop's notification service, `org.freedesktop.Notifications` on the session bus, through the `gdbus` command of GLib, so amade-commons needs no D-Bus library. The arguments are written in GVariant's text form, which `gdbus` parses:
+
+```java title="amade-commons · desktop/Notifications.java"
+--8<-- "amade-commons/src/main/java/eu/amadeos/commons/desktop/Notifications.java:arguments"
+```
+
+Buttons need the way back: the first notification with an action starts `gdbus monitor`, which prints every signal of the service as a line. `ActionInvoked` with the notification's id runs the button's code, on a background thread; `NotificationClosed` forgets it.
+
+```java title="amade-commons · desktop/Notifications.java"
+--8<-- "amade-commons/src/main/java/eu/amadeos/commons/desktop/Notifications.java:signals"
+```
+
+Without a service (Windows, macOS, an X session without a desktop) the message goes to the system tray's balloon, if there is a tray, and otherwise only to the log. The service is asked again a minute later, because the desktop's notification service may just be restarting.
+
+!!! warning "Pitfall: the action runs on a background thread"
+    The button's code is called from the thread that reads `gdbus monitor`. Anything that touches Swing goes through `SwingUtilities.invokeLater`, as `window::toFront` above.
+
+!!! tip "Tip: the sender-pid hint"
+    Each `gdbus call` is a short process with a bus connection of its own that ends at once. A notification service that ties a notification's buttons to the sender's connection would think the program had quit. `Notifications` therefore adds the hint `sender-pid` with its own process id; the amadeOS service keeps the buttons working as long as that process runs.
+
+??? example "Test: the arguments and the signals"
+    ```java title="amade-commons · test/desktop/NotificationsTest.java"
+    --8<-- "amade-commons/src/test/java/eu/amadeos/commons/desktop/NotificationsTest.java:signals-test"
+    ```

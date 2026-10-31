@@ -108,5 +108,6 @@ nav:
       - 64. Software: 64-software.md
       - 65. The Clipboard Manager: 65-clipboard.md
       - 66. The Window Switcher: 66-window-switcher.md
-      - 67. A Module of Your Own: 67-own-module.md
+      - 67. Notifications: 67-notifications.md
+      - 68. A Module of Your Own: 68-own-module.md
   - The Road Ahead: roadmap.md
