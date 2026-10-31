@@ -20,6 +20,8 @@ amade-files is also the first application in this book that remembers something 
 - **The trash**, compatible with other Linux desktops: what amade-files trashes, they can restore, and the other way round. Inside the trash the panel shows where each file came from.
 - **Opening files**: plain text goes to Pad, everything else to the application the desktop has for its type, with the busy cursor while it starts. Programs and launchers are not started without asking.
 - **Settings** that survive: the view, hidden files on or off, one or two panels, and the folders of both panels.
+- **USB sticks, memory cards and discs** in the tree, mounted when plugged in or chosen, with *Safely Remove*.
+- **Archives**: opening a zip, tar or 7z unpacks it next to itself; *Compress…* packs files into zip, tar.gz or tar.xz.
 
 The program is about 6,000 lines of Java and 1,500 lines of tests: the largest so far. Most of it is in two services, file operations and the trash, and in the Swing classes that make the tree and drag and drop work.
 
@@ -34,6 +36,8 @@ The program is about 6,000 lines of Java and 1,500 lines of tests: the largest s
 - How to build a `JTree` that reads its folders only when they are opened, and update it without closing what the user opened.
 - How files travel on the X11 clipboard and in drag and drop, in formats that other programs understand.
 - How a `TransferHandler` decides between copy and move, and what Swing does not tell it.
+- How to let other programs do work that needs root (mounting a USB stick) and read what they print.
+- How to unpack an archive from the internet without letting it write outside its folder.
 
 ## The packages
 
@@ -369,6 +373,86 @@ Calling C code can crash the JVM, so Java asks the application for permission: n
 
 `announce` checks first whether the permission was given, and does nothing otherwise. A program that does not know about `LaunchFeedback`, or runs without X11, loses nothing but the cursor. *Never throws* is the contract: the busy cursor is a nicety, and a nicety must never stop a file from opening.
 
+## USB sticks: asking other programs
+
+A USB stick appears as a block device, `/dev/sdb1`, and must be **mounted** before its files can be read: attached to a folder such as `/media/ralf/STICK`. Mounting needs root. On a desktop, the daemon **udisks** does it on behalf of the user at the screen, after asking polkit whether they may (for removable drives in the active session the answer is yes, without a password). Files does not talk to udisks over D-Bus; it runs two small programs and reads what they print.
+
+`lsblk` lists the block devices. With `--pairs`, every line is a list of `KEY="value"`, which is easy to read without a JSON library:
+
+```java title="amade-files · DriveService.java (the command)"
+--8<-- "amade-files/src/main/java/eu/amadeos/apps/files/service/DriveService.java:lsblk"
+```
+
+Not every device is a drive for the tree. The internal disk is not removable, swap holds no files, and the stick the live system started from is in use by the system. The rule that sorts them out is the most important part of the class, and it is a pure function of the text, so the test can feed it the `lsblk` output of a laptop with all these cases at once:
+
+```java title="amade-files · DriveService.java"
+--8<-- "amade-files/src/main/java/eu/amadeos/apps/files/service/DriveService.java:parse"
+```
+
+Mounting is `udisksctl mount`. udisks chooses the folder; instead of parsing its message ("Mounted /dev/sdb1 at …"), which could change between versions, Files asks `lsblk` again:
+
+```java title="amade-files · DriveService.java"
+--8<-- "amade-files/src/main/java/eu/amadeos/apps/files/service/DriveService.java:mount"
+```
+
+Every program is started through the `CommandRunner` of amade-commons (chapter 31), so the tests answer with canned output (`FinishedProcess`) and check which commands were run, in which order. *Safely Remove* unmounts every partition of the stick and then switches the disk off, so it can be pulled out:
+
+```java title="amade-files · DriveService.java"
+--8<-- "amade-files/src/main/java/eu/amadeos/apps/files/service/DriveService.java:eject"
+```
+
+The tree already asked for its places every three seconds, to notice sticks mounted by someone else. Now the same look also notices sticks that are new since the last look, and mounts them at once. A stick that was there before Files started, or that the user unmounted, waits until it is chosen: plugging in means "I want to use it", starting Files does not.
+
+```java title="amade-files · MainPresenter.java"
+--8<-- "amade-files/src/main/java/eu/amadeos/apps/files/ui/main/MainPresenter.java:refresh-places"
+```
+
+A drive that waits is a `Place` whose path is its device. Choosing it in the tree mounts it instead of listing `/dev/sdb1`; the right mouse button only opens its menu, *Mount and Open* or *Mount*, because a menu should never do something before the user picks an entry.
+
+## Archives
+
+amadeOS has no archive program, so the File Manager opens archives itself: zip, tar with gzip, bzip2 or xz, 7z, and single compressed files. [Apache Commons Compress](https://commons.apache.org/proper/commons-compress/) reads and writes all of them in Java; only xz and 7z need a second small library (`org.tukaani:xz`). No `unzip` or `7z` has to be installed, and the code is the same on every system.
+
+```java title="amade-files · ArchiveService.java (formats)"
+--8<-- "amade-files/src/main/java/eu/amadeos/apps/files/service/ArchiveService.java:formats"
+```
+
+### Never overwrite, never half
+
+Extracting follows the rule of the copy: the user must never see half a result. The archive is unpacked into a hidden folder next to it, and only when everything is there does the result get its real name:
+
+```java title="amade-files · ArchiveService.java"
+--8<-- "amade-files/src/main/java/eu/amadeos/apps/files/service/ArchiveService.java:extract"
+```
+
+Some archives hold one folder (`project/…`), others a heap of loose files. Unpacking the heap into the current folder would mix it with what is there; wrapping the folder in another folder of the same name is annoying. So the decision is made *after* unpacking, when it is known what the archive held:
+
+```java title="amade-files · ArchiveService.java"
+--8<-- "amade-files/src/main/java/eu/amadeos/apps/files/service/ArchiveService.java:move-into-place"
+```
+
+Because the result always gets a free name, extracting never asks a question and never overwrites anything.
+
+### An archive is input from a stranger
+
+An archive entry is a path chosen by whoever made the archive. `../../.bashrc` is a perfectly valid name in a zip file, and a program that writes entries where they say would overwrite the user's shell settings: the bug is so common it has a name, *zip slip*. Every entry is resolved against the work folder and normalized, and anything that ends up outside is left out:
+
+```java title="amade-files · ArchiveService.java"
+--8<-- "amade-files/src/main/java/eu/amadeos/apps/files/service/ArchiveService.java:resolve"
+```
+
+Links are the second way out. A tar can hold a link `pkg/escape → ../../..` followed by a file `pkg/escape/evil`: each name is harmless on its own, but writing the second follows the first out of the folder. So links that point outside are not created, and before every file the real path of its folder is checked against the work folder. The test builds exactly this archive and checks that nothing appeared outside.
+
+### Compress
+
+*Compress…* asks for a name and a format and writes the archive the same way: into a hidden `.part` file, renamed when complete. Paths in the archive start at the names of the chosen items, links are stored as links, and the Unix permissions go along, so a script is still executable after a round trip.
+
+```java title="amade-files · ArchiveService.java"
+--8<-- "amade-files/src/main/java/eu/amadeos/apps/files/service/ArchiveService.java:compress"
+```
+
+Both directions run through `runOperation` with the progress window of *Long operations*. A tar.gz is read as a stream and does not say how many files it holds, so the progress follows the bytes read from the archive, and the window shows "128 files" instead of "128 of ?".
+
 ## Testing
 
 The service tests work in a temporary folder (JUnit's `@TempDir`) on the real file system: copying, merging folders, links copied as links, moving across file systems. Their listener answers conflicts from a list and records every report:
@@ -409,6 +493,7 @@ What stays for a person to try is the Swing part: the hint, the keys, folders op
 | `PropertiesFile` | **this chapter** | reading and writing `files.conf` safely |
 | `DesktopLauncher` | chapter 11 | opening files with their application; `isRisky` |
 | `LaunchFeedback` | **this chapter** | the busy cursor while Pad starts |
+| `CommandRunner`, `FinishedProcess` | chapter 31 | `lsblk` and `udisksctl`, and their canned answers in the tests |
 
 ### And what stays in Files
 
@@ -423,7 +508,9 @@ There is one thing Files does not do that Pad does: it speaks only English. Its 
 3. **Speed and time left.** Show "12 MB/s, about 2 minutes left" in the progress window. Which class computes it, and how do you test it without waiting?
 4. **Undo for Move.** After a move, *Edit → Undo* moves the files back. What must the presenter remember, and what happens if a file was changed in the meantime?
 5. **Ask on drop.** Some file managers show a small menu when files are dropped with Alt held: *Move Here*, *Copy Here*, *Link Here*, *Cancel*. Add it. Which class knows that Alt was held, where does the menu open, and why must it open after the drop has ended?
-6. **A watched folder.** When another program creates a file in a shown folder, the panel should update by itself. Look at `java.nio.file.WatchService`. Which thread waits for its events, and how do they reach the panel?
+6. **Format a stick.** Add *Format…* to the menu of a drive: FAT32 or exFAT, a new label, a warning that names the stick. `udisksctl` cannot format; udisks can over D-Bus (`org.freedesktop.UDisks2.Block.Format`). Which polkit action does that need, and how do you make sure the user cannot format the internal disk by mistake?
+7. **Archives as folders.** Instead of unpacking, show the contents of a zip in the panel, and copy single files out of it. Which parts of `FileSystemService` would need an interface, and what does Paste into an archive mean?
+8. **A watched folder.** When another program creates a file in a shown folder, the panel should update by itself. Look at `java.nio.file.WatchService`. Which thread waits for its events, and how do they reach the panel?
 
 ## Summary
 
@@ -437,6 +524,8 @@ There is one thing Files does not do that Pad does: it speaks only English. Its 
 - Files travel between programs as `text/uri-list` and `x-special/gnome-copied-files`. Java offers the first by itself; the second needs a name in the `SystemFlavorMap`.
 - A `TransferHandler` cannot see Shift; a `DragSourceListener` can. Drops from other programs are reported as copies, so the other program never deletes anything.
 - `LaunchFeedback` calls Xlib through the foreign function API to show the busy cursor; the application must allow native access in its manifest.
+- Root work on the desktop goes through a daemon with polkit (udisks); the program runs its command-line tools through `CommandRunner` and reads their output with pure functions that tests can feed.
+- An archive is input from a stranger: resolve every entry inside the target, refuse links that lead out, and decide the result's name after unpacking, so nothing is ever overwritten.
 - Code with one user stays with that user. Sometimes the best way to share a feature is to start the program that has it.
 
 The next chapter keeps settings too, but its data is time itself: Calendar, with time zones, repeating appointments and the first printed page.
