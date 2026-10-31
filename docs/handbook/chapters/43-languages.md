@@ -59,6 +59,20 @@ amadeOS speaks English, German, French, Spanish and Italian, and so does every p
 
 **How it works.** Like [`ThemeStore`](42-look.md#following-the-desktop-themestore): it reads the file once, never fails (a missing or unknown locale is empty), writes atomically, and follows the file with a [`ConfigWatcher`](44-settings.md#following-a-file-configwatcher), calling its listeners on the watching thread.
 
+## Formats of their own: RegionalFormats
+
+*Package `i18n` · introduced in [62. Settings](62-settings.md#date-and-time-the-clock-and-formats-of-their-own) · source: [`RegionalFormats`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/i18n/RegionalFormats.java)*
+
+**What it is for.** The formats of dates, times, numbers, money, paper and measures when they should differ from the language: English texts with German dates, for example. Settings > Date and Time writes the region to `~/.config/amadeos/formats.conf`, one line such as `de_AT.UTF-8`; without the file the formats follow the language.
+
+**When to choose it.** An application does not: `AmadeApplication` makes the region Java's `Locale.Category.FORMAT` locale at start-up, so `DateTimeFormatter.ofLocalizedDate(...)`, `NumberFormat.getInstance()` and `DateChooser` follow it without a line of code. What an application must do is use the localized formatters instead of fixed patterns such as `dd.MM.yyyy`. Only the desktop calls `applyTo(environment)`, for the programs it starts:
+
+```java title="RegionalFormats.java"
+--8<-- "amade-commons/src/main/java/eu/amadeos/commons/i18n/RegionalFormats.java:apply"
+```
+
+**How it works.** It reads the file on every call, so a program started after *Apply* sees the new region; a running program keeps the formats it started with. `REGIONS` is the list Settings offers, the languages of amadeOS with their neighbours and more of Europe; `nativeName` names a region in its own language, *Deutsch (Österreich)*.
+
 ## The language setting: LocaleSettings and LanguageChooser
 
 *Package `i18n` · introduced in [10. Pad](10-pad.md#which-language), `LanguageChooser` in [21. Calendar](21-calendar.md#options-and-the-language) · source: [`LocaleSettings`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/i18n/LocaleSettings.java), [`LanguageChooser`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/i18n/LanguageChooser.java)*

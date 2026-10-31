@@ -40,7 +40,7 @@ env:
   IMAGEEDITOR_COMMIT: 0750100e9c4090cfd1fd1c60e0d75db4b25d2ca0
   WEBCAM_COMMIT: 8beed5bb6d52ee8124a9c3a7811f9c683e61c8f6
   # Part VI: the desktop modules.
-  AMADEOS_SYSTEM_COMMIT: ab28ae44ada3ddb88054639e0296ff21adfb8746
+  AMADEOS_SYSTEM_COMMIT: 58a084a23a73d65af017b3c3499e5cd1895ca6f0
   # Chapter 51: the version and release scripts.
   AMADEOS_CI_COMMIT: c5d64042b79c899bb73df6034dbe366bc06e782a
 

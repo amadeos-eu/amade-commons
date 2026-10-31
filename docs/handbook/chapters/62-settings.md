@@ -1,6 +1,6 @@
 # 62. Settings
 
-Every application of this book follows the desktop theme ([chapter 42](42-look.md#following-the-desktop-themestore)). This chapter is the other end: Settings, amadeOS's successor of CDE's Style Manager (dtstyle), where the user picks the theme, the text size, the backdrop, the workspace names and the Front Panel, keyboard, mouse, bell, the resolution and arrangement of the monitors, screen saver, window behaviour, clipboard and what starts at login, the network, Bluetooth, the printers and the sound devices, and, for the system, the accounts of the computer, the keyring, the updates, the language and the time zone. It is a desktop module, so it starts without Guice and talks to X11. It writes the files the applications and the window manager follow, and it applies some settings by running the X server's own tools.
+Every application of this book follows the desktop theme ([chapter 42](42-look.md#following-the-desktop-themestore)). This chapter is the other end: Settings, amadeOS's successor of CDE's Style Manager (dtstyle), where the user picks the theme, the text size, the backdrop, the workspace names and the Front Panel, keyboard, mouse, bell, the resolution and arrangement of the monitors, screen saver, window behaviour, clipboard and what starts at login, the network, Bluetooth, the printers and the sound devices, which program opens which kind of file, and, for the system, the accounts of the computer, the keyring, the updates, the language, and the clock with its time zone and the formats of dates and numbers. It is a desktop module, so it starts without Guice and talks to X11. It writes the files the applications and the window manager follow, and it applies some settings by running the X server's own tools.
 
 ![Settings: a sidebar of controls, the page of the selected one on the right](images/desktop/settings.jpg)
 
@@ -11,9 +11,11 @@ Every application of this book follows the desktop theme ([chapter 42](42-look.m
 - How the window manager and the panel hear about a new theme without watching files, and how the window manager follows `window.conf`.
 - Applying input settings with `xset`, `xmodmap` and `xrdb`, from pure functions that tests can check.
 - Changing the resolution with `xrandr` safely, with a countdown back to the old layout, and how the desktop follows a new screen size.
-- How pages that reach the keyring, the package manager and the time zone stay testable, and how a user switches off a service of the system without touching a file of a package.
+- How pages that reach the keyring, the package manager and the clock stay testable, and how a user switches off a service of the system without touching a file of a package.
 - Pages that act at once on NetworkManager, PipeWire, BlueZ and CUPS, and a Bluetooth pairing agent of your own over D-Bus.
 - Changing accounts and groups through a small root helper behind polkit, with the rules in the helper, not in the window.
+- Default applications in the freedesktop.org `mimeapps.list`, changing only the user's own lines.
+- The computer's clock through `timedatectl`, and formats of dates and numbers apart from the language.
 
 ## Pages, a sidebar and a search
 
@@ -207,9 +209,9 @@ The session runs the scripts of `/etc/amadeos/autostart.d` at login. They belong
 
 The user's own programs follow the freedesktop.org autostart convention: a desktop entry in `~/.config/autostart/` per program, the folder other desktops use too. *Add…* copies the entry of an installed program there, *Remove* deletes the copy. After the scripts, the session runs `amadeos-session autostart`, which launches the entries with `XdgDesktopEntry.launch()`, so field codes such as `%U` are handled like a start from the Front Panel, and skips entries whose program is gone.
 
-## The System pages: keyring, packages and time zone
+## The System pages: keyring, packages and clock
 
-*Passwords*, *Updates* and *Language* reach beyond the files of the user: the login keyring on the session bus, the package manager through `pkexec`, the computer's time zone through `timedatectl`. The window gets all of that as one record, so a test hands in stand-ins and never needs a keyring, apt or root:
+*Passwords*, *Updates* and *Date and Time* reach beyond the files of the user: the login keyring on the session bus, the package manager through `pkexec`, the computer's clock through `timedatectl`. The window gets all of that as one record, so a test hands in stand-ins and never needs a keyring, apt or root:
 
 ```java title="amadeos-system · settings/SystemAccess.java"
 --8<-- "amadeos-system/settings/src/main/java/eu/amadeos/system/settings/SystemAccess.java"
@@ -225,7 +227,7 @@ The keyring is an interface in the session module, which already depends on dbus
 
 `SecretServiceKeyring` reads the default collection's `Locked` and `Items` properties through the freedesktop.org Secret Service, and locks with its `Lock` method. The Secret Service has no method to unlock with a password or to change one: a client asks for a *prompt*, and the keyring shows its own window. amadeOS wants the question in its own Motif dialog, so for these two it uses GNOME Keyring's own interface, `UnlockWithMasterPassword` and `ChangeWithMasterPassword`. The password travels as a Secret Service secret in a `plain` session on the user's own session bus, and the byte array is overwritten as soon as the call returns. A wrong password comes back as an error, which the page shows on its status line.
 
-All three pages do their work in a `SwingWorker`: reading the keyring, asking apt for the waiting updates, switching automatic security updates (which asks for the administrator's password) and setting the time zone. `apply()` returns a status line such as *saving…* at once, and the worker puts the result there when it is done.
+All three pages do their work in a `SwingWorker`: reading the keyring, asking apt for the waiting updates, switching automatic security updates (which asks for the administrator's password) and changing the clock. `apply()` returns a status line such as *saving…* at once, and the worker puts the result there when it is done.
 
 ## Devices: pages that act at once
 
@@ -309,6 +311,44 @@ The rules are in the helper, not in the window, because anyone may run `pkexec /
 The own password is the exception: it does not need an administrator, but the current password. The page runs `passwd` as the user and writes the current password and the new one twice to its standard input; `passwd` reads PAM's questions from there when it is not on a terminal. That way PAM checks the old password, and `pam_gnome_keyring` in Debian's `common-password` changes the login keyring with it. `passwd` runs with `LC_ALL=C.UTF-8`, so its "Authentication token manipulation error" can be recognised as a wrong current password.
 
 `UsersPageTest` runs the page against `FakeUsers`, a family computer kept as lines of `/etc/passwd` and `/etc/group`, and `UserFilesTest` runs the helper itself with `AMADEOS_USERS_RUN=echo`, which checks every rule but only prints the commands it would run.
+
+## Default Applications: one line per type
+
+![The Default Applications page](images/desktop/settings-applications.jpg)
+
+Which program `xdg-open` starts for a PDF or a `mailto:` link is not an amadeOS invention: the freedesktop.org *MIME Applications* specification keeps it in `mimeapps.list` files, the user's in `~/.config/mimeapps.list`, the system's in `/etc/xdg/mimeapps.list` and the `applications` folders. The first file whose `[Default Applications]` names an installed program for the type wins. Firefox, LibreOffice and `xdg-mime default` write the same file, so the page must not rewrite it from scratch. `MimeApps` in base touches only the lines of the types it is given, and keeps everything else, comments and other sections included:
+
+```java title="amadeos-system · base/xdg/MimeApps.java"
+--8<-- "amadeos-system/base/src/main/java/eu/amadeos/system/base/xdg/MimeApps.java:set"
+```
+
+The page does not offer one list per MIME type, which would be hundreds, but one per *role*: web browser, mail, folders, text, documents, pictures, PDF, e-books, music, videos, calendar and contacts. The first type of a role decides which programs are offered (those whose desktop entry lists it in `MimeType=`) and which one is the default now:
+
+```java title="amadeos-system · settings/ApplicationsPage.java"
+--8<-- "amadeos-system/settings/src/main/java/eu/amadeos/system/settings/ApplicationsPage.java:roles"
+```
+
+On *Apply*, a program is written for the role's types it declares, so choosing the Image Editor for pictures does not send BMP files to a program that cannot read them. Choosing amadeOS's own default again does not write that default into the user's file: it removes the user's lines, so that a later update of `/etc/xdg/mimeapps.list` reaches the user:
+
+```java title="amadeos-system · settings/ApplicationsPage.java"
+--8<-- "amadeos-system/settings/src/main/java/eu/amadeos/system/settings/ApplicationsPage.java:apply"
+```
+
+An application of this book does not need any of this. It opens files and links with `DesktopLauncher` ([chapter 45](45-desktop.md#opening-links-and-files-desktoplauncher)), which calls `xdg-open`, and declares what it opens itself in the `MimeType=` line of its desktop entry ([chapter 50](50-packaging.md)): then it appears in the lists of this page.
+
+## Date and Time: the clock and formats of their own
+
+![The Date and Time page](images/desktop/settings-datetime.jpg)
+
+The clock is a setting of the computer. `systemd-timedated` owns it, and `timedatectl` is its command line: `show` reads it as `Key=value` lines (`Timezone`, `CanNTP`, `NTP`, `NTPSynchronized`), `set-timezone`, `set-ntp` and `set-time` change it, and polkit asks for the administrator's password (*auth_admin_keep*, so once for a few minutes). `SystemClock` wraps the four commands behind an interface, as `SystemAccess` does with the keyring; the test hands in a fake that records the calls. The page changes the zone, then network time, then the time, because `set-time` refuses while network time is on:
+
+```java title="amadeos-system · settings/DateTimePage.java"
+--8<-- "amadeos-system/settings/src/main/java/eu/amadeos/system/settings/DateTimePage.java:clock"
+```
+
+The formats are the user's own. English menus with German dates mean one locale for texts and another for dates and numbers. POSIX has that split: `LANG` for everything, `LC_TIME`, `LC_NUMERIC`, `LC_MONETARY`, `LC_PAPER` and `LC_MEASUREMENT` for the parts. Java has it too, as `Locale.Category.DISPLAY` and `Locale.Category.FORMAT`, but it takes the format locale from `LC_CTYPE`, not from `LC_TIME`, and `AmadeApplication` sets the default locale anyway. So amade-commons keeps the region in a file of its own, `~/.config/amadeos/formats.conf`, read by [`RegionalFormats`](43-languages.md#formats-of-their-own-regionalformats): `AmadeApplication` makes it the `FORMAT` locale of every application, and for programs that are not written in Java the session and `ProcessLauncher` set the `LC_*` variables from it, leaving `LANG` alone. The page lists only regions whose glibc locale `locale -a` knows, since a missing locale would fall back to the plain C formats; the image generates all of them.
+
+The preview below the list is formatted by Java with the chosen locale, the same code an application uses: `DateTimeFormatter.ofLocalizedDate`, `NumberFormat.getCurrencyInstance` and `WeekFields.of(locale)`. One detail: the Unicode CLDR puts a *narrow* no-break space (U+202F) before "PM" and between the thousands of French numbers, a character not every font has. The page shows it as an ordinary no-break space.
 
 ## Network: one proxy for every program
 
