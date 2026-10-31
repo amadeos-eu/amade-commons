@@ -4,6 +4,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import eu.amadeos.commons.config.XdgDirectories;
+import eu.amadeos.commons.desktop.Notifications;
 import eu.amadeos.commons.i18n.LocaleSettings;
 import eu.amadeos.commons.i18n.LocaleStore;
 import eu.amadeos.commons.i18n.Messages;
@@ -49,6 +50,8 @@ public final class AmadeApplication {
         Locale.setDefault(locale);
         // Before the first connection: the proxy of Settings > Network, followed while the program runs.
         Network.install();
+        // Every notification names the program, so the desktop shows its name and applies its setting.
+        Notifications.install(app);
         LoggerFactory.getLogger(AmadeApplication.class).info("{} runs in {} (from {})", app.id(),
                 locale.toLanguageTag(), locales.applied().source());
         SwingUtilities.invokeLater(() -> {

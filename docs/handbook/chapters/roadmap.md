@@ -41,7 +41,9 @@ The handbook grows with the applications: a chapter is written for an applicatio
 | [64. Software](64-software.md) | amadeos-software, amadeos-packages | A root helper behind pkexec and polkit, apt's progress, tests with a fake apt, watching for changes |
 | [65. The Clipboard Manager](65-clipboard.md) | amadeos-session clipboard | A program without a window: XFixes instead of polling, an X thread, a worker and the EDT, taking the clipboard over, `SAVE_TARGETS`, passwords left alone |
 | [66. The Window Switcher](66-window-switcher.md) | amadeos-wm, Alt+Tab | Global keys and an active keyboard grab, previews read from the screen without a compositor, `_NET_WM_ICON`, a Swing popup the window manager does not manage |
-| [67. A Module of Your Own](67-own-module.md) | | The checklist for a new module of amadeos-system |
+| [67. Notifications](67-notifications.md) | amadeos-session notifications, `Notifications` | A D-Bus service with dbus-java, pop-ups that never take the focus, a history that outlives the session, Do not disturb, the client API in commons through `gdbus` |
+| [68. Power Management](68-power.md) | amadeos-session, Settings > Power | Suspend and hibernate through logind, the lid and the power button, the low battery |
+| [69. A Module of Your Own](69-own-module.md) | | The checklist for a new module of amadeos-system |
 
 ## Planned
 

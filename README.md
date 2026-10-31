@@ -17,7 +17,7 @@ same start-up code everywhere.
 | `app` | `AmadeApplication.launch(...)`, `AppInfo`, `CommonsModule` (Guice) |
 | `i18n` | `Language` (English, Deutsch, Français, Español, Italiano), `LocaleStore` (desktop language in `locale.conf`), `LocaleSettings` / `LocaleResolution` (which language an application uses), `Messages` (UTF-8 `.properties` texts), `Mnemonics` (`&Datei`), `LanguageChooser`, `TranslationCheck` |
 | `config` | `XdgDirectories`, `AppDirectories` (`~/.config/amadeos/<app>`), `PropertiesFile` (atomic, owner-only), `ConfigWatcher` |
-| `desktop` | `DesktopLauncher` (`xdg-open`, refuses attachments that could run code), `LaunchFeedback` (busy cursor of the amadeOS window manager while a started program comes up; needs `Enable-Native-Access: ALL-UNNAMED` in the application's jar manifest), `PasswordStore` / `SecretToolPasswordStore` (freedesktop Secret Service via `secret-tool`) |
+| `desktop` | `DesktopLauncher` (`xdg-open`, refuses attachments that could run code), `LaunchFeedback` (busy cursor of the amadeOS window manager while a started program comes up; needs `Enable-Native-Access: ALL-UNNAMED` in the application's jar manifest), `PasswordStore` / `SecretToolPasswordStore` (freedesktop Secret Service via `secret-tool`), `Notifications` / `Notification` (desktop notifications with buttons through `gdbus`, system tray elsewhere) |
 
 ## Themes follow the desktop
 
