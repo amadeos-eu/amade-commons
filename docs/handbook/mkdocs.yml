@@ -110,5 +110,6 @@ nav:
       - 66. The Window Switcher: 66-window-switcher.md
       - 67. Notifications: 67-notifications.md
       - 68. Power Management: 68-power.md
-      - 69. A Module of Your Own: 69-own-module.md
+      - 69. The Task Manager: 69-task-manager.md
+      - 79. A Module of Your Own: 79-own-module.md
   - The Road Ahead: roadmap.md

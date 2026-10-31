@@ -19,7 +19,7 @@ The desktop lives in the repository [amadeos-system](https://github.com/amadeos-
 | Module | Package | What it is |
 |---|---|---|
 | `base` | in every desktop package | The library under the desktop modules: Xlib, PAM and libc through JNA, the EWMH helper, desktop entries, icons and backdrops, launching programs |
-| `wm` | `amadeos-wm` | The window manager: Motif frames, four workspaces, the root menu, the Alt+Tab switcher ([chapter 66](66-window-switcher.md)) |
+| `wm` | `amadeos-wm` | The window manager: Motif frames, four workspaces, the root menu, the Alt+Tab switcher ([chapter 66](66-window-switcher.md)), the check for windows that do not respond ([chapter 69](69-task-manager.md#a-window-that-does-not-respond)) |
 | `panel-cde` | `amadeos-panel-cde` | The CDE Front Panel: clock, calendar, workspace switch, drawers of applications, network and updates cells |
 | `dm` | `amadeos-dm` | The display manager: starts Xorg and the login greeter, authenticates through PAM, starts the session |
 | `session` | `amadeos-session` | The session (window manager, autostart, panel), the screen lock, the screen saver, the polkit agent, the clipboard manager ([chapter 65](65-clipboard.md)), power management ([chapter 68](68-power.md)) |
@@ -27,6 +27,7 @@ The desktop lives in the repository [amadeos-system](https://github.com/amadeos-
 | `logviewer` | `amadeos-logviewer` | Session diagnostics and logs |
 | `print` | `amadeos-print` | The print manager: printers and jobs over IPP |
 | `sysinfo` | `amadeos-sysinfo` | System information on one page |
+| `taskmanager` | `amadeos-taskmanager` | The Task Manager: program windows, processes, performance graphs ([chapter 69](69-task-manager.md)) |
 | `packages` | `amadeos-packages` | The one place that talks to apt, with a root helper |
 | `software` | `amadeos-software` | Software: find, install, update and remove programs |
 
@@ -49,7 +50,7 @@ Look at the `build.gradle` of the repository, and you find the modules split in 
 --8<-- "amadeos-system/build.gradle:desktop-modules"
 ```
 
-**Desktop modules** (`wm`, `panel-cde`, `dm`, `session`, `style`, `logviewer`) are the desktop itself. They run before or around everything else, talk to the X server directly through JNA, and log through `java.util.logging`, so that their logs end up in the session log the log viewer shows. They do not use amade-commons' Guice start-up, and the build removes Guice from them altogether:
+**Desktop modules** (`wm`, `panel-cde`, `dm`, `session`, `style`, `logviewer`, `taskmanager`) are the desktop itself. They run before or around everything else, talk to the X server directly through JNA, and log through `java.util.logging`, so that their logs end up in the session log the log viewer shows. They do not use amade-commons' Guice start-up, and the build removes Guice from them altogether:
 
 ```groovy title="amadeos-system · build.gradle"
 --8<-- "amadeos-system/build.gradle:desktop-config"
