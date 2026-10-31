@@ -66,7 +66,7 @@ nav:
   - "Part I: First Steps":
       - 10. Pad: 10-pad.md
       - 11. Web: 11-web.md
-  - "Part II: Office":
+  - "Part II: Office and Everyday":
       - 20. Files: 20-files.md
       - 21. Calendar: 21-calendar.md
       - 22. Mail: 22-mail.md
@@ -75,6 +75,7 @@ nav:
       - 25. Contacts: 25-contacts.md
       - 26. Backup & Sync: 26-backup.md
       - 27. News: 27-news.md
+      - 28. Webcam: 28-webcam.md
   - "Part III: Graphics and Media":
       - 30. Fractals: 30-fractals.md
       - 31. Imagescan: 31-imagescan.md

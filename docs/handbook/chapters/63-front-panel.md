@@ -217,6 +217,24 @@ The Bluetooth cell shows only on a computer with an adapter: `available()` is fa
 --8<-- "amadeos-system/panel-cde/src/main/java/eu/amadeos/system/panel/cde/status/BluetoothCell.java:menu"
 ```
 
+### The camera light
+
+The camera light shows while any program has a camera open, so the user always sees when a camera is on. It has no switch in Settings for that reason. Linux has no event for "a device was opened", but `/proc` lists every process's open files as links in `/proc/<pid>/fd`. `CameraUsers` looks for links to `/dev/video*`:
+
+```java title="amadeos-system · panel-cde/status/CameraUsers.java"
+--8<-- "amadeos-system/panel-cde/src/main/java/eu/amadeos/system/panel/cde/status/CameraUsers.java:scan"
+```
+
+The panel may read the links of the user's own processes only, which is all a desktop light needs. The process with the device open is often not the program the user started: Webcam opens the camera through `ffmpeg` ([chapter 28](28-webcam.md)). So for `ffmpeg`, a shell and a few other helpers `CameraUsers` names the parent process instead, from the fourth field of `/proc/<pid>/stat`, and a `java -jar` process after its jar. The tooltip then says *Camera in use by amade-webcam*, not *ffmpeg*. The test builds a fake `/proc` with a few processes and links in a temporary directory.
+
+`CameraCell` asks every two seconds, on a thread of its own, and lays out the slot only when the light goes on or off:
+
+```java title="amadeos-system · panel-cde/status/CameraCell.java"
+--8<-- "amadeos-system/panel-cde/src/main/java/eu/amadeos/system/panel/cde/status/CameraCell.java:show"
+```
+
+![The camera light beside the battery cell](images/desktop/camera-cell.png)
+
 ### A second slot
 
 CDE's slot holds four cells, and a laptop with Bluetooth while updates wait has five to show. `StatusDockWidget` therefore opens a second slot of four beside the first when more than four cells are available, and closes it again when they fit into one:
@@ -227,7 +245,7 @@ CDE's slot holds four cells, and a laptop with Bluetooth while updates wait has 
 
 ![Five cells in two slots](images/desktop/status-slot-two.png)
 
-The order is fixed, network, sound, battery, Bluetooth, updates, so the updates cell, which comes and goes, is the one that moves. A cell that is hidden or unavailable leaves no gap.
+The order is fixed, network, sound, battery, Bluetooth, updates, camera, so the cells that come and go, the updates and the camera light, are the ones that move. A cell that is hidden or unavailable leaves no gap.
 
 ## The panel's language
 
