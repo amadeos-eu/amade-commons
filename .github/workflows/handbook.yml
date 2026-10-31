@@ -38,8 +38,9 @@ env:
   BACKUP_COMMIT: 5e923dfd8b24263ba2492514b92740df306a3a71
   NEWS_COMMIT: 2161f48ca22e54cfd293e5e8f15fa15362b2f1cd
   IMAGEEDITOR_COMMIT: b86d48f92e90e08f8f81bc6d28d371df4928c04e
+  WEBCAM_COMMIT: d2969b5bfd8615d28ef6ea601a5f5785125517f0
   # Part VI: the desktop modules.
-  AMADEOS_SYSTEM_COMMIT: 87af45e554d4fac6bd94dd15b5c23c5e8c67c258
+  AMADEOS_SYSTEM_COMMIT: f5656887a4d38c3f5fdfc7d5d0a3c49e9f94fa60
   # Chapter 51: the version and release scripts.
   AMADEOS_CI_COMMIT: c5d64042b79c899bb73df6034dbe366bc06e782a
 
@@ -150,6 +151,11 @@ jobs:
           repository: amadeos-eu/amade-imageeditor
           ref: ${{ env.IMAGEEDITOR_COMMIT }}
           path: amade-imageeditor
+      - uses: actions/checkout@v7
+        with:
+          repository: amadeos-eu/amade-webcam
+          ref: ${{ env.WEBCAM_COMMIT }}
+          path: amade-webcam
       - uses: actions/checkout@v7
         with:
           repository: amadeos-eu/amadeos-system
