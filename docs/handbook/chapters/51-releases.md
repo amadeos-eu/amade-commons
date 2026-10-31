@@ -129,7 +129,7 @@ To fix such a commit, rename it with `git rebase -i` and push with `--force-with
 | Pull request | `1.2.0-dev.N` | tests, package as a download, commit check |
 | Push to develop (a merge) | `1.2.0-dev.N` | tests, package (later: apt suite `dev`) |
 | Promote to release | `1.2.0-pre.N` | tests, package (later: apt suite `testing`) |
-| Promote to main | `1.2.0` | tests, package, tag `v1.2.0`, GitHub Release (later: apt suite `stable`) |
+| Promote to main | `1.2.0` | tests, package, tag `v1.2.0`, GitHub Release (later: apt suite `stable`); libraries also to Maven Central |
 
 !!! note "Until the release branches exist"
     A repository whose develop branch has not been created yet still merges pull requests into main. As long as there is no develop, the version action treats main like develop and builds `-dev.N` versions without tagging anything. The first promotion to main after the one-time setup gives 1.0.0.
@@ -159,6 +159,42 @@ Apps and games pin amade-commons and amade-game-engine by commit hash on JitPack
 
 - **On develop, pin whatever you need.** An app that needs a new commons method pins the commons commit that has it, as before. Cross-repository work does not have to wait for a release.
 - **Before main, pin a release.** Promote refuses to move an app to main when its pin is a commit that no release of the library contains. Release the library first, then raise the pin to its tag, for example `build(deps): amade-commons v1.2.0`. Promote handles the libraries first and waits until their tag exists.
+
+### On Maven Central
+
+Programs outside amadeOS can use the two libraries without JitPack. Every release from main also goes to Maven Central, under the namespace `eu.amadeos`, which belongs to the domain amadeos.eu:
+
+```groovy title="build.gradle of a program outside amadeOS"
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'eu.amadeos:amade-commons:1.2.0'
+    // or, for a game: 'eu.amadeos:amade-game-engine:1.2.0', which brings amade-commons along
+}
+```
+
+Only releases go there. A version on Maven Central can never be changed or deleted, so the `-dev` and `-pre` builds stay on JitPack and in the workflow artifacts. Both libraries are built for Java 25.
+
+The amadeOS repositories themselves keep the JitPack coordinates `com.github.amadeos-eu:...`, on all three branches. Only these coordinates let a composite build (`includeBuild '../amade-commons'`) replace the pin with your checkout, and only JitPack has the commits that develop pins. The build switches to `eu.amadeos` just for the upload, with the Gradle property `mavenCentral`:
+
+```groovy title="amade-commons · build.gradle"
+def centralRelease = providers.gradleProperty('mavenCentral').isPresent()
+
+mavenPublishing {
+    coordinates(centralRelease ? 'eu.amadeos' : project.group.toString(), 'amade-commons', project.version.toString())
+    if (centralRelease) {
+        publishToMavenCentral(true)
+        signAllPublications()
+    }
+    pom { ... }
+}
+```
+
+The plugin `com.vanniktech.maven.publish` builds the sources and javadoc jars that Maven Central requires, signs every file and uploads through the Central Publisher Portal. After the release job has tagged the version, a job `central` in the build workflow runs `./gradlew publishToMavenCentral -PmavenCentral`. It needs five secrets (the portal token and the signing key). Without them it only leaves a warning and the release goes through as before. Setting up the account, the namespace and the key is an owner's task and is described in the operations handbook of amadeOS, not here.
+
+amade-game-engine depends on amade-commons, so on Maven Central it must point to an amade-commons release that is already there. Its build turns the JitPack pin `v1.2.0` into `eu.amadeos:amade-commons:1.2.0` for the upload and stops with an error when the pin is a commit. This is the same rule as above: release commons first, then pin its tag in the engine.
 
 Code excerpts in the handbooks are pinned to commits too, in `handbook.yml`. A fast-forward promotion keeps every commit, so these pins stay valid on all three branches. Merge pull requests with a merge commit, not by squashing, so that the commits a chapter pins reach develop unchanged.
 
@@ -343,3 +379,4 @@ Then, per repository, the build workflow gets the version, release and commit jo
 - Pull requests go to develop. release and main only move forward, by fast-forward, through the Promote workflow, so all three branches hold the same commits and the pins stay valid.
 - The metainfo releases and the release notes come from the commit subjects, so write them for users.
 - Libraries are released first. An app goes to main only with a released library pin.
+- Library releases also go to Maven Central as `eu.amadeos:amade-commons` and `eu.amadeos:amade-game-engine`; inside amadeOS the JitPack coordinates stay.
