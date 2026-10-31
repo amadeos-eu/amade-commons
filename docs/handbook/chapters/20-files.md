@@ -21,6 +21,7 @@ amade-files is also the first application in this book that remembers something 
 - **Opening files**: plain text goes to Pad, everything else to the application the desktop has for its type, with the busy cursor while it starts. Programs and launchers are not started without asking.
 - **Settings** that survive: the view, hidden files on or off, one or two panels, and the folders of both panels.
 - **USB sticks, memory cards and discs** in the tree, mounted when plugged in or chosen, with *Safely Remove*.
+- **Network drives**: *Network* in the tree lists the NAS boxes and PCs of the network and their shares; choosing a share connects it, as a guest or with workgroup, user name and password, which can stay in the login keyring. *Connect to Server…* adds servers that do not announce themselves, also by NFS, WebDAV, FTP and SFTP.
 - **Archives**: opening a zip, tar or 7z unpacks it next to itself; *Compress…* packs files into zip, tar.gz or tar.xz.
 
 The program is about 6,000 lines of Java and 1,500 lines of tests: the largest so far. Most of it is in two services, file operations and the trash, and in the Swing classes that make the tree and drag and drop work.
@@ -37,6 +38,7 @@ The program is about 6,000 lines of Java and 1,500 lines of tests: the largest s
 - How files travel on the X11 clipboard and in drag and drop, in formats that other programs understand.
 - How a `TransferHandler` decides between copy and move, and what Swing does not tell it.
 - How to let other programs do work that needs root (mounting a USB stick) and read what they print.
+- How to hold a short dialogue with a command-line program that asks for a password, without ever putting the password on a command line.
 - How to unpack an archive from the internet without letting it write outside its folder.
 
 ## The packages
@@ -45,9 +47,9 @@ Files follows the structure of chapter 2:
 
 | Package | Classes |
 |---|---|
-| `domain` | `FileEntry` (one line of a panel), `FilePreferences`, `ViewMode`, `Place`, `ClipboardFiles`, `DropMode`, `Progress`, `Resolution`, `SortOrder`, `TrashInfo`, `Side` |
-| `repository` | `PreferencesRepository` |
-| `service` | `FileSystemService` (list, create, rename, places), `FileOperations` (copy, move, delete), `TrashService`, `Opener`, `FileUris`, `PathCompletion`, `Formats` |
+| `domain` | `FileEntry` (one line of a panel), `FilePreferences`, `ViewMode`, `Place`, `ClipboardFiles`, `DropMode`, `Progress`, `Resolution`, `SortOrder`, `TrashInfo`, `Side`, `Drive`; for the network `NetworkAddress`, `NetworkMount`, `DiscoveredServer`, `SavedLocation`, `Credentials` |
+| `repository` | `PreferencesRepository`, `NetworkRepository` |
+| `service` | `FileSystemService` (list, create, rename, places), `FileOperations` (copy, move, delete), `TrashService`, `Opener`, `FileUris`, `PathCompletion`, `Formats`, `DriveService`, `ArchiveService`, `NetworkService`, `NetworkPlaces`, `NetworkAutostart`, `NetworkReconnect` |
 | `ui.main` | `MainView`, `MainPresenter`, `MainWindow`, `MainMenuBar`, `ContextMenus`, `DropHint` |
 | `ui.panel`, `ui.dialogs` | `FilePanel`, `FileTableModel`, `FolderTree`, `IconicPathBar`, `FileTransfer`, `FileDropHandler`, `ProgressDialog`, `ConflictDialog` |
 
@@ -408,6 +410,87 @@ The tree already asked for its places every three seconds, to notice sticks moun
 ```
 
 A drive that waits is a `Place` whose path is its device. Choosing it in the tree mounts it instead of listing `/dev/sdb1`; the right mouse button only opens its menu, *Mount and Open* or *Mount*, because a menu should never do something before the user picks an entry.
+
+## Network drives: gvfs and a dialogue on standard input
+
+![Network in the tree: the shares of a NAS, Public connected, the private share ralf not yet](images/files/network.png)
+
+A NAS box such as a WD My Cloud, a Windows PC or a Linux server offers its folders as **shares**, mostly over SMB, the protocol of Windows networks. There are two ways to reach them from Linux. The kernel can mount a share with `mount -t cifs`, which needs root, an entry in `/etc/fstab` or a polkit helper, and the password in a file or on the command line. Or **gvfs**, the virtual file system of GNOME, connects as the user: its daemons speak SMB, NFS, WebDAV, FTP and SFTP, and `gvfs-fuse` shows every connected share as an ordinary folder below `$XDG_RUNTIME_DIR/gvfs`. Files takes the second way. It needs no rights, and because a share is a folder, everything that works on folders (copy with progress, drag and drop, the trash, opening a photo in the Image Viewer) works on shares without a line of new code.
+
+As with udisks, Files does not talk to the daemons over D-Bus. It runs `gio`, gvfs's command line, through `CommandRunner`, always with `LC_ALL=C`, so that the messages it parses are English whatever the user's language.
+
+### What is connected
+
+gvfs-fuse names each folder after what it shows: `smb-share:domain=WORKGROUP,server=mycloudex2ultra.local,share=ralf,user=ralf`. That name is all Files needs to know what is connected, and reading a folder is much cheaper than starting a program, so the tree can do it every three seconds along with the drives:
+
+```java title="amade-files · NetworkService.java"
+--8<-- "amade-files/src/main/java/eu/amadeos/apps/files/service/NetworkService.java:mounts"
+```
+
+Note that gvfs writes the share in lower case. Addresses therefore have a `key()` that ignores the case of the share, the user and the spelling of the host (`MyCloud`, `mycloud.local` and `mycloud.local.` are one server), and the tree keeps the spelling the server listed.
+
+### What is out there
+
+Servers announce themselves: NAS boxes and Linux machines by mDNS (avahi), Windows 10 and 11 by WS-Discovery (`wsdd`). gvfs collects both in the location `network:///`, and `gio list -a standard::target-uri network:///` prints one line per server with its address:
+
+```java title="amade-files · NetworkService.java"
+--8<-- "amade-files/src/main/java/eu/amadeos/apps/files/service/NetworkService.java:discover"
+```
+
+A NAS often appears twice, once per announcement; the key makes it one entry. The shares of an SMB server are listed the same way, after `gio mount -a smb://server/`, the server's own share list, as a guest.
+
+The tree under *Network* is built by one pure function from four lists: what was found, what the user keeps, what is connected and the share lists read so far. The test feeds it all four and checks the tree, without a network:
+
+```java title="amade-files · NetworkPlaces.java"
+--8<-- "amade-files/src/main/java/eu/amadeos/apps/files/service/NetworkPlaces.java:build"
+```
+
+Servers, and shares that are not connected yet, are no folders. They get a relative path below `network:` that stands for them, so the tree, which works with paths everywhere, needs no second kind of node; `Path.isAbsolute()` tells them apart. A connected share has the gvfs folder as its path, so `reveal` finds it below Network when the user opens a folder on the share from the table. `FolderTree.showPlaces` fills the children of such an entry the way `update` fills folders; while the shares of a server were not read yet, the entry keeps its placeholder, so opening it asks the presenter:
+
+```java title="amade-files · ui/panel/FolderTree.java (showPlaces)"
+--8<-- "amade-files/src/main/java/eu/amadeos/apps/files/ui/panel/FolderTree.java:show-places"
+```
+
+### Logging in
+
+`gio mount smb://nas/ralf` asks for what it needs the way it would in a terminal, `User [ralf]: `, `Domain [WORKGROUP]: `, `Password: `, and reads the answers from its standard input. Putting the password on the command line instead is not an option: every user of the computer can read the command lines of all programs in `/proc`. So Files puts user and workgroup into the address (`smb://WORKGROUP;ralf@nas/ralf`), starts gio, and watches its output: text that ends in `": "` without a newline is a prompt. The answer goes to standard input. A second `Password:` means the first one was wrong; Files then closes the input, gio gives up, and the user gets the dialog again with the reason.
+
+```java title="amade-files · NetworkService.java (the dialogue)"
+--8<-- "amade-files/src/main/java/eu/amadeos/apps/files/service/NetworkService.java:run"
+```
+
+```java title="amade-files · NetworkService.java"
+--8<-- "amade-files/src/main/java/eu/amadeos/apps/files/service/NetworkService.java:mount"
+```
+
+The test plays gio: a fake `Process` whose output pipe prints the prompt and whose input pipe checks the answer, so the right and the wrong password are both tested without gvfs.
+
+![The log-in dialog: registered user or guest, user name, workgroup, password, keyring](images/files/network-login.png)
+
+The presenter tries the saved login first, with the password from the keyring, otherwise a guest; only a `NetworkLoginException` brings up the dialog. That exception is why the presenter has a second `async`, `asyncTry`, which passes on the exception itself instead of its message:
+
+```java title="amade-files · MainPresenter.java"
+--8<-- "amade-files/src/main/java/eu/amadeos/apps/files/ui/main/MainPresenter.java:connect"
+```
+
+After a successful log-in, user, workgroup and guest go to `network.conf`, the password to the keyring through the `PasswordStore` of amade-commons (chapter 22), unless the user unticked *Remember*. Both are written on the worker thread, because `secret-tool` is a program too:
+
+```java title="amade-files · MainPresenter.java"
+--8<-- "amade-files/src/main/java/eu/amadeos/apps/files/ui/main/MainPresenter.java:remember"
+```
+
+### Connect again at login
+
+A share that should be there after login cannot wait until Files is opened: the Image Viewer may want a photo from it first. Files has no daemon, so it leaves the job to the session. While at least one share is marked, `~/.config/autostart` holds an entry that the session starts once at login (*Settings › Startup* lists it):
+
+```ini title="amade-files · NetworkAutostart.java"
+--8<-- "amade-files/src/main/java/eu/amadeos/apps/files/service/NetworkAutostart.java:entry"
+```
+
+`amade-files --connect-saved` starts no window: `main` sees the argument before `AmadeApplication.launch`, connects the marked shares with the passwords from the keyring (`NetworkReconnect`) and exits.
+
+!!! warning "Pitfall: every file on a share is executable"
+    SMB knows no Unix permissions, and gvfs-fuse shows every file as `rwx------`. Files asks before it opens an executable file, so without care every photo on the NAS would ask "can run a program, open anyway?". `FileSystemService` ignores the executable bit below the gvfs folder.
 
 ## Archives
 
