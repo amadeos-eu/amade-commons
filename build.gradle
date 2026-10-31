@@ -81,7 +81,7 @@ mavenPublishing {
             developer {
                 id = 'datazuul'
                 name = 'Ralf Eichinger'
-                email = 'developers@datazuul.com'
+                email = 'ralf.eichinger@datazuul.com'
                 url = 'https://github.com/datazuul'
             }
         }
