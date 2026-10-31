@@ -1,6 +1,6 @@
 # 67. Notifications
 
-A reminder is due while the Calendar is minimized; a download finishes in Firefox; the battery is almost empty. On Windows, GNOME or KDE a small window comes up in a corner and goes away by itself a few seconds later. CDE had nothing like it, and a bare X11 desktop drops these messages: Firefox asks the session bus for a notification service, finds none and stays silent. This chapter adds the service to amadeOS. It is the first desktop module that *offers* a D-Bus interface rather than calling one, and its pop-ups are windows that must never take the keyboard away from the user.
+A reminder is due while the Calendar is minimized; a download finishes in Firefox; updates have arrived. On Windows, GNOME or KDE a small window comes up in a corner and goes away by itself a few seconds later. CDE had nothing like it, and a bare X11 desktop drops these messages: Firefox asks the session bus for a notification service, finds none and stays silent. This chapter adds the service to amadeOS. It is the first desktop module that *offers* a D-Bus interface rather than calling one, and its pop-ups are windows that must never take the keyboard away from the user.
 
 ![Three notifications above the Front Panel: a Calendar reminder with Snooze, new mail, and a download](images/desktop/notification-popups.jpg)
 
@@ -16,7 +16,7 @@ A reminder is due while the Calendar is minimized; a download finishes in Firefo
 
 | Part | What it does |
 |---|---|
-| Pop-ups | Up to four in a corner above the Front Panel, the newest nearest the corner; six seconds by default, paused while the mouse is over them; critical ones (battery almost empty) with a red bar until closed |
+| Pop-ups | Up to four in a corner above the Front Panel, the newest nearest the corner; six seconds by default, paused while the mouse is over them; critical ones with a red bar until closed |
 | History | `amadeos-notifications`: today, yesterday, older; kept 7 days, at most 100, in `~/.cache/amadeos/notifications.json`; its buttons still work while the program runs |
 | Bell cell | In the Front Panel: the count of unseen notifications, crossed out during Do not disturb; a click shows the history, the menu has Do not disturb, Clear all and the settings |
 | Do not disturb | For an hour, until tomorrow morning, until turned off, on a schedule, and while a window is full screen; notifications go silently into the history, critical ones still show |
@@ -55,7 +55,7 @@ The service is part of the session package: `amadeos-session notifications`, pac
 | `PopupStack`, `PopupCard` | session | The pop-up windows on the event dispatch thread |
 | `HistoryWindow` | session | The history |
 | `NotificationDaemon` | session | `main`: the bus, the X connection for struts, full screen and the lock, the worker |
-| `NotificationCell`, `DesktopNotices` | panel-cde | The bell, and the panel's own notifications: battery and updates |
+| `NotificationCell`, `DesktopNotices` | panel-cde | The bell, and the panel's own notification: updates have arrived |
 | `NotificationsPage` | settings | Settings > Notifications |
 
 Three threads, as in the clipboard manager ([chapter 65](65-clipboard.md#who-does-what)): dbus-java calls the exported methods on its own threads, the pop-ups and the history window live on the event dispatch thread, and one worker serializes everything that changes the state. `NotificationCore` is `synchronized`, so a `Notify` that arrives while the user clicks a button sees a consistent history.
@@ -122,12 +122,12 @@ Do not disturb has four sources: the bell's menu (for an hour, until tomorrow mo
 
 The bell learns about all this from the signal `StateChanged(unseen, doNotDisturb)`, which the core sends only when one of the two changed. A program that wants to know whether to beep itself can ask `DoNotDisturb()`.
 
-## The panel's own notifications
+## The panel's own notification
 
-The Front Panel is a client like any other. `DesktopNotices` turns the battery cell's readings into one warning at 10 % and a critical one at 5 %, the second replacing the first; on mains power the warning is withdrawn. Updates are announced once, with a *Show* button that opens Software.
+The Front Panel is a client like any other. `DesktopNotices` announces each new set of waiting updates once, with a *Show* button that opens Software, replaces its notification when more arrive and takes it back when the updates are installed. The low battery warning is not the panel's: the power manager of the session sends it, with the thresholds of Settings > Power.
 
 ```java title="amadeos-system · panel-cde/status/DesktopNotices.java"
---8<-- "amadeos-system/panel-cde/src/main/java/eu/amadeos/system/panel/cde/status/DesktopNotices.java:battery"
+--8<-- "amadeos-system/panel-cde/src/main/java/eu/amadeos/system/panel/cde/status/DesktopNotices.java:updates"
 ```
 
 ## The client in amade-commons
