@@ -117,7 +117,7 @@ As in CDE, each workspace can have a backdrop of its own. The page opens on the 
 
 The `Backdrop` record is the key of the cache: when the user picks another picture, scaling or colour for a workspace, its record changes, the next switch renders the new one and the pixmap nobody uses any more is freed. *Refresh Desktop* in the root menu empties the cache, for a picture that changed on disk under the same name.
 
-The **Screen** page sets the screen saver of the session module: which saver (Qix, Swarm, Starfield, Floating Logo, Blank), after how many minutes it starts and whether it locks. The page previews the chosen saver while it is shown, and *Test* runs it on the whole screen.
+The **Screen** page sets the screen saver of the session module: which saver (Qix, Swarm, Starfield, Floating Logo, Blank), after how many minutes it starts and whether it locks. The page previews the chosen saver while it is shown, and *Test* runs it on the whole screen. The **Power** page next to it, for screen off, suspend, lid, power button and battery, has a chapter of its own ([chapter 68](68-power.md)).
 
 ## Font: one number for every program
 
