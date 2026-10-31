@@ -80,6 +80,12 @@ The decisions are in `PowerPolicy`, which knows neither X11 nor D-Bus. It gets t
 - **The lid acts on the closing edge**, not while it stays closed.
 - **The battery warning and the low-battery action happen once** while discharging; plugging in re-arms them. Hibernate falls back to Suspend for the lid and the button, and to Shut down for a nearly empty battery, where a suspended computer would die anyway.
 
+The warning goes out as a notification ([chapter 67](67-notifications.md)) through `NotificationClient`: critical, so it stays until closed and shows through Do not disturb, with the desktop entry of Settings, whose page a click opens. Where no notification daemon answers, `send` returns 0 and the old small window shows instead:
+
+```java title="amadeos-system · session/power/PowerManager.java"
+--8<-- "amadeos-system/session/src/main/java/eu/amadeos/system/power/PowerManager.java:warning"
+```
+
 The screen does not go dark through the policy at all. The X server already has a timer for that, DPMS: `xset dpms 0 0 300` turns the monitors off after five minutes without input, and any input turns them on again. The manager only sets the timeout when the profile changes, for example when the cable is pulled.
 
 ## The page
@@ -98,7 +104,7 @@ Like every page it only writes its file; the daemon and the window manager notic
 |---|---|
 | `PowerSettingsStoreTest` | Defaults, round trip, unknown or unfit values (an action that does not fit the event) |
 | `PowerPolicyTest` | Idle suspend once, never plugged in by default, no suspend right after waking, lid edge and docked, warn then act once |
-| `PowerManagerTest` | DPMS timeout follows the power source, lid lock, Hibernate's fallbacks, warning, translations |
+| `PowerManagerTest` | DPMS timeout follows the power source, lid lock, Hibernate's fallbacks, the warning as a critical notification or the window, translations |
 | `PowerButtonTest` | Ask, not while locked, double press, Do nothing |
 | `PowerPageTest` | Saving on a laptop, the battery column kept on a desktop, the minute texts |
 
