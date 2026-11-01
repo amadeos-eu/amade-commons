@@ -101,8 +101,7 @@ public final class ThemeStore implements AutoCloseable {
                         HorizonThemes.Accent.of(look.getProperty("accent")))
                 : readLine(THEME_FILE).flatMap(registry::find).filter(t -> t.look() == DesktopLook.CLASSIC)
                         .orElse(DesktopTheme.WARM_MOTIF);
-        String icons = readLine(ICON_THEME_FILE).orElse(null);
-        if (icons != null) theme = theme.withIconTheme(icons);
+        theme = theme.withIconTheme(iconTheme(configDirectory, theme));
         return theme.withFontSize(readLine(FONT_FILE).map(ThemeStore::fontSize).orElse(DesktopTheme.DEFAULT_FONT_SIZE));
     }
     // --8<-- [end:read]
@@ -123,7 +122,33 @@ public final class ThemeStore implements AutoCloseable {
         return p;
     }
 
-    /** The text of {@code look.conf} for a theme: its look and, for a Horizon theme, its scheme and accent. */
+    // --8<-- [start:icons]
+    /**
+     * The icon theme that goes with a theme: each look keeps its own choice. The classic look takes
+     * {@code icon_theme.conf}, Horizon the {@code icons} line of {@code look.conf}; without a choice, the
+     * theme's own icons (NsCDE for the classic palettes, amadeos-horizon for Horizon).
+     */
+    public static String iconTheme(Path configDirectory, DesktopTheme theme) {
+        String chosen = theme.look() == DesktopLook.HORIZON
+                ? readLook(configDirectory).getProperty("icons", "").strip()
+                : readFirstLine(configDirectory.resolve(ICON_THEME_FILE));
+        return chosen == null || chosen.isEmpty() ? theme.iconTheme() : chosen;
+    }
+    // --8<-- [end:icons]
+
+    private static String readFirstLine(Path file) {
+        try {
+            return Files.exists(file) ? Files.readAllLines(file).stream().map(String::strip)
+                    .filter(l -> !l.isEmpty() && !l.startsWith("#")).findFirst().orElse(null) : null;
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    /**
+     * The text of {@code look.conf} for a theme: its look and, for a Horizon theme, its scheme and accent; the
+     * icon theme chosen for Horizon ({@code icons}) is kept.
+     */
     public static String lookFile(DesktopTheme theme, Properties previous) {
         String scheme = previous.getProperty("scheme", HorizonThemes.DEFAULT_SCHEME.id());
         String accent = previous.getProperty("accent", HorizonThemes.DEFAULT_ACCENT.id());
@@ -131,8 +156,10 @@ public final class ThemeStore implements AutoCloseable {
             scheme = HorizonThemes.scheme(theme.id()).id();
             accent = HorizonThemes.accent(theme.id()).id();
         }
+        String icons = previous.getProperty("icons", "").strip();
         return "# The desktop look (Settings > Appearance): classic or horizon, and Horizon's colours\n"
-                + "look=" + theme.look().id() + "\nscheme=" + scheme + "\naccent=" + accent + "\n";
+                + "look=" + theme.look().id() + "\nscheme=" + scheme + "\naccent=" + accent + "\n"
+                + (icons.isEmpty() ? "" : "icons=" + icons + "\n");
     }
 
     private static int fontSize(String value) {
