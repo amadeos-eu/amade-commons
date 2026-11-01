@@ -21,6 +21,8 @@ The desktop lives in the repository [amadeos-system](https://github.com/amadeos-
 | `base` | in every desktop package | The library under the desktop modules: Xlib, PAM and libc through JNA, the EWMH helper, desktop entries, icons and backdrops, launching programs |
 | `wm` | `amadeos-wm` | The window manager: Motif frames, four workspaces, the root menu, the Alt+Tab switcher ([chapter 66](66-window-switcher.md)), the check for windows that do not respond ([chapter 69](69-task-manager.md#a-window-that-does-not-respond)) |
 | `panel-cde` | `amadeos-panel-cde` | The CDE Front Panel: clock, calendar, workspace switch, drawers of applications, network and updates cells |
+| `panel-horizon` | `amadeos-panel-horizon` | The top bar, the dock and the search of the second look, Horizon; the show-desktop button ([chapter 70](70-widgets.md#showing-the-desktop)) |
+| `widgets` | `amadeos-widgets` | The desktop widgets of Horizon: one host for the built-in widgets and those of applications ([chapter 70](70-widgets.md)) |
 | `dm` | `amadeos-dm` | The display manager: starts Xorg and the login greeter, authenticates through PAM, starts the session |
 | `session` | `amadeos-session` | The session (window manager, autostart, panel), the screen lock, the screen saver, the polkit agent, the clipboard manager ([chapter 65](65-clipboard.md)), power management ([chapter 68](68-power.md)) |
 | `settings` | `amadeos-settings` | Settings, formerly the Style Manager: Color, Font, Backdrop, Keyboard, Mouse, Beep, Screen, Window, Clipboard |
