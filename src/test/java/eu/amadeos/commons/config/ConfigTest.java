@@ -57,6 +57,17 @@ class ConfigTest {
         assertEquals(Path.of("/home/anna/Filme"), xdg.videos());
         assertEquals(Path.of("/home/anna/Bilder"), xdg.pictures());
     }
+
+    @Test
+    void downloadsAndDocumentsFollowTheUserDirectories() throws Exception {
+        XdgDirectories xdg = new XdgDirectories(Map.of("XDG_CONFIG_HOME", dir.resolve("cfg").toString()), "/home/anna");
+        assertEquals(Path.of("/home/anna/Downloads"), xdg.downloads());
+        assertEquals(Path.of("/home/anna/Documents"), xdg.documents());
+        Files.createDirectories(dir.resolve("cfg"));
+        Files.writeString(dir.resolve("cfg/user-dirs.dirs"),
+                "XDG_DOWNLOAD_DIR=\"$HOME/Downloads\"\nXDG_DOCUMENTS_DIR=\"$HOME/Dokumente\"\n");
+        assertEquals(Path.of("/home/anna/Dokumente"), xdg.documents());
+    }
     // --8<-- [end:pictures]
 
     @Test
