@@ -90,6 +90,7 @@ class HorizonThemesTest {
         assertEquals(List.of(new Color(0x2F, 0xB8, 0xB0)).getFirst(), HorizonThemes.Accent.of("nope").color());
     }
 
+    // --8<-- [start:icons]
     @Test
     void eachLookKeepsItsOwnIconTheme() throws Exception {
         ThemeStore store = new ThemeStore(dir, new ThemeRegistry());
@@ -111,4 +112,5 @@ class HorizonThemesTest {
         assertEquals("NsCDE", store.current().iconTheme(), "a choice made in Horizon");
         assertEquals("light", ThemeStore.readLook(dir).getProperty("scheme"));
     }
+    // --8<-- [end:icons]
 }

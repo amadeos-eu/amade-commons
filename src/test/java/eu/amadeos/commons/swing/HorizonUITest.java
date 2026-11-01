@@ -20,6 +20,7 @@ class HorizonUITest {
         AmadeUI.install(DesktopTheme.WARM_MOTIF);
     }
 
+    // --8<-- [start:switch]
     @Test
     void aHorizonThemeMakesTheLookFlatAndAClassicOneMakesItMotifAgain() {
         AmadeUI.install(DARK);
@@ -38,6 +39,7 @@ class HorizonUITest {
         assertInstanceOf(AmadeUI.MotifBevelBorder.class, UIManager.getBorder("TextField.border"));
         assertInstanceOf(AmadeUI.MotifCheckBoxIcon.class, UIManager.getIcon("CheckBox.icon"));
     }
+    // --8<-- [end:switch]
 
     @Test
     void thePaletteIsReadableInBothSchemes() {

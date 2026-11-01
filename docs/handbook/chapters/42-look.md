@@ -1,6 +1,6 @@
 # 42. Look and Themes
 
-amadeOS looks like CDE: grey-brown panels with 3D bevels, bold buttons that sink in when pressed, and colours from a palette the user picks in Settings. Every program looks the same and changes its colours together with the desktop, without a line of code of its own. This chapter covers the colour themes, where custom themes come from, how a running program follows the desktop, the Swing look that paints it all, the text size, and what a program does for colours and fonts beyond the standard ones.
+amadeOS looks like CDE: grey-brown panels with 3D bevels, bold buttons that sink in when pressed, and colours from a palette the user picks in Settings. Every program looks the same and changes its colours together with the desktop, without a line of code of its own. This chapter covers the colour themes, where custom themes come from, how a running program follows the desktop, the Swing look that paints it all, the flat look of the second desktop look Horizon, the text size, and what a program does for colours and fonts beyond the standard ones.
 
 ## Colour schemes: DesktopTheme
 
@@ -78,17 +78,17 @@ The keys are the method names of `DesktopTheme`: `highlight`, `shadow`, `activeT
 
 *Package `theme` · introduced in [10. Pad](10-pad.md#following-the-desktop-theme) · source: [`ThemeStore`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/theme/ThemeStore.java)*
 
-**What it is for.** The theme the user chose in Settings, and news when they choose another. Settings writes the theme's id into `~/.config/amadeos/theme.conf`, the icon theme into `icon_theme.conf` and the text size, 1 to 7, into `font.conf`; `ThemeStore` reads the three into one `DesktopTheme` and, once `watch()` was called, follows them. The text size is part of the theme value (`fontSize()`, `withFontSize(int)`), so a new size reaches a program the same way a new palette does.
+**What it is for.** The theme the user chose in Settings, and news when they choose another. Settings writes the desktop look into `~/.config/amadeos/look.conf` (`look=classic` or `look=horizon`, and Horizon's scheme and accent), the classic palette's id into `theme.conf`, the icon theme into `icon_theme.conf` (classic) or the `icons` line of `look.conf` (Horizon) and the text size, 1 to 7, into `font.conf`; `ThemeStore` reads them into one `DesktopTheme` and, once `watch()` was called, follows them. The text size is part of the theme value (`fontSize()`, `withFontSize(int)`), so a new size reaches a program the same way a new palette does.
 
 **When to choose it.** `AmadeApplication.launch` creates it and passes it to `AmadeUI.follow`, and `CommonsModule` binds it. A program asks for it only to react to a theme change beyond colours, for example to load other icons when `iconTheme()` changes.
 
-**How it works.** Reading never fails: a missing file, an unknown id or an unreadable file mean Warm Motif, so a program starts even with a broken setting.
+**How it works.** Reading never fails: a missing file, an unknown id or an unreadable file mean Warm Motif (or, with `look=horizon`, Horizon Dark with the teal accent), so a program starts even with a broken setting.
 
 ```java title="amade-commons · theme/ThemeStore.java"
 --8<-- "amade-commons/src/main/java/eu/amadeos/commons/theme/ThemeStore.java:read"
 ```
 
-`watch()` starts a [`ConfigWatcher`](44-settings.md#following-a-file-configwatcher) on the three files. On a change it calls `reload()`, which reads them again and tells the listeners only if the theme really changed:
+`watch()` starts a [`ConfigWatcher`](44-settings.md#following-a-file-configwatcher) on the four files. On a change it calls `reload()`, which reads them again and tells the listeners only if the theme really changed:
 
 ```java title="amade-commons · theme/ThemeStore.java"
 --8<-- "amade-commons/src/main/java/eu/amadeos/commons/theme/ThemeStore.java:reload"
@@ -138,6 +138,63 @@ The keys are the method names of `DesktopTheme`: `highlight`, `shadow`, `activeT
 | `theme()` | The theme installed last; read it while painting |
 | `style(component, styler)`, `restyle(root)` | Colours of your own ([below](#colours-of-your-own-style)) |
 | `sunken()`, `raised()`, `paintBevel(...)`, `colorDot(color, size)` | Helpers ([below](#bevels-and-dots)) |
+
+## The flat look of Horizon: HorizonUI
+
+*Package `swing` · introduced in this chapter, for the Horizon desktop look · source: [`HorizonUI`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/swing/HorizonUI.java), [`HorizonThemes`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/theme/HorizonThemes.java)*
+
+**What it is for.** amadeOS has two desktop looks (Settings > Desktop look). The classic one is CDE, as above. Horizon has a top bar, a dock and flat windows with rounded corners, in a dark or a light scheme with one of six accent colours. In Horizon every program is flat too: rounded buttons without bevels, the default button filled with the accent, text fields with a thin line that turns into an accent ring when focused, slim scroll bars without arrows, tabs underlined in the accent, check boxes and radio buttons filled with the accent when ticked, plain (not bold) fonts. Toolbar buttons stay flat until the mouse is over them.
+
+**When to choose it.** Never directly. A program that starts with `AmadeApplication.launch` gets it for free: a Horizon theme in the `ThemeStore` installs it, a classic one takes it away again, while the program runs. The rules of this chapter stay the same: colours come from `AmadeUI.theme()` or a [styler](#colours-of-your-own-style), and both work in Horizon, where `base()` is the window background, `activeTitleBg()` the accent and `fieldBackground()` the background of fields and lists.
+
+**How it works.** A Horizon theme is an ordinary `DesktopTheme` with the id `horizon-<scheme>-<accent>` and `look()` = `HORIZON`, so the desktop processes exchange it like a classic palette:
+
+```java title="amade-commons · theme/HorizonThemes.java"
+--8<-- "amade-commons/src/main/java/eu/amadeos/commons/theme/HorizonThemes.java:theme"
+```
+
+`AmadeUI.install` first installs the classic look as always, then calls `HorizonUI.reset()`, which removes every key Horizon may have set before, and, for a Horizon theme, `HorizonUI.install(theme)`, which replaces the borders, icons and UI classes of the controls:
+
+```java title="amade-commons · swing/HorizonUI.java"
+--8<-- "amade-commons/src/main/java/eu/amadeos/commons/swing/HorizonUI.java:install"
+```
+
+Buttons keep amade-commons' own button UIs; their `paint` asks `HorizonUI.paintButton` in Horizon, which draws the rounded face, the accent for the default button and nothing at all for a toolbar button the mouse is not over:
+
+```java title="amade-commons · swing/HorizonUI.java"
+--8<-- "amade-commons/src/main/java/eu/amadeos/commons/swing/HorizonUI.java:button"
+```
+
+A button is a toolbar button when it carries the client property `HorizonUI.TOOL_BUTTON`; [`ToolButtons`](46-toolbars-and-printing.md) sets it. The old helpers keep working: `AmadeUI.sunken()`, `raised()` and `paintBevel` draw a thin rounded line in Horizon instead of a bevel, so a program that framed its preview with a bevel needs no change.
+
+| Member | What it is |
+|---|---|
+| `HorizonUI.active()`, `active(theme)` | True while (or if) the theme is a Horizon one |
+| `HorizonUI.Palette.of(theme)` | The colours of the controls: face, hover, pressed, line, accent, text on the accent, scroll thumb |
+| `HorizonUI.TOOL_BUTTON` | Client property for a flat toolbar button |
+| `HorizonUI.ARC` | The corner radius of controls, 8 pixels |
+| `HorizonThemes.theme(scheme, accent)`, `find(id)` | The twelve Horizon themes |
+
+!!! warning "Pitfall: a colour from the classic palettes"
+    A colour written into the code, a CDE grey for a header or a dark blue for a selection, looks wrong in Horizon's dark scheme. Take it from the theme (`base()`, `fieldBackground()`, `selectionBackground()`, `activeTitleBg()`), and the program fits both looks.
+
+??? example "Test: the look switches both ways"
+    ```java title="amade-commons · test/swing/HorizonUITest.java"
+    --8<-- "amade-commons/src/test/java/eu/amadeos/commons/swing/HorizonUITest.java:switch"
+    ```
+
+### Icons of each look
+
+Each look keeps its own icon theme. The classic look takes `icon_theme.conf`, NsCDE unless the user chose another; Horizon takes the `icons` line of `look.conf`, and without one its own theme `amadeos-horizon` (package `amadeos-icons-horizon` of amadeos-system, which falls back to NsCDE and hicolor). `ThemeStore.iconTheme(directory, theme)` makes that choice, and `DesktopTheme.iconTheme()` of the current theme is its answer, so a program that loads freedesktop icons by the theme's name gets the Horizon icons in Horizon without a line of code:
+
+```java title="amade-commons · theme/ThemeStore.java"
+--8<-- "amade-commons/src/main/java/eu/amadeos/commons/theme/ThemeStore.java:icons"
+```
+
+??? example "Test: each look keeps its own icon theme"
+    ```java title="amade-commons · test/theme/HorizonThemesTest.java"
+    --8<-- "amade-commons/src/test/java/eu/amadeos/commons/theme/HorizonThemesTest.java:icons"
+    ```
 
 ## Text size: fontScale
 
