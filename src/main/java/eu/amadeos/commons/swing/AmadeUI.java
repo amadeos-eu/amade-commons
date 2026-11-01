@@ -17,7 +17,8 @@ import java.util.function.BiConsumer;
 
 /**
  * The amadeOS Motif look for Swing: 3D bevels, Motif buttons, check boxes and radio buttons, and the
- * colours of the current {@link DesktopTheme} for every standard component.
+ * colours of the current {@link DesktopTheme} for every standard component. With a theme of the Horizon desktop
+ * look, {@link HorizonUI} makes it flat.
  *
  * <p>Typical use (done by {@link eu.amadeos.commons.app.AmadeApplication}):
  * <pre>
@@ -59,6 +60,7 @@ public final class AmadeUI {
         } catch (ReflectiveOperationException | UnsupportedLookAndFeelException e) {
             org.slf4j.LoggerFactory.getLogger(AmadeUI.class).warn("Cannot install the cross-platform look and feel", e);
         }
+        HorizonUI.reset();
 
         ColorUIResource base = res(t.base());
         ColorUIResource highlight = res(t.highlight());
@@ -198,6 +200,9 @@ public final class AmadeUI {
         put("TabbedPane.selected", softHighlight);
         put("TabbedPane.contentBorderInsets", new Insets(2, 2, 2, 2));
 
+        // The Horizon desktop look: flat buttons, fields, check boxes, scroll bars, menus and tabs
+        if (HorizonUI.active(t)) HorizonUI.install(t);
+
         installFonts(fontScale());
     }
 
@@ -224,10 +229,13 @@ public final class AmadeUI {
     // Starts from the look and feel's own fonts every time, so that sizes never compound.
     private static void installFonts(float scale) {
         UIDefaults defaults = UIManager.getLookAndFeelDefaults();
+        // Horizon writes everything in the regular weight; Metal makes most controls bold
+        boolean plain = HorizonUI.active(theme);
         for (Object key : java.util.List.copyOf(defaults.keySet())) {
             if (!(key instanceof String name) || !name.endsWith("font")) continue;
             if (defaults.get(key) instanceof Font font) {
-                put(name, new FontUIResource(font.deriveFont((float) Math.round(font.getSize2D() * scale))));
+                Font sized = font.deriveFont((float) Math.round(font.getSize2D() * scale));
+                put(name, new FontUIResource(plain ? sized.deriveFont(Font.PLAIN) : sized));
             }
         }
     }
@@ -323,6 +331,10 @@ public final class AmadeUI {
     /** Paints a Motif bevel in the colours of the current theme. */
     public static void paintBevel(Graphics g, int x, int y, int width, int height, boolean raised, int thickness) {
         DesktopTheme t = theme;
+        if (HorizonUI.active(t)) {
+            HorizonUI.paintFrame(g, x, y, width, height);
+            return;
+        }
         Color tl1 = raised ? t.highlight() : t.darkShadow();
         Color tl2 = raised ? t.softHighlight() : t.shadow();
         Color br1 = raised ? t.darkShadow() : t.highlight();
@@ -394,6 +406,7 @@ public final class AmadeUI {
 
         @Override
         public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
+            if (HorizonUI.active()) return; // AmadeButtonUI paints the rounded face
             boolean sunken = false;
             if (c instanceof AbstractButton b) {
                 ButtonModel model = b.getModel();
@@ -438,8 +451,14 @@ public final class AmadeUI {
             b.setFocusPainted(false);
             b.setRolloverEnabled(true);
             defaultColors(b);
-            if (b.getBorder() == null || b.getBorder() instanceof UIResource) b.setBorder(new MotifButtonBorder(2));
-            b.setFont(b.getFont().deriveFont(Font.BOLD, 12.0f));
+            boolean flat = HorizonUI.active();
+            if (b.getBorder() == null || b.getBorder() instanceof UIResource) {
+                b.setBorder(flat ? new HorizonUI.FlatButtonBorder() : new MotifButtonBorder(2));
+            }
+            if (b.getFont() == null || b.getFont() instanceof UIResource) {
+                b.setFont(new javax.swing.plaf.FontUIResource(b.getFont().deriveFont(flat ? Font.PLAIN : Font.BOLD,
+                        12.0f)));
+            }
         }
 
         @Override
@@ -449,6 +468,11 @@ public final class AmadeUI {
             DesktopTheme t = theme;
             Graphics2D g2 = (Graphics2D) g;
             g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+            if (HorizonUI.active(t)) {
+                HorizonUI.paintButton(g2, b);
+                super.paint(g2, c);
+                return;
+            }
             boolean pressed = model.isArmed() && model.isPressed();
             Color bg;
             if (pressed) bg = t.sunkenBg();
@@ -478,7 +502,9 @@ public final class AmadeUI {
             b.setFocusPainted(false);
             b.setRolloverEnabled(true);
             defaultColors(b);
-            if (b.getBorder() == null || b.getBorder() instanceof UIResource) b.setBorder(new MotifButtonBorder(2));
+            if (b.getBorder() == null || b.getBorder() instanceof UIResource) {
+                b.setBorder(HorizonUI.active() ? new HorizonUI.FlatButtonBorder() : new MotifButtonBorder(2));
+            }
         }
 
         @Override
@@ -488,6 +514,11 @@ public final class AmadeUI {
             DesktopTheme t = theme;
             Graphics2D g2 = (Graphics2D) g;
             g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+            if (HorizonUI.active(t)) {
+                HorizonUI.paintButton(g2, b);
+                super.paint(g2, c);
+                return;
+            }
             boolean down = model.isSelected() || (model.isArmed() && model.isPressed());
             Color bg = down ? t.sunkenBg() : model.isRollover() && b.isEnabled() ? t.softHighlight() : t.base();
             g2.setColor(bg);
