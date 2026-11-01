@@ -68,6 +68,16 @@ public final class XdgDirectories {
         return userDirectory("XDG_VIDEOS_DIR", "Videos");
     }
 
+    /** The user's downloads folder, {@code XDG_DOWNLOAD_DIR} ({@code ~/Downloads}), like {@link #pictures()}. */
+    public Path downloads() {
+        return userDirectory("XDG_DOWNLOAD_DIR", "Downloads");
+    }
+
+    /** The user's documents folder, {@code XDG_DOCUMENTS_DIR} ({@code ~/Documents}, {@code ~/Dokumente}), like {@link #pictures()}. */
+    public Path documents() {
+        return userDirectory("XDG_DOCUMENTS_DIR", "Documents");
+    }
+
     /** A folder of {@code user-dirs.dirs}, written as {@code "$HOME/Bilder"} or as an absolute path. */
     private Path userDirectory(String variable, String fallback) {
         Path home = Path.of(userHome);
