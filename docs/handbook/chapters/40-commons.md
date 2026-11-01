@@ -113,6 +113,7 @@ A few rules hold for nearly every class. Knowing them makes the rest of the manu
 | `process` | `CommandRunner`, `ProgramResult`, `ProgramMissingException`, `FinishedProcess` | [31. Imagescan](31-imagescan.md#the-command-runner-moves-into-amade-commons) |
 | `json` | `Json` | [33. Audio](33-audio.md#json) |
 | `net` | `Network`, `NetworkProxy`, `ProxySettings`, `ProxyStore`, `ProxyCheck` | [33. Audio](33-audio.md), moved for [38. TV](38-tv.md#and-what-stays-in-tv) |
+| `widget` | `DesktopWidget`, `WidgetContext`, `WidgetSettings`, `WidgetColors`, `WidgetCard`, `WidgetPreview` | [70. Desktop Widgets](70-widgets.md#the-api-in-amade-commons) |
 
 ## Using it in a program
 

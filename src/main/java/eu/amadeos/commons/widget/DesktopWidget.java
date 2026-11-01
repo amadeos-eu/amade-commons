@@ -13,6 +13,7 @@ import java.awt.Dimension;
  * {@code /usr/share/amadeos/widgets/} names the jar. The class needs a public constructor without
  * arguments. All methods are called on the Swing event thread.
  */
+// --8<-- [start:interface]
 public interface DesktopWidget {
     /** A short, stable name, unique among all widgets: {@code clock}, {@code calendar-month}. */
     String id();
@@ -40,3 +41,4 @@ public interface DesktopWidget {
         return null;
     }
 }
+// --8<-- [end:interface]

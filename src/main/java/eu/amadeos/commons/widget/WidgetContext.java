@@ -7,6 +7,7 @@ import java.util.Locale;
  * What the host gives one copy of a widget. Everything the context starts (timers, theme listeners) ends
  * when the copy is removed from the desktop or the host ends.
  */
+// --8<-- [start:interface]
 public interface WidgetContext {
     /** The colours of the card, from the current desktop colours; they change with the theme. */
     WidgetColors colors();
@@ -29,3 +30,4 @@ public interface WidgetContext {
     /** Starts a program, such as the widget's application: {@code open("amade-calendar")}. */
     void open(String... command);
 }
+// --8<-- [end:interface]

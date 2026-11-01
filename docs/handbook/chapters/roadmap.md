@@ -45,6 +45,7 @@ The handbook grows with the applications: a chapter is written for an applicatio
 | [67. Notifications](67-notifications.md) | amadeos-session notifications, `Notifications` | A D-Bus service with dbus-java, pop-ups that never take the focus, a history that outlives the session, Do not disturb, the client API in commons through `gdbus` |
 | [68. Power Management](68-power.md) | amadeos-session, Settings > Power | Suspend and hibernate through logind, the lid and the power button, the low battery |
 | [69. The Task Manager](69-task-manager.md) | amadeos-taskmanager, amadeos-wm | Processes and rates from `/proc` with a fake `/proc` for the tests, the process behind a window, `kill`, `renice` and `pkexec`, hanging windows found with `_NET_WM_PING` |
+| [70. Desktop Widgets](70-widgets.md) | amadeos-widgets, amadeos-wm, Calendar | Show desktop with `_NET_SHOWING_DESKTOP`, a window property that keeps windows below, plugins with `ServiceLoader` and a class loader per jar, the widget API in commons, the Calendar's month widget |
 | [79. A Module of Your Own](79-own-module.md) | | The checklist for a new module of amadeos-system |
 
 ## Planned
