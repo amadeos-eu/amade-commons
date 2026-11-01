@@ -58,12 +58,16 @@ public final class ThemeRegistry {
         themes.put(theme.id(), theme);
     }
 
+    /** The classic palettes; the Horizon colours are chosen apart from them (see {@link HorizonThemes}). */
     public synchronized List<DesktopTheme> all() {
         return List.copyOf(themes.values());
     }
 
+    /** A classic palette by its id, or a Horizon theme by its id ({@code horizon-dark-teal}). */
     public synchronized Optional<DesktopTheme> find(String id) {
-        return Optional.ofNullable(id == null ? null : themes.get(id.strip()));
+        if (id == null) return Optional.empty();
+        DesktopTheme theme = themes.get(id.strip());
+        return theme != null ? Optional.of(theme) : HorizonThemes.find(id);
     }
 
     // --8<-- [start:discover]

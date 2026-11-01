@@ -6,18 +6,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 
 /**
- * The desktop theme as chosen in the desktop's Settings. Reads {@code ~/.config/amadeos/theme.conf} (theme
- * id), {@code icon_theme.conf} (icon theme) and {@code font.conf} (font size 1 to 7) and, once {@link #watch()} was called, follows changes to these
+ * The desktop theme as chosen in the desktop's Settings. Reads {@code ~/.config/amadeos/look.conf} (the look,
+ * classic or Horizon, and Horizon's scheme and accent), {@code theme.conf} (the classic palette's id),
+ * {@code icon_theme.conf} (icon theme) and {@code font.conf} (font size 1 to 7) and, once {@link #watch()} was called, follows changes to these
  * files, so that applications switch theme together with the desktop. Applications only read the theme;
  * the desktop writes it.
  */
@@ -26,7 +29,9 @@ public final class ThemeStore implements AutoCloseable {
     public static final String THEME_FILE = "theme.conf";
     public static final String ICON_THEME_FILE = "icon_theme.conf";
     public static final String FONT_FILE = "font.conf";
-    private static final Set<String> WATCHED = Set.of(THEME_FILE, ICON_THEME_FILE, FONT_FILE);
+    /** The look and Horizon's colours: {@code look=horizon}, {@code scheme=dark}, {@code accent=teal}. */
+    public static final String LOOK_FILE = "look.conf";
+    private static final Set<String> WATCHED = Set.of(THEME_FILE, ICON_THEME_FILE, FONT_FILE, LOOK_FILE);
 
     private final Path configDirectory;
     private final ThemeRegistry registry;
@@ -90,12 +95,45 @@ public final class ThemeStore implements AutoCloseable {
 
     // --8<-- [start:read]
     private DesktopTheme read() {
-        DesktopTheme theme = readLine(THEME_FILE).flatMap(registry::find).orElse(DesktopTheme.WARM_MOTIF);
+        Properties look = readLook(configDirectory);
+        DesktopTheme theme = DesktopLook.of(look.getProperty("look")) == DesktopLook.HORIZON
+                ? HorizonThemes.theme(HorizonThemes.Scheme.of(look.getProperty("scheme")),
+                        HorizonThemes.Accent.of(look.getProperty("accent")))
+                : readLine(THEME_FILE).flatMap(registry::find).filter(t -> t.look() == DesktopLook.CLASSIC)
+                        .orElse(DesktopTheme.WARM_MOTIF);
         String icons = readLine(ICON_THEME_FILE).orElse(null);
         if (icons != null) theme = theme.withIconTheme(icons);
         return theme.withFontSize(readLine(FONT_FILE).map(ThemeStore::fontSize).orElse(DesktopTheme.DEFAULT_FONT_SIZE));
     }
     // --8<-- [end:read]
+
+    /**
+     * The contents of {@code look.conf} in a configuration directory ({@code look}, {@code scheme},
+     * {@code accent}); empty if there is no such file, which means the classic look.
+     */
+    public static Properties readLook(Path configDirectory) {
+        Properties p = new Properties();
+        Path file = configDirectory.resolve(LOOK_FILE);
+        if (!Files.isRegularFile(file)) return p;
+        try (Reader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
+            p.load(reader);
+        } catch (IOException | IllegalArgumentException e) {
+            LOG.debug("Cannot read {}", file, e);
+        }
+        return p;
+    }
+
+    /** The text of {@code look.conf} for a theme: its look and, for a Horizon theme, its scheme and accent. */
+    public static String lookFile(DesktopTheme theme, Properties previous) {
+        String scheme = previous.getProperty("scheme", HorizonThemes.DEFAULT_SCHEME.id());
+        String accent = previous.getProperty("accent", HorizonThemes.DEFAULT_ACCENT.id());
+        if (theme.look() == DesktopLook.HORIZON) {
+            scheme = HorizonThemes.scheme(theme.id()).id();
+            accent = HorizonThemes.accent(theme.id()).id();
+        }
+        return "# The desktop look (Settings > Appearance): classic or horizon, and Horizon's colours\n"
+                + "look=" + theme.look().id() + "\nscheme=" + scheme + "\naccent=" + accent + "\n";
+    }
 
     private static int fontSize(String value) {
         try {
