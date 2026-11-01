@@ -54,6 +54,7 @@ A few rules hold for nearly every class. Knowing them makes the rest of the manu
 | A theme of my own on the desktop | `theme.properties` in `~/.config/amadeos/themes/<id>/` | [42](42-look.md#custom-themes-themeregistry) |
 | To follow the theme the user picks in Settings | `AmadeUI.follow` (done by `launch`) | [42](42-look.md#following-the-desktop-themestore) |
 | A component with colours beyond the standard ones | `AmadeUI.style` | [42](42-look.md#colours-of-your-own-style) |
+| To know whether the desktop shows the flat Horizon look | `HorizonUI.active()` (the look itself comes with `launch`) | [42](42-look.md#the-flat-look-of-horizon-horizonui) |
 | A sunken or raised bevel, a coloured dot | `AmadeUI.sunken()`, `raised()`, `colorDot` | [42](42-look.md#bevels-and-dots) |
 | A dialog to pick a date | `DateChooser` | [42](42-look.md#picking-a-date-datechooser) |
 | Texts in five languages, formatted | `Messages`, `Texts.tr` | [43](43-languages.md#texts-messages) |
@@ -93,8 +94,8 @@ A few rules hold for nearly every class. Knowing them makes the rest of the manu
 |---|---|---|
 | `app` | `AmadeApplication`, `AppInfo`, `CommonsModule` | [10. Pad](10-pad.md#starting-it) |
 | `app` | `@Ui` | [30. Fractals](30-fractals.md#the-ui-executor) |
-| `theme` | `DesktopTheme`, `ThemeRegistry`, `ThemeStore` | [10. Pad](10-pad.md#following-the-desktop-theme) |
-| `swing` | `AmadeUI`, `EdtExecutor` | [10. Pad](10-pad.md#following-the-desktop-theme) |
+| `theme` | `DesktopTheme`, `ThemeRegistry`, `ThemeStore`, `DesktopLook`, `HorizonThemes` | [10. Pad](10-pad.md#following-the-desktop-theme) |
+| `swing` | `AmadeUI`, `HorizonUI`, `EdtExecutor` | [10. Pad](10-pad.md#following-the-desktop-theme) |
 | `swing` | `DateChooser` | [21. Calendar](21-calendar.md#typing-and-picking-dates) |
 | `swing` | `ToolIcon`, `StandardGlyph`, `ToolButtons` | [30. Fractals](30-fractals.md#the-toolbar-moves-into-amade-commons) |
 | `swing` | `TransportGlyph`, `TransportButtons` | [33. Audio](33-audio.md#the-transport-buttons) |

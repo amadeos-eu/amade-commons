@@ -14,6 +14,8 @@ import java.util.Optional;
 public final class HorizonThemes {
     /** The prefix of every Horizon theme id. */
     public static final String PREFIX = "horizon-";
+    /** The icons of the Horizon look (package amadeos-icons-horizon); NsCDE fills in what it does not have. */
+    public static final String ICON_THEME = "amadeos-horizon";
 
     /** Dark or light. */
     public enum Scheme {
@@ -116,7 +118,7 @@ public final class HorizonThemes {
                     new Color(0x2C, 0x2D, 0x3A),   // inactive title
                     new Color(0xE8, 0xE9, 0xF1),   // text
                     new Color(0x8C, 0x8E, 0xA2),   // inactive text
-                    DesktopTheme.DEFAULT_ICON_THEME,
+                    ICON_THEME,
                     new Color(0x14, 0x15, 0x1D),   // bars (top bar, dock)
                     new Color(0x3A, 0x3C, 0x4C),
                     new Color(0x0A, 0x0A, 0x10),
@@ -133,7 +135,7 @@ public final class HorizonThemes {
                 new Color(0xE6, 0xE6, 0xEB),
                 new Color(0x1E, 0x1F, 0x29),
                 new Color(0x8A, 0x8C, 0x99),
-                DesktopTheme.DEFAULT_ICON_THEME,
+                ICON_THEME,
                 new Color(0xEC, 0xEC, 0xF1),
                 Color.WHITE,
                 new Color(0xB8, 0xB9, 0xC4),

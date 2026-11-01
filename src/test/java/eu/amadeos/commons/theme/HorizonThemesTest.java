@@ -89,4 +89,28 @@ class HorizonThemesTest {
         assertEquals(DesktopLook.HORIZON, DesktopLook.of(" Horizon "));
         assertEquals(List.of(new Color(0x2F, 0xB8, 0xB0)).getFirst(), HorizonThemes.Accent.of("nope").color());
     }
+
+    // --8<-- [start:icons]
+    @Test
+    void eachLookKeepsItsOwnIconTheme() throws Exception {
+        ThemeStore store = new ThemeStore(dir, new ThemeRegistry());
+        Files.writeString(dir.resolve(ThemeStore.ICON_THEME_FILE), "Papirus");
+        store.reload();
+        assertEquals("Papirus", store.current().iconTheme(), "the classic look takes icon_theme.conf");
+
+        Files.writeString(dir.resolve(ThemeStore.LOOK_FILE), "look=horizon\nscheme=dark\naccent=teal\n");
+        store.reload();
+        assertEquals(HorizonThemes.ICON_THEME, store.current().iconTheme(), "Horizon has its own icons");
+
+        Properties previous = ThemeStore.readLook(dir);
+        previous.setProperty("icons", "NsCDE");
+        String text = ThemeStore.lookFile(HorizonThemes.theme(HorizonThemes.Scheme.LIGHT, HorizonThemes.Accent.RED),
+                previous);
+        assertTrue(text.contains("icons=NsCDE"), text);
+        Files.writeString(dir.resolve(ThemeStore.LOOK_FILE), text);
+        store.reload();
+        assertEquals("NsCDE", store.current().iconTheme(), "a choice made in Horizon");
+        assertEquals("light", ThemeStore.readLook(dir).getProperty("scheme"));
+    }
+    // --8<-- [end:icons]
 }

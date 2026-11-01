@@ -30,6 +30,7 @@ public final class ToolButtons {
     private static <B extends AbstractButton> B configure(B button, Action action) {
         button.setHideActionText(true);
         button.setFocusable(false);
+        button.putClientProperty(HorizonUI.TOOL_BUTTON, Boolean.TRUE);
         button.setMargin(new Insets(2, 2, 2, 2));
         // Not a UIResource, so the toolbar's look and feel does not swap in its flat rollover border.
         button.setBorder(BorderFactory.createCompoundBorder(new AmadeUI.MotifButtonBorder(2),
