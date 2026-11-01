@@ -8,6 +8,7 @@ import eu.amadeos.commons.desktop.Notifications;
 import eu.amadeos.commons.i18n.LocaleSettings;
 import eu.amadeos.commons.i18n.LocaleStore;
 import eu.amadeos.commons.i18n.Messages;
+import eu.amadeos.commons.i18n.RegionalFormats;
 import eu.amadeos.commons.net.Network;
 import eu.amadeos.commons.swing.AmadeUI;
 import eu.amadeos.commons.theme.ThemeStore;
@@ -48,6 +49,8 @@ public final class AmadeApplication {
                 xdg.appConfig(app.configName()), System.getenv());
         Locale locale = locales.locale();
         Locale.setDefault(locale);
+        // Dates, times and numbers in the region of Settings > Date and Time, if one is chosen there.
+        RegionalFormats.system().region().ifPresent(region -> Locale.setDefault(Locale.Category.FORMAT, region));
         // Before the first connection: the proxy of Settings > Network, followed while the program runs.
         Network.install();
         // Every notification names the program, so the desktop shows its name and applies its setting.
