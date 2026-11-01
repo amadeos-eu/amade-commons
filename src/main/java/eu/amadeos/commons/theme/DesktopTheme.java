@@ -298,6 +298,11 @@ public final class DesktopTheme {
                 (int) Math.round(a.getBlue() * (1 - weightOfB) + b.getBlue() * weightOfB));
     }
 
+    /** The look this theme belongs to: {@link DesktopLook#HORIZON} for the Horizon colours, otherwise classic. */
+    public DesktopLook look() {
+        return HorizonThemes.isHorizon(id) ? DesktopLook.HORIZON : DesktopLook.CLASSIC;
+    }
+
     @Override
     public boolean equals(Object o) {
         return o instanceof DesktopTheme other && id.equals(other.id) && iconTheme.equals(other.iconTheme)
