@@ -136,7 +136,7 @@ The amade programs send through `eu.amadeos.commons.desktop.Notifications` ([cha
 
 ## Who sends notifications
 
-Five amade programs use the client, each for the moment the user may not be looking at its window:
+Six amade programs use the client, each for the moment the user may not be looking at its window:
 
 | Program | When | Buttons | Chapter |
 |---|---|---|---|
@@ -145,6 +145,7 @@ Five amade programs use the client, each for the moment the user may not be look
 | Backup | a job is overdue, or a backup failed (critical) | *Open Backup & Sync* | [26](26-backup.md) |
 | TV | a program with a reminder starts | *Watch* | [38](38-tv.md) |
 | Webcam | a photo, a burst or a video is saved while the window is in the background | *Open* | [28](28-webcam.md) |
+| Terminal | a bell rings in a tab that is not in front, if the Preferences say so | a click shows the tab | [29](29-terminal.md) |
 
 They share three rules. Every action goes to the EDT first, because the client calls it on its own thread. If `send` returns 0 (no notification service, so the client used the system tray of [chapter 45](45-desktop.md#notifications-notifications)) and there is no system tray either, the program falls back to what it did before: Calendar's and TV's dialogs, Backup's notice window. And a notification that would only repeat itself replaces the last one: Mail's count of new mail, Backup's reminder for the same job.
 
