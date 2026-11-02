@@ -1,6 +1,6 @@
 # 49. Special Characters
 
-A keyboard has room for the letters of one language. Everything else, the € on an English keyboard, the „German quotes“ on a French one, the en dash, the °, the ½, the é in a name, has to come from somewhere. Every program that takes text therefore offers the same window: *Special Characters*, in the package `chars`. WritePad has it in its Insert menu, Pad in its Edit menu, Mail's compose window in its Format menu, and all three open it with **Ctrl+Shift+U**.
+A keyboard has room for the letters of one language. Everything else, the € on an English keyboard, the „German quotes“ on a French one, the en dash, the °, the ½, the é in a name, has to come from somewhere. Every program that takes text therefore offers the same window: *Special Characters*, in the package `chars`. WritePad has it in its Insert menu, Pad in its Edit menu, Mail's compose window in its Format menu, and all three open it with **Ctrl+Shift+U**. Right below sits *Smileys and Emoji…* (**Ctrl+.**), the same window opened on the emoji.
 
 ![The Special Characters window in the classic look: categories on the left, a grid of accented letters, a large à with its name and code on the right](images/chars/special-characters.png)
 
@@ -10,7 +10,7 @@ This chapter is a little different from the others in Part IV. The other parts o
 
 The window does four things.
 
-- **Categories** on the left: *Recently used*, *Accented letters*, *Quotes and dashes*, *Currency*, *Maths and numbers*, *Arrows*, *Greek*, *Symbols*, and *All characters*, which is the whole of Unicode up to U+1FFFF without control, private and unassigned code points.
+- **Categories** on the left: *Recently used*, *Accented letters*, *Quotes and dashes*, *Currency*, *Maths and numbers*, *Arrows*, *Greek*, *Symbols*, *Smileys and emoji*, and *All characters*, which is the whole of Unicode up to U+1FFFF without control, private and unassigned code points.
 - **The grid** in the middle draws the characters in the font of the text they go into. A character that font lacks is drawn in Java's `Dialog` font, which falls back across the installed fonts, and the preview says so. The arrow keys, Page Up, Page Down, Home and End move through it, and the tooltip names the character.
 - **The preview** on the right shows the selected character large, its Unicode name in sentence case, its usual name in the user's language if our word list has one, and its code.
 - **The search** at the top has the cursor when the window opens. Enter in the search field inserts the first result, so *Ctrl+Shift+U*, `euro`, *Enter* types € without touching the mouse.
@@ -25,7 +25,7 @@ The window follows the desktop's look like every other part of the library, beca
 
 *Package `chars` · introduced in this chapter for WritePad, Pad and Mail · source: [`SpecialCharacters`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/chars/SpecialCharacters.java)*
 
-**What it is for.** One line that gives a window the menu item, the key and a dialog that inserts into the window's text fields.
+**What it is for.** One line that gives a window the two menu items, the two keys and a dialog that inserts into the window's text fields.
 
 ```java
 --8<-- "amade-commons/src/main/java/eu/amadeos/commons/chars/SpecialCharacters.java:install"
@@ -69,7 +69,30 @@ A program that creates its editor before the window is shown can name the field 
 
 For a toolbar button or a context menu, `SpecialCharacters.action(window, locale)` gives the `Action` behind the menu item, with name and key. For a window without a fitting menu, `installKey(window, locale)` binds only the key.
 
-**When to choose something else.** The dialog is for characters a person picks. A program that needs a fixed character (a bullet in a list, the € in a price) writes it into its own code or texts. And the dialog does not offer colour emoji: Java2D cannot draw the colour emoji fonts (their glyphs are bitmaps in `CBDT` tables), so they would show as empty boxes. The *Symbols* category has the black and white ones that DejaVu and FreeSerif draw: ★ ♥ ✓ ☀ ☂ ✈ ☺.
+**When to choose something else.** The dialog is for characters a person picks. A program that needs a fixed character (a bullet in a list, the € in a price) writes it into its own code or texts. ## Smileys and emoji
+
+Smileys are ordinary Unicode characters: 😀 is U+1F600, *grinning face*. What makes them hard is drawing them. The emoji font of a Linux desktop, Noto Color Emoji, keeps its pictures as coloured bitmaps in `CBDT` tables, and Java2D cannot draw those, so Java shows an empty box. The dialog therefore draws emoji in a black and white emoji font, *Symbola* (Debian package `fonts-symbola`, which the amadeOS image installs):
+
+```java
+--8<-- "amade-commons/src/main/java/eu/amadeos/commons/chars/CharacterGrid.java:emoji-font"
+```
+
+`CharacterCatalog.isEmoji` decides what counts: the *Smileys and emoji* category and everything from U+1F000. Letters, quotes and maths stay in the text's font. Without Symbola, emoji fall back to `Dialog`, which on most systems means Unifont's pixel pictures or empty boxes; the window still inserts them correctly.
+
+The category holds single code points only, about 250 of them, in groups: faces, hands, hearts, animals, food, celebrations, travel and weather, things, signs. Skin tones and joined sequences (👩‍💻 is three code points glued with U+200D) are left out, because Symbola has no pictures for them and the grid has one cell per code point. A test checks that Symbola draws every character of the category.
+
+![The window in Horizon and German, opened with Ctrl+. on Smileys und Emojis](images/chars/special-characters-emoji-horizon.png)
+
+*Smileys and Emoji…* is a second action on the same window, opened on that category:
+
+```java
+JMenuItem item = SpecialCharacters.install(window, menu, locale);   // adds both items
+Action emoji = SpecialCharacters.emojiAction(window, locale);       // for a toolbar button
+```
+
+Ctrl+. is the key GNOME and Windows (Windows key + .) use for their emoji pickers. The word lists have the common emoji too, so `lachen` finds 😀 and `Daumen hoch` 👍 in German.
+
+What the user sees after inserting depends on the program that shows the text, not on the dialog. In WritePad's page an emoji is drawn by the page's font and its fallbacks, so it can look different from the grid. In a mail, the reader's program draws it, and a phone or a web browser shows it in colour.
 
 ## The characters and the search: CharacterCatalog
 
@@ -126,14 +149,14 @@ The file belongs to the desktop, not to one program, so a character inserted in 
 
 ## Testing
 
-`CharacterCatalogTest` checks the search without a screen: codes, words in English and German, letters with marks, that words must start a word, that every category has a text in every language, and the recent list in a temporary directory. `SpecialCharactersTest` needs a display (`xvfb-run`): it installs the menu item in German and checks its text and key, then searches for `euro` in the dialog, presses Enter in the search field and checks that `Preis: 49 ` became `Preis: 49 €` and that € leads the recent list.
+`CharacterCatalogTest` checks the search without a screen: codes, words in English and German, letters with marks, that words must start a word, that every category has a text in every language, and the recent list in a temporary directory. `SpecialCharactersTest` needs a display (`xvfb-run`): it installs the menu items in German and checks their texts and keys, then searches for `euro` in the dialog, presses Enter in the search field and checks that `Preis: 49 ` became `Preis: 49 €` and that € leads the recent list, and that opening on the emoji selects 😀. When `fonts-symbola` is installed, a third test checks that Symbola draws every emoji of the category.
 
 ## What uses it
 
 | Program | Where | Into |
 |---|---|---|
-| WritePad | *Insert > Special Characters…* | the page |
-| Pad | *Edit > Special Characters…* | the editor of the current tab |
-| Mail | compose window, *Format > Special Characters…* | the body, the subject, To, Cc or Bcc, whichever had the cursor last |
+| WritePad | *Insert > Special Characters…*, *Smileys and Emoji…* | the page |
+| Pad | *Edit > Special Characters…*, *Smileys and Emoji…* | the editor of the current tab |
+| Mail | compose window, *Format > Special Characters…*, *Smileys and Emoji…* | the body, the subject, To, Cc or Bcc, whichever had the cursor last |
 
 The User's Handbook describes the window for users in chapter 40, *What all amade applications share*.

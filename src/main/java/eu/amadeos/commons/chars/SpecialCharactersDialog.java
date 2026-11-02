@@ -92,9 +92,16 @@ final class SpecialCharactersDialog extends JDialog {
         showPreview(grid.selectedCharacter());
     }
 
-    /** Shows the window with the cursor in the search field. */
-    void open() {
-        if (!isVisible()) {
+    /**
+     * Shows the window with the cursor in the search field. With a category, the window shows it (Smileys and
+     * Emoji… opens on the emoji); without, it keeps what it showed last.
+     */
+    void open(CharacterCatalog.Category category) {
+        if (category != null) {
+            search.setText("");
+            categories.setSelectedValue(category, true);
+            showCategory();
+        } else if (!isVisible()) {
             search.setText("");
             if (categories.getSelectedIndex() < 0) categories.setSelectedIndex(0);
             showCategory();
@@ -273,7 +280,7 @@ final class SpecialCharactersDialog extends JDialog {
         String own = catalog.localWords(cp);
         words.setText(own.isEmpty() ? " " : html(own, width));
         code.setText(CharacterCatalog.code(cp));
-        shownIn.setText(f == grid.textFont() ? " " : html(texts.get("chars.other-font"), width));
+        shownIn.setText(f == grid.textFont() || CharacterCatalog.isEmoji(cp) ? " " : html(texts.get("chars.other-font"), width));
     }
 
     private static String html(String text, int width) {

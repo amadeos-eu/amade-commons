@@ -110,10 +110,33 @@ final class CharacterGrid extends JComponent implements Scrollable {
         return font;
     }
 
-    /** The font the character is drawn in: the text's font, or the fallback if the text's font lacks it. */
+    // --8<-- [start:emoji-font]
+    /**
+     * The font the character is drawn in: emoji in the black and white emoji font when it is installed (Java2D
+     * cannot draw colour emoji fonts), everything else in the text's font, or the fallback if the text's font
+     * lacks it.
+     */
     Font fontFor(int cp) {
+        if (CharacterCatalog.isEmoji(cp)) {
+            Font emoji = emojiFont(font.getSize());
+            if (emoji != null && emoji.canDisplay(cp)) return emoji;
+        }
         return font.canDisplay(cp) ? font : fallback;
     }
+
+    /** The family of the black and white emoji font, Debian package {@code fonts-symbola}. */
+    static final String EMOJI_FAMILY = "Symbola";
+    private static Boolean emojiInstalled;
+
+    /** The emoji font in the size, null if it is not installed. */
+    static Font emojiFont(int size) {
+        if (emojiInstalled == null) {
+            emojiInstalled = java.util.Arrays.asList(GraphicsEnvironment.getLocalGraphicsEnvironment()
+                    .getAvailableFontFamilyNames(java.util.Locale.ROOT)).contains(EMOJI_FAMILY);
+        }
+        return emojiInstalled ? new Font(EMOJI_FAMILY, Font.PLAIN, size) : null;
+    }
+    // --8<-- [end:emoji-font]
 
     void select(int index) {
         if (index == selected) return;

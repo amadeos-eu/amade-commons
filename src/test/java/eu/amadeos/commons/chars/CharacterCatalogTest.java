@@ -56,6 +56,18 @@ class CharacterCatalogTest {
     }
 
     @Test
+    void emojiAreFoundByNameAndByOwnWords() {
+        assertEquals(0x1F600, german.search("lachen").getFirst());
+        assertTrue(english.search("thumbs up").contains(0x1F44D));
+        assertTrue(english.search("cat face").contains(0x1F431));
+        assertTrue(CharacterCatalog.isEmoji(0x1F600));
+        assertTrue(CharacterCatalog.isEmoji(0x2764));
+        assertFalse(CharacterCatalog.isEmoji('ä'));
+        List<Integer> emoji = english.characters(CharacterCatalog.Category.EMOJI);
+        assertEquals(emoji.size(), emoji.stream().distinct().count(), "no character twice");
+    }
+
+    @Test
     void wordsMustStartAWord() {
         assertFalse(english.search("ash").contains(0x2014), "'ash' is inside 'dash' but starts no word");
         assertTrue(english.search("xqzv").isEmpty());

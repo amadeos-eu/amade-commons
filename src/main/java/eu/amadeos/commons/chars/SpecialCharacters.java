@@ -39,6 +39,8 @@ public final class SpecialCharacters {
     /** Ctrl+Shift+U opens the dialog in every amade program. */
     public static final KeyStroke KEY = KeyStroke.getKeyStroke(KeyEvent.VK_U,
             InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK);
+    /** Ctrl+. opens the dialog on the smileys and emoji, as in many other desktops. */
+    public static final KeyStroke EMOJI_KEY = KeyStroke.getKeyStroke(KeyEvent.VK_PERIOD, InputEvent.CTRL_DOWN_MASK);
     // --8<-- [end:key]
 
     private static final String DIALOG = "amade.specialCharacters.dialog";
@@ -49,14 +51,16 @@ public final class SpecialCharacters {
 
     // --8<-- [start:install]
     /**
-     * Adds "Special Characters…" with {@link #KEY} to the menu (after a separator if the menu has items) and
-     * returns the item. The dialog inserts into the editable text field of the window that had the focus last.
+     * Adds "Special Characters…" with {@link #KEY} and "Smileys and Emoji…" with {@link #EMOJI_KEY} to the menu
+     * (after a separator if the menu has items) and returns the first item. The dialog inserts into the editable
+     * text field of the window that had the focus last.
      */
     public static JMenuItem install(Window window, JMenu menu, Locale locale) {
-        Action action = action(window, locale);
         if (menu.getMenuComponentCount() > 0) menu.addSeparator();
-        JMenuItem item = menu.add(action);
+        JMenuItem item = menu.add(action(window, locale));
         Mnemonics.apply(item, Messages.commons(locale).get("chars.menu"));
+        JMenuItem emoji = menu.add(emojiAction(window, locale));
+        Mnemonics.apply(emoji, Messages.commons(locale).get("chars.emoji-menu"));
         return item;
     }
     // --8<-- [end:install]
@@ -66,20 +70,30 @@ public final class SpecialCharacters {
      * themselves (a toolbar, a context menu). It starts following the window's text fields.
      */
     public static Action action(Window window, Locale locale) {
+        return action(window, locale, "chars.menu", KEY, null);
+    }
+
+    /** The action behind "Smileys and Emoji…": the same dialog, opened on the emoji, with {@link #EMOJI_KEY}. */
+    public static Action emojiAction(Window window, Locale locale) {
+        return action(window, locale, "chars.emoji-menu", EMOJI_KEY, CharacterCatalog.Category.EMOJI);
+    }
+
+    private static Action action(Window window, Locale locale, String textKey, KeyStroke key,
+                                 CharacterCatalog.Category category) {
         Objects.requireNonNull(window, "window");
         followFocus(window);
-        Action action = new AbstractAction(Mnemonics.strip(Messages.commons(locale).get("chars.menu"))) {
+        Action action = new AbstractAction(Mnemonics.strip(Messages.commons(locale).get(textKey))) {
             @Override
             public void actionPerformed(ActionEvent e) {
-                open(window, text -> insertIntoTarget(window, text), locale);
+                open(window, text -> insertIntoTarget(window, text), locale, null, category);
             }
         };
-        action.putValue(Action.ACCELERATOR_KEY, KEY);
+        action.putValue(Action.ACCELERATOR_KEY, key);
         return action;
     }
 
     /**
-     * Only the key {@link #KEY}, for a window without a fitting menu: the dialog inserts into the window's text
+     * Only the keys {@link #KEY} and {@link #EMOJI_KEY}, for a window without a fitting menu: the dialog inserts into the window's text
      * fields as with {@link #install(Window, JMenu, Locale)}.
      */
     public static void installKey(RootPaneContainer window, Locale locale) {
@@ -87,6 +101,8 @@ public final class SpecialCharacters {
         JRootPane root = window.getRootPane();
         root.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KEY, "amade.specialCharacters");
         root.getActionMap().put("amade.specialCharacters", action);
+        root.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(EMOJI_KEY, "amade.specialCharacters.emoji");
+        root.getActionMap().put("amade.specialCharacters.emoji", emojiAction((Window) window, locale));
     }
 
     // --8<-- [start:open]
@@ -98,17 +114,18 @@ public final class SpecialCharacters {
         open(owner, (Predicate<String>) text -> {
             insert.accept(text);
             return true;
-        }, locale, null);
+        }, locale, null, null);
     }
     // --8<-- [end:open]
 
-    private static void open(Window owner, Predicate<String> insert, Locale locale, Font textFont) {
+    private static void open(Window owner, Predicate<String> insert, Locale locale, Font textFont,
+                             CharacterCatalog.Category category) {
         SpecialCharactersDialog dialog = dialogOf(owner, locale);
         dialog.setTarget(insert);
         JTextComponent target = target(owner);
         Font font = textFont != null ? textFont : target != null ? target.getFont() : null;
         if (font != null) dialog.setTextFont(font);
-        dialog.open();
+        dialog.open(category);
     }
 
     private static SpecialCharactersDialog dialogOf(Window owner, Locale locale) {

@@ -47,6 +47,10 @@ public final class CharacterCatalog {
         ARROWS("←↑→↓↔↕↖↗↘↙⇐⇑⇒⇓⇔⇕↩↪↺↻⤴⤵➔➜➝➞➡⬅⬆⬇▲▼◀▶△▽◁▷"),
         GREEK("αβγδεζηθικλμνξοπρσςτυφχψωΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ"),
         SYMBOLS("©®™℗℠✓✔✗✘★☆♥♡♦♣♠●○■□◆◇☐☑☒☺☹☀☁☂☃☎✆✈✉✂✎✏⚠⚡♪♫♀♂⚥⌘⌥⏎⌫⎋☕⚙☯☮✝☪✡☘⚓⌛⌚"),
+        // Smileys and emoji: single code points only (no skin tones or joined sequences), the ones the
+        // black and white emoji font Symbola draws
+        EMOJI("😀😁😂😃😄😅😆😇😈😉😊😋😌😍😎😏😐😑😒😓😔😕😖😗😘😙😚😛😜😝😞😟😠😡😢😣😤😥😦😧😨😩😪😫😬😭😮😯😰😱😲😳😴😵😶😷😸😹😺😻😼😽😾😿🙀🙁🙂🙃🙄🙅🙆🙇🙈🙉🙊🙋🙌🙍🙎🙏🤐🤑🤒🤓🤔🤕🤗🤠🤡🤢🤣🤤🤥🤧"
+                + "👍👎👌✌🤞👏🙌🙏💪👋✋☝👆👇👈👉🤝❤💔💕💖💗💙💚💛💜🖤💯🐶🐱🐭🐹🐰🦊🐻🐼🐨🐯🦁🐮🐷🐸🐵🐔🐧🐦🐤🦆🦅🦉🐴🦄🐝🐛🦋🐌🐞🐢🐍🐙🐠🐟🐬🐳🍏🍎🍐🍊🍋🍌🍉🍇🍓🍒🍑🍍🥝🍅🥕🌽🥔🍞🧀🍕🍔🍟🌭🍝🍰🎂🍩🍪🍫🍦☕🍵🍺🍷🥂🎉🎊🎁🎈🎄🎃⚽🏀🎾🎮🎲🎵🎶🎸🚗🚌🚲✈🚀🏠⛰🌍☀⛅☁🌧⛄🌈⭐🌙🔥💧❄📱💻⌨📷📚📎🔑🔒💡⏰📅📦🎓✅❌❓❗⛔🚫♻➕➖"),
         ALL("");
         // --8<-- [end:categories]
 
@@ -58,7 +62,7 @@ public final class CharacterCatalog {
 
         /** The fixed characters of this category, in order. Empty for {@link #RECENT} and {@link #ALL}. */
         public List<Integer> characters() {
-            return characters.codePoints().boxed().toList();
+            return characters.codePoints().distinct().boxed().toList();
         }
 
         /** The key of the category's name in the amade-commons texts, e.g. {@code chars.category.currency}. */
@@ -133,6 +137,11 @@ public final class CharacterCatalog {
             return Collections.unmodifiableList(list);
         }
         return category.characters();
+    }
+
+    /** True for a character that is drawn as an emoji: the emoji category and everything from U+1F000. */
+    public static boolean isEmoji(int cp) {
+        return cp >= 0x1F000 || Category.EMOJI.characters.indexOf(cp) >= 0;
     }
 
     /** The Unicode name in sentence case: {@code Latin small letter a with diaeresis}. */
