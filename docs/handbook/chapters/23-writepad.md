@@ -2,7 +2,7 @@
 
 Pad edits text. WritePad edits documents: fonts and sizes, bold and italic, indents and tab stops, lists, and above all *pages*. A letter has to fit on a sheet of A4 and look on paper the way it looked on the screen. And a document has to open in other people's word processors, so WritePad reads and writes their file formats.
 
-amade-writepad is modelled on the small word processors that came with the desktops of the 1990s: a toolbar, a format bar, a ruler, and the pages on a dark desk. It is the biggest program so far, about 10,300 lines of Java and 4,000 lines of tests. This chapter shows the three parts that make it a word processor, the page view, the file formats and printing, and it moves printing into amade-commons, where Calendar has been waiting for it since chapter 21.
+amade-writepad is modelled on the small word processors that came with the desktops of the 1990s: a toolbar, a format bar, a ruler, and the pages on a dark desk. It is the biggest program so far, about 12,800 lines of Java and 4,400 lines of tests. This chapter shows the parts that make it a word processor, the page view, pictures with text flowing around them, the file formats and printing, and it moves printing into amade-commons, where Calendar has been waiting for it since chapter 21.
 
 ## What you build
 
@@ -12,6 +12,7 @@ amade-writepad is modelled on the small word processors that came with the deskt
 - **Real pages** in A5, A4, Letter or Legal, portrait or landscape, with margins; zoom from 50 % to 300 %.
 - **A ruler** with indent markers and tab stops (left, centre, right, decimal) to drag.
 - **Bullet and numbered lists** in several levels.
+- **Pictures** in the line, on a line of their own, or at the left or right margin with the text flowing beside them; resized with handles, set up in a dialog.
 - **ODT, DOCX, RTF and plain text**, opened and saved; old DOC files through LibreOffice when it is installed.
 - **Printing** that puts the lines and page breaks on paper exactly where they are on the screen.
 
@@ -20,6 +21,7 @@ amade-writepad is modelled on the small word processors that came with the deskt
 - How Swing's text components are built: document, elements, views and the editor kit.
 - How to replace Swing's views to lay text out on pages.
 - How to keep a layout in points and show it in pixels, at any zoom.
+- How to put an object into styled text as one character, and how to let text flow around it.
 - How to read and write document formats with the JDK alone, and why that is possible.
 - How to print through `java.awt.print`, and what moves into amade-commons for it.
 
@@ -109,6 +111,57 @@ One pass over the paragraphs counts, per list and level, and a higher level star
 
 Why not type the numbers? Because then deleting item 2 would leave "1., 3., 4.", and every file format stores lists as structure, not as text. A label that the program draws is always right. `PagedParagraphView.paintLabel` draws it in front of the first line, at the first-line indent, in the font of the paragraph's first character.
 
+## Pictures
+
+![A picture floating at the right, selected, in the Horizon look](images/writepad/pictures.png)
+
+### A picture is one character
+
+Swing's styled text has a place for things that are not text: a character whose attributes hold a component or an icon. WritePad uses the same idea with its own class. A picture is the character U+FFFC, OBJECT REPLACEMENT CHARACTER, and its attributes carry an immutable `Picture`: the image's bytes, its size in points, where it sits, its border and its description.
+
+```java title="amade-writepad · service/picture/PictureAttributes.java"
+--8<-- "amade-writepad/src/main/java/eu/amadeos/apps/writepad/service/picture/PictureAttributes.java:character"
+```
+
+Because the picture is a character, everything the editor already does works for it without a line of new code: the caret steps over it, a selection includes it, ++delete++ removes it, cut and paste move it, and undo brings it back. Changing a picture (a new size, another position) is `setCharacterAttributes` on its one character, which is one undoable edit too.
+
+Two details make this safe. `Picture` uses *identity* for `equals`: two equal pictures side by side would otherwise end up in one element, because `DefaultStyledDocument` joins neighbouring runs with equal attributes, and one element can only be one view. And `WritepadDocument.insertString` drops the picture attribute from any text except a single U+FFFC, so typing right after a picture does not create more pictures with the attributes of the character before.
+
+The view factory of the editor kit gives a character with a picture a `PictureView` instead of a `LabelView`. It is as wide and high as the picture and stands on the baseline, so the line it is in grows to fit it, as a large letter would. A picture "on a line of its own" is nothing new either: it is a picture alone in its paragraph, and the paragraph's alignment puts it left, centred or right. LibreOffice and Word store such pictures the same way.
+
+### Text that flows around a picture
+
+A floating picture is harder, because its text is not in its line. The text of the paragraph runs down beside it, and the lines beside it are shorter. Swing's paragraph view breaks lines with a *flow strategy*, which asks the view two questions for every row: where does the row start (`getFlowStart`), and how wide may it be (`getFlowSpan`). Both take the row's index. A plain `ParagraphView` gives the same answer for every row. `PagedParagraphView` answers per row:
+
+```java title="amade-writepad · service/layout/PagedParagraphView.java"
+--8<-- "amade-writepad/src/main/java/eu/amadeos/apps/writepad/service/layout/PagedParagraphView.java:floats"
+```
+
+To know where row 5 goes on the page, the view adds up the heights of rows 0 to 4, which are already filled when the strategy asks for row 5, and places each with the same `layout.place` as the paragraphs, so a row that would cross the bottom margin moves to the next page here too. Row 5 itself is not filled yet, so its height is a guess: as high as the row before. A row that would be narrower than 54 points (three short words) does not squeeze in next to the picture; it moves below it.
+
+Who decides where the pictures are? The section view, which stacks the paragraphs, already knows the y of each paragraph before it lays it out. Now it also places the paragraph's floating pictures at that y, and hands each paragraph the room that the pictures of this and earlier paragraphs still take below its top:
+
+```java title="amade-writepad · service/layout/PagedSectionView.java"
+--8<-- "amade-writepad/src/main/java/eu/amadeos/apps/writepad/service/layout/PagedSectionView.java:place-floats"
+```
+
+So a picture reaches into the paragraphs after its own, the way it does in every word processor, and two pictures on the same side stack. The section paints the floating pictures itself, after the text, because their character view has no size. And a click on a floating picture cannot find it through `viewToModel`, so the section answers "which picture is at this point" from its list.
+
+!!! note "Note: why a centred picture does not float"
+    Text on both sides of a picture is possible (Word calls it "square, both sides"), and it is hard to read: the eye has to jump over the picture in every line. WritePad offers left and right only. A centred picture stands on its own line.
+
+### Handles on top of the caret
+
+A selected picture shows a frame with eight handles. Dragging a handle must not reach the caret, or the press would start a text selection. So the editor looks at mouse events before Swing does:
+
+```java title="amade-writepad · ui/editor/PageEditor.java"
+--8<-- "amade-writepad/src/main/java/eu/amadeos/apps/writepad/ui/editor/PageEditor.java:mouse"
+```
+
+While dragging, only the frame follows the mouse; the picture gets its new size when the button is let go, as one undo step. Corner handles keep the proportions unless ++shift++ is held, and a dragged picture never gets wider than the text.
+
+The clipboard learned pictures too. Inside WritePad a copy carries the text with its pictures; other programs get plain text without the U+FFFC characters, or an image if exactly one picture is selected. A screenshot on the clipboard and image files dropped from the File Manager come in as pictures.
+
 ## File formats
 
 Every format is a `DocumentFormat`:
@@ -153,6 +206,23 @@ A DOCX file is a ZIP too, but without the `mimetype` entry, which is why the che
     Java libraries exist for these formats, and they are big: the usual one for DOCX brings about 19 MB of jars, four times the size of the whole WritePad package, and a DOM of the entire document in memory. WritePad needs three XML files of a DOCX and four of an ODT, and StAX reads them as a stream. The decision and its alternative are written down in the repository's `CONTRIBUTING.md`, with the size, the date and what would change it. Write such notes for every dependency you decide against: in a year someone will ask again.
 
 RTF is different: a text format of nested groups in curly braces with control words such as `\b` and `\par`. WritePad reads it with its own small tokenizer. The old binary DOC format is the one case where WritePad does not write its own code: it runs LibreOffice (`soffice --headless --convert-to docx`) in the background, with a profile of its own, and reads the DOCX. Running another program well, with a timeout, its output and its exit code, is a part that moves into amade-commons in chapter 31.
+
+### Pictures in three formats
+
+Each format stores a picture as the image file plus a frame that says how big it is and where it goes, and each has its own words for it:
+
+| | ODT | DOCX | RTF |
+|---|---|---|---|
+| Image | `Pictures/1.jpg` in the ZIP | `word/media/image1.jpg` and a relationship | hex digits in `\pict` (`\pngblip`, `\jpegblip`) |
+| In the line | `draw:frame` anchored `as-char` | `wp:inline` | `{\pict ...}` in the text |
+| Floating | anchored to the paragraph, `style:wrap` right or left | `wp:anchor` with `wrapSquare` | a picture shape `{\shp ...}` with `\shpwr2` |
+| Description | `svg:desc` | `descr` of `wp:docPr` | shape property `wzDescription` |
+
+```java title="amade-writepad · service/format/docx/DocxWriter.java"
+--8<-- "amade-writepad/src/main/java/eu/amadeos/apps/writepad/service/format/docx/DocxWriter.java:drawing"
+```
+
+The size in a file is the picture *with* its border, because LibreOffice writes it so. Write it without, and a picture grows by the width of its border every time the file goes through LibreOffice and back. The test that found this reads a file that LibreOffice saved from one of WritePad's, in each of the three formats; the round trip of WritePad alone would never have shown it. LibreOffice's RTF loses the border, so for RTF the test accepts the frame's size as the picture's.
 
 The tests for every format do the same three things: write a document and read it back (a *round trip*), read files that other programs wrote, and check the bytes against the rules of the format. The round trip alone is not enough: a writer and a reader that share a mistake pass it.
 
@@ -256,7 +326,8 @@ What stays in the programs is what is really theirs: Calendar's report pages and
 2. **Page numbers in the footer.** The page view already paints a footer ("1 / 6"). Make it a setting of the document, saved in ODT as a footer with a page-number field. Which part of the code reads it, and which writes it?
 3. **The paper where you live.** New documents always start on A4. Use `PaperSize.forLocale` for new documents. What should happen when a document from a Letter country is opened in an A4 country?
 4. **A second Ctrl+S that counts.** Instead of ignoring a save while one is running, remember it and save again when the first one is done, with the newest text. Write the test first, with the queueing executor.
-5. **Print preview for Calendar.** `ReportPages` paints into any `Graphics2D`. Show the pages in a window before printing. Could WritePad's page view show Calendar's pages? What would a `PreviewPanel` in amade-commons need to know about the pages?
+5. **Pictures in the middle.** A floating picture always starts at the top of its paragraph. Let the user drag it down: store its distance from the paragraph's top (ODT `svg:y`, DOCX `wp:posOffset`) and use it in `placeFloats`. What happens to the rows above the picture?
+6. **Print preview for Calendar.** `ReportPages` paints into any `Graphics2D`. Show the pages in a window before printing. Could WritePad's page view show Calendar's pages? What would a `PreviewPanel` in amade-commons need to know about the pages?
 
 ## Summary
 
@@ -264,6 +335,7 @@ What stays in the programs is what is really theirs: Calendar's report pages and
 - Lay out in one unit (points) and translate only at the edge; then zoom does not move line breaks, and printing is the same painting at scale 1.
 - A layout that moves things needs a case in which it stops moving them.
 - Labels of list items are computed from structure, not stored as text.
+- A picture is one character with the picture in its attributes, so caret, selection, clipboard and undo work for it unchanged. Text flows around a floating picture because the paragraph answers the flow strategy's two questions per row.
 - ODT and DOCX are ZIP files with XML inside; the JDK's `java.util.zip` and StAX read and write them. Recognise files by content first, by name second.
 - Two writes of the same file must not run at the same time: chain them, or start no second one.
 - Paper sizes, page formats, printer attributes, the print dialog and PostScript files move into amade-commons as `PaperSize` and `PrintJobs`, their second user after Calendar. The JDK's stream print service writes PostScript without a printer.
