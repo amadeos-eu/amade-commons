@@ -92,6 +92,7 @@ A few rules hold for nearly every class. Knowing them makes the rest of the manu
 | To pick a character for something that is not a text field | `SpecialCharacters.open` | [49](49-special-characters.md#using-it-specialcharacters) |
 | Smileys and emoji that Java can draw | `SpecialCharacters.emojiAction`, `fonts-symbola` | [49](49-special-characters.md#smileys-and-emoji) |
 | To search characters by name, word or code | `CharacterCatalog` | [49](49-special-characters.md#the-characters-and-the-search-charactercatalog) |
+| To set XHTML chapters of a book into pages, justified and hyphenated | `typeset`: `ChapterParser`, `Typesetter`, `Hyphenators` | [37](37-books.md) |
 
 ## Which chapter introduced what
 
@@ -120,6 +121,7 @@ A few rules hold for nearly every class. Knowing them makes the rest of the manu
 | `json` | `Json` | [33. Audio](33-audio.md#json) |
 | `net` | `Network`, `NetworkProxy`, `ProxySettings`, `ProxyStore`, `ProxyCheck` | [33. Audio](33-audio.md), moved for [38. TV](38-tv.md#and-what-stays-in-tv) |
 | `chars` | `SpecialCharacters`, `CharacterCatalog`, `RecentCharacters` | [49. Special Characters](49-special-characters.md) (for WritePad, Pad and Mail) |
+| `typeset` | `ZipPaths`, `Css`, `Style`, `ChapterParser`, `Typesetter`, `ChapterLayout`, `Page`, `PageGeometry`, `Appearance`, `Hyphenator`, `Hyphenators` | [37. Books](37-books.md), moved for the Book Editor's preview |
 | `widget` | `DesktopWidget`, `WidgetContext`, `WidgetSettings`, `WidgetColors`, `WidgetCard`, `WidgetPreview` | [70. Desktop Widgets](70-widgets.md#the-api-in-amade-commons) |
 
 ## Using it in a program

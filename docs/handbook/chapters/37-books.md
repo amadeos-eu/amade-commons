@@ -2,7 +2,7 @@
 
 An e-book is a website in a ZIP file. An EPUB holds XHTML chapters, CSS, pictures and fonts, and a reader could simply show each chapter in an HTML component and let it scroll. That would be a web page, not a book. A book has pages that you turn, text set flush on both sides with words divided at the line end, a page number, a running head and a picture that the text flows around. amade-books sets all of that itself. It is the program of this book that does the most typography, and the one where Java's text layout shows both its strength and its oddities.
 
-The program has about 8,600 lines of Java and 2,200 lines of tests. Nothing moves into amade-commons with it. It reads two formats, EPUB 2 and 3 for books and CBZ for comics, keeps a library of both, and remembers for every book where the reader stopped.
+The program has about 8,600 lines of Java and 2,200 lines of tests. Its typesetter was written for it and later moved into amade-commons as the package `eu.amadeos.commons.typeset`, when the Book Editor needed the same pages for its preview; the code excerpts below come from there. It reads two formats, EPUB 2 and 3 for books and CBZ for comics, keeps a library of both, and remembers for every book where the reader stopped.
 
 ## What you build
 
@@ -42,8 +42,8 @@ Books use little of CSS: fonts, sizes, emphasis, margins, indents, alignment, pa
 
 | Package | Contents |
 |---|---|
-| `domain.epub` | `EpubBook` (the container, the package document, the contents), `EpubSession` (an open book: chapter texts, layouts, fonts, progress, links, search), `TocEntry`, `ZipPaths` |
-| `domain.layout` | `Css`, `Style`, `ChapterParser`, `Block`, `ChapterText`, `Typesetter`, `ChapterLayout`, `Page`, `PageGeometry`, `Appearance`, `Hyphenator`, `Hyphenators` |
+| `domain.epub` | `EpubBook` (the container, the package document, the contents), `EpubSession` (an open book: chapter texts, layouts, fonts, progress, links, search), `TocEntry` |
+| `typeset` (in amade-commons) | `ZipPaths`, `Css`, `Style`, `ChapterParser`, `Block`, `ChapterText`, `Typesetter`, `ChapterLayout`, `Page`, `PageGeometry`, `Appearance`, `Hyphenator`, `Hyphenators` |
 | `domain.comic` | `ComicBook`, `ComicSession`, `Spreads`, `NaturalOrder` |
 | `domain.library` | `LibraryScanner`, `LibraryEntry`, `Shelf`, `ShelfFilter`, `SortOrder`, `BookState`, `Bookmark` |
 | `repository` | `BooksPreferences` (`books.properties`), `ReadingStates` (`library.json`), `LibraryCache` (the scanned shelf and the covers) |
@@ -87,8 +87,8 @@ The series is one of the things books state in several ways. EPUB 3 uses `belong
 
 `Css` reads the style sheets of a chapter: the `<link>`ed files and `<style>` elements, plus the `style` attribute. It understands selectors by element, class and id, joined as descendants and children; a rule with pseudo-classes, attributes or siblings in its selector is skipped. The properties it knows are the ones books use: `font-*`, `text-align`, `text-indent`, `margin`, `padding`, `float`, `width`, `display`, `page-break-*` and `break-*`, `vertical-align`, `text-transform`, `font-variant: small-caps` and `@font-face`. Rules apply in the order they appear, so the later one wins, and the `style` attribute last of all:
 
-```java title="amade-books · domain/layout/Css.java"
---8<-- "amade-books/src/main/java/eu/amadeos/apps/books/domain/layout/Css.java:cascade"
+```java title="amade-commons · typeset/Css.java"
+--8<-- "amade-commons/src/main/java/eu/amadeos/commons/typeset/Css.java:cascade"
 ```
 
 This is not the CSS cascade: there is no specificity and no `!important`. For books that is close enough. Their style sheets have few rules, and where two rules meet, the later one is nearly always the more specific one too. Sizes in `em` and `%` are kept relative to the reader's size, and sizes in `px` and `pt` are converted to `em`. A book that sets its text at `12pt` therefore grows when the reader makes the text bigger.
@@ -97,8 +97,8 @@ This is not the CSS cascade: there is no specificity and no `!important`. For bo
 
 `ChapterParser` walks the XHTML of a chapter with the computed style of each element. It turns it into a list of `Block`s: `Text` (a paragraph or a heading, with styled runs), `Image` and `Rule`:
 
-```java title="amade-books · domain/layout/ChapterParser.java"
---8<-- "amade-books/src/main/java/eu/amadeos/apps/books/domain/layout/ChapterParser.java:walk"
+```java title="amade-commons · typeset/ChapterParser.java"
+--8<-- "amade-commons/src/main/java/eu/amadeos/commons/typeset/ChapterParser.java:walk"
 ```
 
 Four things happen on the way:
@@ -110,8 +110,8 @@ Four things happen on the way:
 
 White space is collapsed as a browser does, and the soft hyphens that some books put in every word are dropped, because the hyphenator finds the places itself:
 
-```java title="amade-books · domain/layout/ChapterParser.java"
---8<-- "amade-books/src/main/java/eu/amadeos/apps/books/domain/layout/ChapterParser.java:append"
+```java title="amade-commons · typeset/ChapterParser.java"
+--8<-- "amade-commons/src/main/java/eu/amadeos/commons/typeset/ChapterParser.java:append"
 ```
 
 ### One offset for everything
@@ -124,8 +124,8 @@ The result of the parser, `ChapterText`, has the blocks and the *plain text* of 
 
 `PageGeometry` decides from the size of the reading area and the appearance whether one or two pages fit, and how wide the text column is. A page is never wider than 40 em, because longer lines are hard to read. The margins are a share of the page width, and the bands above and below the text hold the running head and the page number:
 
-```java title="amade-books · domain/layout/PageGeometry.java"
---8<-- "amade-books/src/main/java/eu/amadeos/apps/books/domain/layout/PageGeometry.java:of"
+```java title="amade-commons · typeset/PageGeometry.java"
+--8<-- "amade-commons/src/main/java/eu/amadeos/commons/typeset/PageGeometry.java:of"
 ```
 
 `Typesetter` then sets one chapter into pages of the text area. It returns a `ChapterLayout`: a list of `Page`s, each with its lines (a `TextLayout` with its place and its range of offsets), its pictures and its rules. `EpubSession` keeps the last layouts by chapter, appearance and size, so turning back and forth does not set a chapter again.
@@ -134,8 +134,8 @@ The result of the parser, `ChapterText`, has the blocks and the *plain text* of 
 
 Each paragraph becomes an `AttributedString`. The reader's font family and size are combined with what the book says: italics, bold, relative sizes, superscripts and small capitals:
 
-```java title="amade-books · domain/layout/Typesetter.java"
---8<-- "amade-books/src/main/java/eu/amadeos/apps/books/domain/layout/Typesetter.java:attributes"
+```java title="amade-commons · typeset/Typesetter.java"
+--8<-- "amade-commons/src/main/java/eu/amadeos/commons/typeset/Typesetter.java:attributes"
 ```
 
 Small capitals are capitals at 80 % of the size. The characters are replaced one for one, so the offsets stay the same. With *Publisher's font*, the fonts of the book's `@font-face` rules are loaded with `Font.createFont`:
@@ -150,8 +150,8 @@ Java reads TrueType and OpenType. It does not read WOFF, or fonts that the publi
 
 A paragraph is broken into lines with `LineBreakMeasurer`, the JDK's line breaker. It knows the width of every glyph, kerning, and where a line may break in many scripts. The typesetter asks it for the next line of the width that is left, and checks each line against the bottom of the page:
 
-```java title="amade-books · domain/layout/Typesetter.java"
---8<-- "amade-books/src/main/java/eu/amadeos/apps/books/domain/layout/Typesetter.java:text"
+```java title="amade-commons · typeset/Typesetter.java"
+--8<-- "amade-commons/src/main/java/eu/amadeos/commons/typeset/Typesetter.java:text"
 ```
 
 Three rules of typesetting are in this loop:
@@ -166,20 +166,20 @@ The width a line may take comes from `edges`, which knows the floats on the page
 
 `LineBreakMeasurer` breaks only between words. When the next word does not fit, the typesetter asks the hyphenator for the places where that word may be divided, and tries them from the last to the first:
 
-```java title="amade-books · domain/layout/Typesetter.java"
---8<-- "amade-books/src/main/java/eu/amadeos/apps/books/domain/layout/Typesetter.java:line"
+```java title="amade-commons · typeset/Typesetter.java"
+--8<-- "amade-commons/src/main/java/eu/amadeos/commons/typeset/Typesetter.java:line"
 ```
 
 The hyphenator is Frank Liang's algorithm, the one in TeX, LibreOffice and Firefox. A language has a list of *patterns*, short pieces of words with numbers between the letters. For a word, every pattern that matches anywhere in it sets its numbers. At each place between two letters the highest number counts, and an odd number means "may be divided here":
 
-```java title="amade-books · domain/layout/Hyphenator.java"
---8<-- "amade-books/src/main/java/eu/amadeos/apps/books/domain/layout/Hyphenator.java:points"
+```java title="amade-commons · typeset/Hyphenator.java"
+--8<-- "amade-commons/src/main/java/eu/amadeos/commons/typeset/Hyphenator.java:points"
 ```
 
 The test uses the example patterns from the TeXbook:
 
-```java title="amade-books · test · domain/layout/HyphenatorTest.java"
---8<-- "amade-books/src/test/java/eu/amadeos/apps/books/domain/layout/HyphenatorTest.java:patterns"
+```java title="amade-commons · test · typeset/HyphenatorTest.java"
+--8<-- "amade-commons/src/test/java/eu/amadeos/commons/typeset/HyphenatorTest.java:patterns"
 ```
 
 The patterns themselves are not in the program. Debian's `hyphen-de`, `hyphen-en-us`, `hyphen-fr` and the rest put them into `/usr/share/hyphen` as `hyph_de_DE.dic`, in the format of the Hyphen library that LibreOffice uses. `Hyphenators` loads the one for a language the first time it is needed. The Debian package of amade-books recommends the five languages of the desktop. Because the amadeOS image installs no recommends, the image lists them itself.
@@ -188,8 +188,8 @@ The patterns themselves are not in the program. Debian's `hyphen-de`, `hyphen-en
 
 The last step for a line is `TextLayout.getJustifiedLayout`. It widens the spaces of the line until it fills the width:
 
-```java title="amade-books · domain/layout/Typesetter.java"
---8<-- "amade-books/src/main/java/eu/amadeos/apps/books/domain/layout/Typesetter.java:justify"
+```java title="amade-commons · typeset/Typesetter.java"
+--8<-- "amade-commons/src/main/java/eu/amadeos/commons/typeset/Typesetter.java:justify"
 ```
 
 !!! warning "Pitfall: justification after a ligature"
@@ -202,28 +202,28 @@ The last step for a line is `TextLayout.getJustifiedLayout`. It widens the space
 
 A picture is a block like a paragraph. It takes the width the book gives it (`width: 50%`, `width: 10em`) or its natural width, and never more than the column or, on the page, the text height:
 
-```java title="amade-books · domain/layout/Typesetter.java"
---8<-- "amade-books/src/main/java/eu/amadeos/apps/books/domain/layout/Typesetter.java:picture"
+```java title="amade-commons · typeset/Typesetter.java"
+--8<-- "amade-commons/src/main/java/eu/amadeos/commons/typeset/Typesetter.java:picture"
 ```
 
 **Floats.** A picture with `float: left` or `right` goes to that side, at most 60 % of the column wide, and the text flows around it. The typesetter keeps a list of the floats on the current page, and `edges` gives each line the room between them. The test sets a paragraph beside a picture and checks that no line runs into it:
 
-```java title="amade-books · test · domain/layout/TypesetterTest.java"
---8<-- "amade-books/src/test/java/eu/amadeos/apps/books/domain/layout/TypesetterTest.java:floats"
+```java title="amade-commons · test · typeset/TypesetterTest.java"
+--8<-- "amade-commons/src/test/java/eu/amadeos/commons/typeset/TypesetterTest.java:floats"
 ```
 
 **Deferred pictures.** A picture that does not fit at the bottom of a page does not start a new page, which would leave a gap. It is *deferred*: the text goes on below where the picture would have been, and the picture opens the next page. Printed books do the same.
 
 **Captions.** The parser marks the text blocks inside a `<figure>`, or inside a floating `<div>` with a picture, as captions. The typesetter collects them with their picture into a `Figure`, sets them centred below it, and moves them along when the picture is deferred:
 
-```java title="amade-books · test · domain/layout/TypesetterTest.java"
---8<-- "amade-books/src/test/java/eu/amadeos/apps/books/domain/layout/TypesetterTest.java:captions"
+```java title="amade-commons · test · typeset/TypesetterTest.java"
+--8<-- "amade-commons/src/test/java/eu/amadeos/commons/typeset/TypesetterTest.java:captions"
 ```
 
 A deferred figure has a consequence for the offsets. On the first page, the text after the picture comes before the picture itself. Each page records the first and last offset it shows, and `ChapterLayout.pageOf` finds the page of an offset by these starts. The moved figure must not count for the page where it lands, or the next page would start before the text the reader saw last:
 
-```java title="amade-books · domain/layout/Typesetter.java"
---8<-- "amade-books/src/main/java/eu/amadeos/apps/books/domain/layout/Typesetter.java:finish"
+```java title="amade-commons · typeset/Typesetter.java"
+--8<-- "amade-commons/src/main/java/eu/amadeos/commons/typeset/Typesetter.java:finish"
 ```
 
 ## Keeping the place
