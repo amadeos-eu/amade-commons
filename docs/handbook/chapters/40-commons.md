@@ -14,6 +14,7 @@ Each chapter of this part covers one area. Each section in it describes one part
 | [46. Toolbars, Icons and Printing](46-toolbars-and-printing.md) | `swing`, `print` | Icons drawn in code, toolbar buttons, a player's transport buttons, paper sizes, printing and PostScript |
 | [47. Programs, JSON and the Network](47-programs-json-network.md) | `process`, `json`, `net` | Running other programs, testing without them, reading and writing JSON, the proxy of the desktop, how the programs talk to web services |
 | [48. Video Playback](48-video-playback.md) | `mpv` | Playing video and streams with libmpv in a Swing window, its events, the video output for this machine |
+| [49. Special Characters](49-special-characters.md) | `chars` | The window that inserts accented letters, quotes, dashes, symbols and all of Unicode into a program's text, its search, the recent list |
 
 ## What amade-commons is, and is not
 
@@ -87,6 +88,9 @@ A few rules hold for nearly every class. Knowing them makes the rest of the manu
 | The proxy of the desktop, also for programs I start | `Network`, `NetworkProxy`, `ProxyStore` | [47](47-programs-json-network.md#the-proxy-of-the-desktop-network) |
 | To play video or a stream in a window | `Mpv` | [48](48-video-playback.md#a-player-in-a-swing-window-mpv) |
 | To read mpv's events in a `switch` | `MpvEvent` | [48](48-video-playback.md#events-mpvevent) |
+| A Special Characters item (Ctrl+Shift+U) that inserts into my window's text fields | `SpecialCharacters.install` | [49](49-special-characters.md#using-it-specialcharacters) |
+| To pick a character for something that is not a text field | `SpecialCharacters.open` | [49](49-special-characters.md#using-it-specialcharacters) |
+| To search characters by name, word or code | `CharacterCatalog` | [49](49-special-characters.md#the-characters-and-the-search-charactercatalog) |
 
 ## Which chapter introduced what
 
@@ -114,6 +118,7 @@ A few rules hold for nearly every class. Knowing them makes the rest of the manu
 | `process` | `CommandRunner`, `ProgramResult`, `ProgramMissingException`, `FinishedProcess` | [31. Imagescan](31-imagescan.md#the-command-runner-moves-into-amade-commons) |
 | `json` | `Json` | [33. Audio](33-audio.md#json) |
 | `net` | `Network`, `NetworkProxy`, `ProxySettings`, `ProxyStore`, `ProxyCheck` | [33. Audio](33-audio.md), moved for [38. TV](38-tv.md#and-what-stays-in-tv) |
+| `chars` | `SpecialCharacters`, `CharacterCatalog`, `RecentCharacters` | [49. Special Characters](49-special-characters.md) (for WritePad, Pad and Mail) |
 | `widget` | `DesktopWidget`, `WidgetContext`, `WidgetSettings`, `WidgetColors`, `WidgetCard`, `WidgetPreview` | [70. Desktop Widgets](70-widgets.md#the-api-in-amade-commons) |
 
 ## Using it in a program
