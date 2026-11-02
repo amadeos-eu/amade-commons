@@ -2,7 +2,7 @@
 
 Pad edits text. WritePad edits documents: fonts and sizes, bold and italic, indents and tab stops, lists, and above all *pages*. A letter has to fit on a sheet of A4 and look on paper the way it looked on the screen. And a document has to open in other people's word processors, so WritePad reads and writes their file formats.
 
-amade-writepad is modelled on the small word processors that came with the desktops of the 1990s: a toolbar, a format bar, a ruler, and the pages on a dark desk. It is the biggest program so far, about 12,800 lines of Java and 4,400 lines of tests. This chapter shows the parts that make it a word processor, the page view, pictures with text flowing around them, the file formats and printing, and it moves printing into amade-commons, where Calendar has been waiting for it since chapter 21.
+amade-writepad is modelled on the small word processors that came with the desktops of the 1990s: a toolbar, a format bar, a ruler, and the pages on a dark desk. It is the biggest program so far, about 16,600 lines of Java and 5,000 lines of tests. This chapter shows the parts that make it a word processor, the page view, pictures with text flowing around them, tables, the file formats and printing, and it moves printing into amade-commons, where Calendar has been waiting for it since chapter 21.
 
 ## What you build
 
@@ -13,6 +13,7 @@ amade-writepad is modelled on the small word processors that came with the deskt
 - **A ruler** with indent markers and tab stops (left, centre, right, decimal) to drag.
 - **Bullet and numbered lists** in several levels.
 - **Pictures** in the line, on a line of their own, or at the left or right margin with the text flowing beside them; resized with handles, set up in a dialog.
+- **Tables** with a heading row that repeats on every page, lines, cell colours, columns to drag, and rows that break between pages.
 - **ODT, DOCX, RTF and plain text**, opened and saved; old DOC files through LibreOffice when it is installed.
 - **Printing** that puts the lines and page breaks on paper exactly where they are on the screen.
 
@@ -22,6 +23,7 @@ amade-writepad is modelled on the small word processors that came with the deskt
 - How to replace Swing's views to lay text out on pages.
 - How to keep a layout in points and show it in pixels, at any zoom.
 - How to put an object into styled text as one character, and how to let text flow around it.
+- How to build tables out of plain paragraphs, and keep the user from breaking them.
 - How to read and write document formats with the JDK alone, and why that is possible.
 - How to print through `java.awt.print`, and what moves into amade-commons for it.
 
@@ -162,6 +164,79 @@ While dragging, only the frame follows the mouse; the picture gets its new size 
 
 The clipboard learned pictures too. Inside WritePad a copy carries the text with its pictures; other programs get plain text without the U+FFFC characters, or an image if exactly one picture is selected. A screenshot on the clipboard and image files dropped from the File Manager come in as pictures.
 
+## Tables
+
+![The right-click menu of a table cell, in the Horizon look](images/writepad/tables.png)
+
+### A table is paragraphs that know their cell
+
+Swing's styled document has no tables. `HTMLDocument` builds them as nested elements (table, row, cell, paragraph), and everything that walks the paragraphs of a document then has to learn about the nesting: the lists, the ruler, the four formats, printing. WritePad keeps its document flat. A table is a run of ordinary paragraphs, and each one carries three more paragraph attributes: the table's format, its row and its column.
+
+```java title="amade-writepad · service/table/TableAttributes.java"
+--8<-- "amade-writepad/src/main/java/eu/amadeos/apps/writepad/service/table/TableAttributes.java:attributes"
+```
+
+A cell is simply the paragraphs in a row that have the same table, row and column. ++enter++ in a cell makes a new paragraph, which inherits the attributes, so it lands in the same cell without a line of table code. Bold, alignment and lists work in a cell because a cell's text is ordinary text. The row is an object that equals only itself, for the same reason as `Picture` above: two rows with equal attributes would otherwise melt into one. The `TableFormat` is immutable (column widths, lines, padding, alignment, the heading's repeat); changing a table means giving all its paragraphs a new one.
+
+Inserting a table is inserting line ends and giving them attributes:
+
+```java title="amade-writepad · service/table/TableEditing.java"
+--8<-- "amade-writepad/src/main/java/eu/amadeos/apps/writepad/service/table/TableEditing.java:insert"
+```
+
+The method splits the paragraph when the caret is in the middle of it, so there is always a paragraph after a table, where the text goes on.
+
+### Line ends you cannot delete
+
+A flat model has one danger: the line end at the end of a cell is a character like any other. ++backspace++ at the start of a cell would join it with the cell before, and selecting half a table and pressing ++delete++ would pour cells into each other. So the document refuses:
+
+```java title="amade-writepad · service/format/WritepadDocument.java"
+--8<-- "amade-writepad/src/main/java/eu/amadeos/apps/writepad/service/format/WritepadDocument.java:protect"
+```
+
+`remove` cuts the range into the pieces between protected line ends and removes only those: the text of the cells goes, the cells stay. The pieces are removed in one `CompoundEdit`, so one undo brings all of them back. Table operations themselves (a new row, a deleted column) must remove line ends, so they run inside `structurally(...)`, which switches the protection off, and in `grouped(...)`, which makes their many small edits one undo step.
+
+### Rows on pages
+
+`PagedSectionView` stacks the paragraphs one below the other. In a table, the paragraphs of a row stand side by side instead. A `BoxView` lays out the minor axis (x) before the major axis (y), and that helps: in `layoutMinorAxis` every paragraph of a cell gets its column's x and width, so it breaks its lines at the column's width. Then the major axis places the rows:
+
+```java title="amade-writepad · service/layout/PagedSectionView.java"
+--8<-- "amade-writepad/src/main/java/eu/amadeos/apps/writepad/service/layout/PagedSectionView.java:table"
+```
+
+A row is as high as its highest cell. A row that does not fit on the rest of the page moves to the next one as a whole, and when the table has a heading row that repeats, the section lays out a *copy* of the heading above it. The copy is no text in the document; the section paints the heading's views a second time, shifted to the new page. Cells centred or at the bottom move down within their row after the row's height is known.
+
+The cells' backgrounds are painted before the text, the lines after it:
+
+```java title="amade-writepad · service/layout/PagedSectionView.java"
+--8<-- "amade-writepad/src/main/java/eu/amadeos/apps/writepad/service/layout/PagedSectionView.java:paint-tables"
+```
+
+### Clicks and arrow keys
+
+Two things Swing does with the views assume that paragraphs are stacked. A click asks the section which child is under the point, and `BoxView` answers with the last child that starts above it: in a row of cells, always the last cell. So the section answers itself, by row and then by column:
+
+```java title="amade-writepad · service/layout/PagedSectionView.java"
+--8<-- "amade-writepad/src/main/java/eu/amadeos/apps/writepad/service/layout/PagedSectionView.java:hit"
+```
+
+The column edges are in the section's own coordinates, which already include the page's left edge. The first version subtracted that edge from the click once more, and every click landed one cell to the left; the tests that clicked into the first column passed. The test that found it clicks into every cell, in a table narrower and in one wider than the text:
+
+```java title="amade-writepad · TableLayoutTest.java"
+--8<-- "amade-writepad/src/test/java/eu/amadeos/apps/writepad/service/layout/TableLayoutTest.java:clicks"
+```
+
+++up++ and ++down++ are the other one. Swing moves the caret to the paragraph before or after, which in a table is the cell to the left or right. The section overrides the step from one child to the next and stays in the column:
+
+```java title="amade-writepad · service/layout/PagedSectionView.java"
+--8<-- "amade-writepad/src/main/java/eu/amadeos/apps/writepad/service/layout/PagedSectionView.java:north-south"
+```
+
+++tab++ is the editor's business, not the view's: in a table it goes to the next cell and selects its text, in the last cell it adds a row, and ++ctrl+tab++ types a real tab. The column lines are dragged with the same trick as the picture handles: the editor looks at the mouse events before Swing does, and a press near a line starts a drag that ends with one `setFormat` when the button is let go.
+
+!!! note "Note: merged cells later"
+    A merged cell spans columns or rows, and then "the paragraphs with the same row and column" is no longer a cell's definition. WritePad leaves them out for now. Files with merged cells open with the cells split again, the text in the first part, which every format can express. Exercise 6 asks how the model would carry them.
+
 ## File formats
 
 Every format is a `DocumentFormat`:
@@ -225,6 +300,29 @@ Each format stores a picture as the image file plus a frame that says how big it
 The size in a file is the picture *with* its border, because LibreOffice writes it so. Write it without, and a picture grows by the width of its border every time the file goes through LibreOffice and back. The test that found this reads a file that LibreOffice saved from one of WritePad's, in each of the three formats; the round trip of WritePad alone would never have shown it. LibreOffice's RTF loses the border, so for RTF the test accepts the frame's size as the picture's.
 
 The tests for every format do the same three things: write a document and read it back (a *round trip*), read files that other programs wrote, and check the bytes against the rules of the format. The round trip alone is not enough: a writer and a reader that share a mistake pass it.
+
+### Tables in four formats
+
+A table is easier to move between formats than a picture, because all three document formats think in rows and cells. They disagree on the details:
+
+| | ODT | DOCX | RTF |
+|---|---|---|---|
+| Table | `table:table` with `table:table-column`s | `w:tbl` with `w:tblGrid` | rows of `\intbl` paragraphs |
+| Row | `table:table-row` | `w:tr` | `\trowd` … `\row` |
+| Cell | `table:table-cell` | `w:tc` | its right edge `\cellx`, its text ending in `\cell` |
+| Repeated heading | inside `table:table-header-rows` | `w:tblHeader` in the row | `\trhdr` |
+| Lines | per cell, `fo:border-left` … | per table, `w:tblBorders`, or per cell | per cell, `\clbrdrt` … |
+| Background | `fo:background-color` of the cell style | `w:shd` | `\clcbpat`, a colour of the colour table |
+
+RTF is the odd one: a table is not a group with rows inside but paragraphs marked `\intbl`, and each row first describes its cells (`\trowd` and one `\cellx` per cell, with the cell's lines and colour before it) and then gives their text:
+
+```java title="amade-writepad · service/format/rtf/RtfWriter.java"
+--8<-- "amade-writepad/src/main/java/eu/amadeos/apps/writepad/service/format/rtf/RtfWriter.java:table"
+```
+
+Readers collect the paragraphs of a table at the end of the document as they come and only make them a table at its end, with `TableBuilder`, because the format of a table (DOCX's grid, RTF's `\cellx` of the first row) is not always known before its cells. Lines are stored per cell in two of the three formats, so `TableLines` turns the table's choice (around every cell, around the table, between the rows, none) into the edges of each cell when writing, and guesses it back from the first cells when reading. Merged cells come in split (`table:covered-table-cell`, `w:gridSpan` and `w:vMerge`, `\clmrg`), a table inside a cell comes in as its paragraphs. Plain text writes each row as one line with tabs between the cells.
+
+The tests are the three of the pictures: a round trip, files that LibreOffice saved, and the bytes. The LibreOffice files found two things the round trip could not: LibreOffice writes DOCX's lines per cell with the words `start` and `end` instead of `left` and `right`, and it drops `\trhdr` and writes the padding per cell (`\clpadl`) when it saves RTF.
 
 ## Saving, and a second Ctrl+S
 
@@ -327,7 +425,8 @@ What stays in the programs is what is really theirs: Calendar's report pages and
 3. **The paper where you live.** New documents always start on A4. Use `PaperSize.forLocale` for new documents. What should happen when a document from a Letter country is opened in an A4 country?
 4. **A second Ctrl+S that counts.** Instead of ignoring a save while one is running, remember it and save again when the first one is done, with the newest text. Write the test first, with the queueing executor.
 5. **Pictures in the middle.** A floating picture always starts at the top of its paragraph. Let the user drag it down: store its distance from the paragraph's top (ODT `svg:y`, DOCX `wp:posOffset`) and use it in `placeFloats`. What happens to the rows above the picture?
-6. **Print preview for Calendar.** `ReportPages` paints into any `Graphics2D`. Show the pages in a window before printing. Could WritePad's page view show Calendar's pages? What would a `PreviewPanel` in amade-commons need to know about the pages?
+6. **Merged cells.** Add a column span to the paragraphs of a cell (one more attribute) and teach `layoutMinorAxis`, the hit test and the three formats about it. Where does the definition "a cell is the paragraphs with the same row and column" still hold, and what replaces it for a cell that spans rows?
+7. **Print preview for Calendar.** `ReportPages` paints into any `Graphics2D`. Show the pages in a window before printing. Could WritePad's page view show Calendar's pages? What would a `PreviewPanel` in amade-commons need to know about the pages?
 
 ## Summary
 
@@ -336,6 +435,7 @@ What stays in the programs is what is really theirs: Calendar's report pages and
 - A layout that moves things needs a case in which it stops moving them.
 - Labels of list items are computed from structure, not stored as text.
 - A picture is one character with the picture in its attributes, so caret, selection, clipboard and undo work for it unchanged. Text flows around a floating picture because the paragraph answers the flow strategy's two questions per row.
+- A table can be plain paragraphs that know their row and column. Protect the line ends between cells in `remove`, and lay the paragraphs of a row side by side in the minor axis.
 - ODT and DOCX are ZIP files with XML inside; the JDK's `java.util.zip` and StAX read and write them. Recognise files by content first, by name second.
 - Two writes of the same file must not run at the same time: chain them, or start no second one.
 - Paper sizes, page formats, printer attributes, the print dialog and PostScript files move into amade-commons as `PaperSize` and `PrintJobs`, their second user after Calendar. The JDK's stream print service writes PostScript without a printer.
