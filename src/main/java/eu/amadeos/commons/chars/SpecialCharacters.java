@@ -135,8 +135,7 @@ public final class SpecialCharacters {
         JRootPane root = window instanceof RootPaneContainer c ? c.getRootPane() : null;
         if (root == null || root.getClientProperty(TARGET + ".listener") != null) return;
         PropertyChangeListener listener = e -> {
-            if (e.getNewValue() instanceof JTextComponent t && t.isEditable()
-                    && SwingUtilities.getWindowAncestor(t) == window) {
+            if (e.getNewValue() instanceof JTextComponent t && isTextField(t, window)) {
                 root.putClientProperty(TARGET, new WeakReference<>(t));
             }
         };
@@ -156,9 +155,19 @@ public final class SpecialCharacters {
             }
         });
         Component now = KeyboardFocusManager.getCurrentKeyboardFocusManager().getPermanentFocusOwner();
-        if (now instanceof JTextComponent t && SwingUtilities.getWindowAncestor(t) == window) {
+        if (now instanceof JTextComponent t && isTextField(t, window)) {
             root.putClientProperty(TARGET, new WeakReference<>(t));
         }
+    }
+
+    /**
+     * True for an editable text field of the window itself; the editors of combo boxes and spinners (a font
+     * size, a zoom factor) do not count, nor do fields of the program's own dialogs.
+     */
+    private static boolean isTextField(JTextComponent t, Window window) {
+        return t.isEditable() && SwingUtilities.getWindowAncestor(t) == window
+                && SwingUtilities.getAncestorOfClass(JComboBox.class, t) == null
+                && SwingUtilities.getAncestorOfClass(JSpinner.class, t) == null;
     }
     // --8<-- [end:focus]
 

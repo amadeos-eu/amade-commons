@@ -1,6 +1,6 @@
 # 49. Special Characters
 
-A keyboard has room for the letters of one language. Everything else, the € on an English keyboard, the „German quotes“ on a French one, the en dash, the °, the ½, the é in a name, has to come from somewhere. Every program that takes text therefore offers the same window: *Special Characters*, in the package `chars`. WritePad has it in its Insert menu, Pad and Mail's compose window in their Edit menus, and all three open it with **Ctrl+Shift+U**.
+A keyboard has room for the letters of one language. Everything else, the € on an English keyboard, the „German quotes“ on a French one, the en dash, the °, the ½, the é in a name, has to come from somewhere. Every program that takes text therefore offers the same window: *Special Characters*, in the package `chars`. WritePad has it in its Insert menu, Pad in its Edit menu, Mail's compose window in its Format menu, and all three open it with **Ctrl+Shift+U**.
 
 ![The Special Characters window in the classic look: categories on the left, a grid of accented letters, a large à with its name and code on the right](images/chars/special-characters.png)
 
@@ -31,7 +31,7 @@ The window follows the desktop's look like every other part of the library, beca
 --8<-- "amade-commons/src/main/java/eu/amadeos/commons/chars/SpecialCharacters.java:install"
 ```
 
-WritePad passes its *Insert* menu, Pad and Mail their *Edit* menus:
+WritePad passes its *Insert* menu, Pad its *Edit* menu, Mail's compose window its *Format* menu:
 
 ```java
 SpecialCharacters.install(this, editMenu, locale);
@@ -53,7 +53,7 @@ A program that already uses Ctrl+Shift+U in a window does not install the dialog
 --8<-- "amade-commons/src/main/java/eu/amadeos/commons/chars/SpecialCharacters.java:focus"
 ```
 
-In Mail's compose window, that is the body, the subject or the To field, whichever the user was typing in. Fields of the program's own dialogs (a Find dialog, say) do not count, because their window is not the program's window. When the window closes, the listener is removed and the dialog disposed, so the many compose windows of a long Mail session do not pile up.
+In Mail's compose window, that is the body, the subject or the To field, whichever the user was typing in. Fields of the program's own dialogs (a Find dialog, say) do not count, because their window is not the program's window, and neither do the editors of combo boxes and spinners: in WritePad, a click into the font size must not make the next € land there. When the window closes, the listener is removed and the dialog disposed, so the many compose windows of a long Mail session do not pile up.
 
 If there is no field (nothing had the focus yet, or the field became read-only or was closed with its tab), the character goes to the clipboard and the status line says so:
 
@@ -133,7 +133,7 @@ The file belongs to the desktop, not to one program, so a character inserted in 
 | Program | Where | Into |
 |---|---|---|
 | WritePad | *Insert > Special Characters…* | the page |
-| Pad | *Edit > Special Characters…* | the editor of the current tab, or the Find field |
-| Mail | compose window, *Edit > Special Characters…* | the body, the subject, To, Cc or Bcc, whichever had the cursor last |
+| Pad | *Edit > Special Characters…* | the editor of the current tab |
+| Mail | compose window, *Format > Special Characters…* | the body, the subject, To, Cc or Bcc, whichever had the cursor last |
 
 The User's Handbook describes the window for users in chapter 40, *What all amade applications share*.
