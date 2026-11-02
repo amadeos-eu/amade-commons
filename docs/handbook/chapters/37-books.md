@@ -2,7 +2,7 @@
 
 An e-book is a website in a ZIP file. An EPUB holds XHTML chapters, CSS, pictures and fonts, and a reader could simply show each chapter in an HTML component and let it scroll. That would be a web page, not a book. A book has pages that you turn, text set flush on both sides with words divided at the line end, a page number, a running head and a picture that the text flows around. amade-books sets all of that itself. It is the program of this book that does the most typography, and the one where Java's text layout shows both its strength and its oddities.
 
-The program has about 8,600 lines of Java and 2,200 lines of tests. Its typesetter was written for it and later moved into amade-commons as the package `eu.amadeos.commons.typeset`, when the Book Editor needed the same pages for its preview; the code excerpts below come from there. It reads two formats, EPUB 2 and 3 for books and CBZ for comics, keeps a library of both, and remembers for every book where the reader stopped.
+The program has about 8,600 lines of Java and 2,200 lines of tests. Its typesetter was written for it and later moved into amade-commons as the package `eu.amadeos.commons.typeset`, when the Book Editor ([chapter 80](80-bookeditor.md)) needed the same pages for its preview; the code excerpts below come from there. It reads two formats, EPUB 2 and 3 for books and CBZ for comics, keeps a library of both, and remembers for every book where the reader stopped.
 
 ## What you build
 

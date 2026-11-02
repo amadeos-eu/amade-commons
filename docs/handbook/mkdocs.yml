@@ -116,4 +116,6 @@ nav:
       - 71. Disks: 71-disks.md
       - 70. Desktop Widgets: 70-widgets.md
       - 79. A Module of Your Own: 79-own-module.md
+  - "Part VII: Writing and Publishing":
+      - 80. Book Editor: 80-bookeditor.md
   - The Road Ahead: roadmap.md
