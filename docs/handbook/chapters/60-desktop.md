@@ -31,6 +31,7 @@ The desktop lives in the repository [amadeos-system](https://github.com/amadeos-
 | `print` | `amadeos-print` | The print manager: printers and jobs over IPP |
 | `sysinfo` | `amadeos-sysinfo` | System information on one page |
 | `taskmanager` | `amadeos-taskmanager` | The Task Manager: program windows, processes, performance graphs ([chapter 69](69-task-manager.md)) |
+| `disks` | `amadeos-disks` | Disks: drives, partitions, formatting, health and disk images through udisks2 ([chapter 71](71-disks.md)) |
 | `packages` | `amadeos-packages` | The one place that talks to apt, with a root helper |
 | `software` | `amadeos-software` | Software: find, install, update and remove programs |
 
