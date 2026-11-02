@@ -2,7 +2,7 @@
 
 Pad edits text. WritePad edits documents: fonts and sizes, bold and italic, indents and tab stops, lists, and above all *pages*. A letter has to fit on a sheet of A4 and look on paper the way it looked on the screen. And a document has to open in other people's word processors, so WritePad reads and writes their file formats.
 
-amade-writepad is modelled on the small word processors that came with the desktops of the 1990s: a toolbar, a format bar, a ruler, and the pages on a dark desk. It is the biggest program so far, about 16,600 lines of Java and 5,000 lines of tests. This chapter shows the parts that make it a word processor, the page view, pictures with text flowing around them, tables, the file formats and printing, and it moves printing into amade-commons, where Calendar has been waiting for it since chapter 21.
+amade-writepad is modelled on the small word processors that came with the desktops of the 1990s: a toolbar, a format bar, a ruler, and the pages on a dark desk. It is the biggest program so far, about 18,400 lines of Java and 5,600 lines of tests. This chapter shows the parts that make it a word processor, the page view, pictures with text flowing around them, tables, paragraph styles, the file formats and printing, and it moves printing into amade-commons, where Calendar has been waiting for it since chapter 21.
 
 ## What you build
 
@@ -13,6 +13,7 @@ amade-writepad is modelled on the small word processors that came with the deskt
 - **A ruler** with indent markers and tab stops (left, centre, right, decimal) to drag.
 - **Bullet and numbered lists** in several levels.
 - **Pictures** in the line, on a line of their own, or at the left or right margin with the text flowing beside them; resized with handles, set up in a dialog.
+- **Paragraph styles**: Normal, Title, Subtitle, Heading 1 to 6, Quote and Code, chosen in a style box or with ++ctrl+0++ to ++ctrl+6++, and changed for the whole document in a dialog.
 - **Tables** with a heading row that repeats on every page, lines, cell colours, columns to drag, and rows that break between pages.
 - **ODT, DOCX, RTF and plain text**, opened and saved; old DOC files through LibreOffice when it is installed.
 - **Printing** that puts the lines and page breaks on paper exactly where they are on the screen.
@@ -24,6 +25,7 @@ amade-writepad is modelled on the small word processors that came with the deskt
 - How to keep a layout in points and show it in pixels, at any zoom.
 - How to put an object into styled text as one character, and how to let text flow around it.
 - How to build tables out of plain paragraphs, and keep the user from breaking them.
+- How Swing's named styles carry paragraph styles, and how a file's complete formatting turns back into styles.
 - How to read and write document formats with the JDK alone, and why that is possible.
 - How to print through `java.awt.print`, and what moves into amade-commons for it.
 
@@ -235,7 +237,65 @@ The column edges are in the section's own coordinates, which already include the
 ++tab++ is the editor's business, not the view's: in a table it goes to the next cell and selects its text, in the last cell it adds a row, and ++ctrl+tab++ types a real tab. The column lines are dragged with the same trick as the picture handles: the editor looks at the mouse events before Swing does, and a press near a line starts a drag that ends with one `setFormat` when the button is let go.
 
 !!! note "Note: merged cells later"
-    A merged cell spans columns or rows, and then "the paragraphs with the same row and column" is no longer a cell's definition. WritePad leaves them out for now. Files with merged cells open with the cells split again, the text in the first part, which every format can express. Exercise 6 asks how the model would carry them.
+    A merged cell spans columns or rows, and then "the paragraphs with the same row and column" is no longer a cell's definition. WritePad leaves them out for now. Files with merged cells open with the cells split again, the text in the first part, which every format can express. Exercise 7 asks how the model would carry them.
+
+## Paragraph styles
+
+![Format → Paragraph Style, in the CDE look](images/writepad/styles.png)
+
+A heading in a word processor is not big bold text. It is a paragraph in the style *Heading 1*, and the style says what Heading 1 looks like. Change the style and every heading changes; save the file and LibreOffice shows the headings in its navigator. WritePad has eleven built-in styles, each with its names in the three file formats:
+
+```java title="amade-writepad · service/style/ParagraphStyle.java"
+--8<-- "amade-writepad/src/main/java/eu/amadeos/apps/writepad/service/style/ParagraphStyle.java:styles"
+```
+
+The names look arbitrary and are not: `Heading_20_1` is how ODT writes "Heading 1" (a space is `_20_`), Word's ids have no spaces and its names are lower case, and Code borrows *Preformatted Text* and *HTML Preformatted*, the styles both programs give `<pre>`. With these names, LibreOffice and Word take WritePad's headings for their own.
+
+### Styles are Swing's named styles
+
+Swing has had styles from the start, and they fit. A `StyledDocument` keeps named `Style`s, and every paragraph element has a *resolve parent*: an attribute that is not set on the paragraph itself is looked up in it. Make the resolve parent the style *Heading 1*, and the paragraph has the heading's font, size and spacing without a single attribute of its own. The runs of text inside resolve to their paragraph, so they get the heading's font too. Change the style, and Swing tells the views, which lay the paragraphs out again.
+
+Two details make it work. Every style defines *every* key (font, size, bold, italic, alignment, indents, spacing), so a paragraph never falls through to Swing's defaults; only black text leaves the colour out, because "no colour" means the automatic colour that a document keeps in every format. And Normal is a style of its own, not Swing's `default` style, because `JTextPane` copies the component's font into `default` whenever the look changes.
+
+```java title="amade-writepad · service/style/ParagraphStyle.java"
+--8<-- "amade-writepad/src/main/java/eu/amadeos/apps/writepad/service/style/ParagraphStyle.java:built-in"
+```
+
+### Applying a style
+
+What happens to formatting set by hand when a paragraph gets a style? Leave it, and a heading pasted from somewhere keeps its 16 pt Arial and never takes the heading's look. Remove it, and a word in italics loses its italics. WritePad does what Word does: formatting that covers the whole paragraph goes, formatting of a part stays.
+
+```java title="amade-writepad · service/style/ParagraphStyles.java"
+--8<-- "amade-writepad/src/main/java/eu/amadeos/apps/writepad/service/style/ParagraphStyles.java:apply"
+```
+
+The test says it in one example:
+
+```java title="amade-writepad · ParagraphStylesTest.java"
+--8<-- "amade-writepad/src/test/java/eu/amadeos/apps/writepad/service/style/ParagraphStylesTest.java:apply"
+```
+
+The format bar's style box, the *Format → Paragraph Style* menu and the keys ++ctrl+0++ to ++ctrl+6++ all call the same action. ++enter++ at the end of a heading asks the style for its `next()` style and gives it to the new paragraph, in the same undo step as the line end.
+
+### Changing a style, undoably
+
+*Format → Styles…* (++f11++) edits the definitions. Its result is a map of the changed styles, and the change is one `StyleEdit`: it remembers the old and the new definitions, and undo and redo set one or the other. Changing a style is no edit of the text, so Swing records nothing; the edit is posted to the undo manager by hand:
+
+```java title="amade-writepad · ui/main/EditorActions.java"
+--8<-- "amade-writepad/src/main/java/eu/amadeos/apps/writepad/ui/main/EditorActions.java:styles-dialog"
+```
+
+### Reading files back into styles
+
+The readers of the file formats below already worked hard to give every paragraph and every run its complete formatting, resolved through the file's style chain. They keep doing that, and then hand the result to one method that turns it into styles: the styles take the file's definitions, each paragraph its style, and only what differs from the style stays on the paragraph and its runs.
+
+```java title="amade-writepad · service/style/ParagraphStyles.java"
+--8<-- "amade-writepad/src/main/java/eu/amadeos/apps/writepad/service/style/ParagraphStyles.java:adopt"
+```
+
+The method first takes a snapshot of how everything looks, because installing the new definitions changes what the attributes resolve to. Without the snapshot, a paragraph that was 12 pt before would compare itself with the new style and look the same as it, when it was not. That is the test the method has to pass: after `adopt`, every character looks exactly as before.
+
+The readers record which paragraph has which style as they go, as a `Position` in the document. The first version took the position before inserting the paragraph's text, at the end of the document, and a `Position` at the end moves with everything inserted there: every style ended up on the last paragraph. The position is taken after the paragraph's line end now, inside the paragraph.
 
 ## File formats
 
@@ -323,6 +383,29 @@ RTF is the odd one: a table is not a group with rows inside but paragraphs marke
 Readers collect the paragraphs of a table at the end of the document as they come and only make them a table at its end, with `TableBuilder`, because the format of a table (DOCX's grid, RTF's `\cellx` of the first row) is not always known before its cells. Lines are stored per cell in two of the three formats, so `TableLines` turns the table's choice (around every cell, around the table, between the rows, none) into the edges of each cell when writing, and guesses it back from the first cells when reading. Merged cells come in split (`table:covered-table-cell`, `w:gridSpan` and `w:vMerge`, `\clmrg`), a table inside a cell comes in as its paragraphs. Plain text writes each row as one line with tabs between the cells.
 
 The tests are the three of the pictures: a round trip, files that LibreOffice saved, and the bytes. The LibreOffice files found two things the round trip could not: LibreOffice writes DOCX's lines per cell with the words `start` and `end` instead of `left` and `right`, and it drops `\trhdr` and writes the padding per cell (`\clpadl`) when it saves RTF.
+
+### Styles in three formats
+
+| | ODT | DOCX | RTF |
+|---|---|---|---|
+| Definitions | `style:style` in `styles.xml` | `w:style` in `word/styles.xml` | `{\stylesheet}` with `{\s1 … heading 1;}` |
+| A paragraph's style | `text:style-name`, or an automatic style with it as parent | `w:pStyle` | `\s1` after `\pard` |
+| Headings | `text:h` with `text:outline-level` | `w:outlineLvl` in the style | `\outlinelevel` |
+| Formatting by hand | an automatic style with only the differences | `w:pPr` and `w:rPr` with only the differences | everything, always |
+
+ODT and DOCX write the styles once and then only what a paragraph or run does differently, with explicit negatives where a word is not bold in a bold heading (`fo:font-weight="normal"`, `w:b w:val="0"`). RTF is the exception: a reader that ignores the style sheet must still see the right formatting, so RTF repeats the whole formatting after every `\s`. Word and LibreOffice write it that way too.
+
+```java title="amade-writepad · service/format/odt/OdtWriter.java"
+--8<-- "amade-writepad/src/main/java/eu/amadeos/apps/writepad/service/format/odt/OdtWriter.java:named-style"
+```
+
+Reading needs a decision for styles WritePad does not know. A document from LibreOffice may have *Text Body* for the text, or a style of its own based on Heading 1. The readers walk the chain of parents to the first style with a known name, `ParagraphStyle.forName` maps the names every program uses to the eleven built-in ones, and the paragraph keeps its look through the formatting set on it by hand:
+
+```java title="amade-writepad · service/format/docx/DocxReader.java"
+--8<-- "amade-writepad/src/main/java/eu/amadeos/apps/writepad/service/format/docx/DocxReader.java:styles"
+```
+
+The tests are the usual three: a round trip of a document with every style and a redefined Heading 1, the bytes, and a file of each format that LibreOffice wrote from HTML with `<h1>` to `<h4>`, `<blockquote>` and `<pre>`. LibreOffice calls a quote *Block Quotation* in DOCX and RTF, which the round trip would never have told.
 
 ## Saving, and a second Ctrl+S
 
@@ -425,8 +508,9 @@ What stays in the programs is what is really theirs: Calendar's report pages and
 3. **The paper where you live.** New documents always start on A4. Use `PaperSize.forLocale` for new documents. What should happen when a document from a Letter country is opened in an A4 country?
 4. **A second Ctrl+S that counts.** Instead of ignoring a save while one is running, remember it and save again when the first one is done, with the newest text. Write the test first, with the queueing executor.
 5. **Pictures in the middle.** A floating picture always starts at the top of its paragraph. Let the user drag it down: store its distance from the paragraph's top (ODT `svg:y`, DOCX `wp:posOffset`) and use it in `placeFloats`. What happens to the rows above the picture?
-6. **Merged cells.** Add a column span to the paragraphs of a cell (one more attribute) and teach `layoutMinorAxis`, the hit test and the three formats about it. Where does the definition "a cell is the paragraphs with the same row and column" still hold, and what replaces it for a cell that spans rows?
-7. **Print preview for Calendar.** `ReportPages` paints into any `Graphics2D`. Show the pages in a window before printing. Could WritePad's page view show Calendar's pages? What would a `PreviewPanel` in amade-commons need to know about the pages?
+6. **Your own styles.** Let the Styles dialog add a style based on another one. What becomes of `ParagraphStyle`, an enum? Which names do the three writers use, and what does `forName` do with them when the file comes back?
+7. **Merged cells.** Add a column span to the paragraphs of a cell (one more attribute) and teach `layoutMinorAxis`, the hit test and the three formats about it. Where does the definition "a cell is the paragraphs with the same row and column" still hold, and what replaces it for a cell that spans rows?
+8. **Print preview for Calendar.** `ReportPages` paints into any `Graphics2D`. Show the pages in a window before printing. Could WritePad's page view show Calendar's pages? What would a `PreviewPanel` in amade-commons need to know about the pages?
 
 ## Summary
 
@@ -435,6 +519,7 @@ What stays in the programs is what is really theirs: Calendar's report pages and
 - A layout that moves things needs a case in which it stops moving them.
 - Labels of list items are computed from structure, not stored as text.
 - A picture is one character with the picture in its attributes, so caret, selection, clipboard and undo work for it unchanged. Text flows around a floating picture because the paragraph answers the flow strategy's two questions per row.
+- Paragraph styles are Swing's named styles as resolve parents. Define every key in every style, apply a style the way Word does, and let the readers fill complete formatting and turn it into styles in one place, comparing against a snapshot.
 - A table can be plain paragraphs that know their row and column. Protect the line ends between cells in `remove`, and lay the paragraphs of a row side by side in the minor axis.
 - ODT and DOCX are ZIP files with XML inside; the JDK's `java.util.zip` and StAX read and write them. Recognise files by content first, by name second.
 - Two writes of the same file must not run at the same time: chain them, or start no second one.
