@@ -120,6 +120,12 @@ The keys are the method names of `DesktopTheme`: `highlight`, `shadow`, `activeT
 --8<-- "amade-commons/src/main/java/eu/amadeos/commons/swing/AmadeUI.java:check-box-ui"
 ```
 
+Sliders and progress bars are drawn by AmadeUI too. Swing's cross-platform look paints them in its own blue and grey whatever the colour table says, so in every theme they looked like a foreign program. `AmadeSliderUI` draws the CDE slider instead: a sunken groove, filled from the minimum up to the value, and a raised thumb with a notch; progress bars get the same sunken trough and fill. The fill is the selection colour, unless that hardly differs from the groove, as in Classic Gray, whose active title bar is the base colour; then it is the dark shadow (or, on a dark groove, the highlight):
+
+```java title="amade-commons · swing/AmadeUI.java"
+--8<-- "amade-commons/src/main/java/eu/amadeos/commons/swing/AmadeUI.java:fill"
+```
+
 **When to choose it.** `launch` installs it. A program calls it directly only for the helpers below, or in a test that draws a component in a given theme.
 
 **How it works.** `install(theme)` sets Swing's colour table: `Panel.background`, `TextField.background`, `Table.selectionBackground` and about a hundred others, plus the borders and UI classes. Every colour is a `ColorUIResource`, Swing's mark for "comes from the look". `apply(theme)` installs a new theme and updates every open window:
@@ -140,6 +146,7 @@ The keys are the method names of `DesktopTheme`: `highlight`, `shadow`, `activeT
 | `apply(theme)` | `install`, then updates and restyles every window |
 | `follow(store)` | Applies every change of the store on the EDT |
 | `theme()` | The theme installed last; read it while painting |
+| `fillColor(theme)` | The filled part of sliders and progress bars, for bars a program draws itself |
 | `style(component, styler)`, `restyle(root)` | Colours of your own ([below](#colours-of-your-own-style)) |
 | `sunken()`, `raised()`, `paintBevel(...)`, `colorDot(color, size)` | Helpers ([below](#bevels-and-dots)) |
 
