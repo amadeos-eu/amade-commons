@@ -105,6 +105,10 @@ public final class AmadeUI {
         put("ToggleButton.foreground", text);
         put("ToggleButton.select", sunken);
         put("ToggleButton.border", new MotifButtonBorder(2));
+        // The text of a switched-off check box or radio button in the palette's inactive text colour; Swing's
+        // basic look etches it in shades of the background, which vanish on black (high contrast).
+        put("CheckBox.disabledText", inactive);
+        put("RadioButton.disabledText", inactive);
 
         // Flat Metal gradients: no Ocean blue, and two ratios + three colours as Metal's painter expects.
         java.util.List<?> flat = java.util.Arrays.asList(0.0f, 0.0f, base, base, base);
@@ -136,12 +140,12 @@ public final class AmadeUI {
         put("PopupMenuSeparator.background", shadow);
         put("PopupMenuSeparator.foreground", highlight);
 
-        put("CheckBoxUI", "javax.swing.plaf.basic.BasicCheckBoxUI");
+        put("CheckBoxUI", AmadeCheckBoxUI.class.getName());
         put("CheckBox.background", base);
         put("CheckBox.foreground", text);
         put("CheckBox.focus", shadow);
         put("CheckBox.icon", new MotifCheckBoxIcon());
-        put("RadioButtonUI", "javax.swing.plaf.basic.BasicRadioButtonUI");
+        put("RadioButtonUI", AmadeRadioButtonUI.class.getName());
         put("RadioButton.background", base);
         put("RadioButton.foreground", text);
         put("RadioButton.focus", shadow);
@@ -487,6 +491,54 @@ public final class AmadeUI {
     }
 
     /** Motif toggle button: sunken while selected. */
+    /** Draws the text of a switched-off button in {@code <prefix>disabledText} instead of etching it. */
+    private static void paintDisabledText(Graphics g, AbstractButton b, java.awt.Rectangle textRect, String text,
+                                          String prefix) {
+        java.awt.Color color = javax.swing.UIManager.getColor(prefix + "disabledText");
+        g.setColor(color != null ? color : b.getForeground());
+        java.awt.FontMetrics fm = b.getFontMetrics(b.getFont());
+        javax.swing.plaf.basic.BasicGraphicsUtils.drawStringUnderlineCharAt(b, (Graphics2D) g, text,
+                b.getDisplayedMnemonicIndex(), textRect.x, textRect.y + fm.getAscent());
+    }
+
+    // --8<-- [start:check-box-ui]
+    /** Check boxes with a readable text when switched off, on every palette. */
+    public static class AmadeCheckBoxUI extends javax.swing.plaf.basic.BasicCheckBoxUI {
+        private static final AmadeCheckBoxUI INSTANCE = new AmadeCheckBoxUI();
+
+        public static ComponentUI createUI(JComponent c) {
+            return INSTANCE;
+        }
+
+        @Override
+        protected void paintText(Graphics g, AbstractButton b, java.awt.Rectangle textRect, String text) {
+            if (b.getModel().isEnabled()) {
+                super.paintText(g, b, textRect, text);
+            } else {
+                paintDisabledText(g, b, textRect, text, getPropertyPrefix());
+            }
+        }
+    }
+    // --8<-- [end:check-box-ui]
+
+    /** Radio buttons with a readable text when switched off, on every palette. */
+    public static class AmadeRadioButtonUI extends javax.swing.plaf.basic.BasicRadioButtonUI {
+        private static final AmadeRadioButtonUI INSTANCE = new AmadeRadioButtonUI();
+
+        public static ComponentUI createUI(JComponent c) {
+            return INSTANCE;
+        }
+
+        @Override
+        protected void paintText(Graphics g, AbstractButton b, java.awt.Rectangle textRect, String text) {
+            if (b.getModel().isEnabled()) {
+                super.paintText(g, b, textRect, text);
+            } else {
+                paintDisabledText(g, b, textRect, text, getPropertyPrefix());
+            }
+        }
+    }
+
     public static class AmadeToggleButtonUI extends BasicToggleButtonUI {
         private static final AmadeToggleButtonUI INSTANCE = new AmadeToggleButtonUI();
 
