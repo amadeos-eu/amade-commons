@@ -125,7 +125,7 @@ The answer is a `ClientMessage` of type `WM_PROTOCOLS` at the root window, with 
 
 The Task Manager runs once per display: a second start hands its arguments over a Unix socket in `$XDG_RUNTIME_DIR` and exits. So the window manager does not need to know whether it is open. `NotRespondingDialog` offers *Wait*, *End Program* and *Open Task Manager*, reads the property every second and closes itself when the window answers again and the window manager has taken the mark off. A Task Manager started only for the question exits with the dialog.
 
-The keys are the window manager's too, with the passive grab of [chapter 66](66-window-switcher.md#a-key-for-the-whole-desktop), in every combination with Num Lock and Caps Lock:
+The keys are the window manager's too, with the passive grab of [chapter 66](66-window-switcher.md#a-key-for-the-whole-desktop), in every combination with Num Lock and Caps Lock. Ctrl+Shift+Esc is one of the desktop shortcuts the user can change in Settings ([chapter 62](62-settings.md#keyboard-shortcuts-keys-the-window-manager-grabs)); Ctrl+Alt+Delete is fixed, so a user who is stuck always finds it:
 
 ```java title="amadeos-system · wm/x11/X11WindowManagerService.java"
 --8<-- "amadeos-system/wm/src/main/java/eu/amadeos/system/wm/x11/X11WindowManagerService.java:task-manager-keys"

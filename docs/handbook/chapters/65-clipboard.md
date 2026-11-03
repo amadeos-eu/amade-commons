@@ -29,7 +29,7 @@ The manager is part of the session package: `amadeos-session clipboard`, package
 
 | Class | Thread | What it does |
 |---|---|---|
-| `SelectionWatcher` | X thread | Its own X connection: XFixes events, the Ctrl+Alt+V grab, commands from other programs, requests to save |
+| `SelectionWatcher` | X thread | Its own X connection: XFixes events, commands from other programs (also *show* for Ctrl+Alt+V), requests to save |
 | `ClipboardManager` | worker | The decisions: record, skip, take over, save. No X11, no Swing, so it can be tested |
 | `X11SelectionProbe` | worker | A second X connection for the questions the manager asks: owner, targets, mouse buttons |
 | `AwtClipboards` | worker | Reads and offers the data through AWT's clipboard |
@@ -41,7 +41,7 @@ Reading a copy can take a moment (an image from a slow program, a program that d
 
 ```mermaid
 flowchart LR
-    X[X server] -- XFixes events, Ctrl+Alt+V, commands --> W[SelectionWatcher<br/>X thread]
+    X[X server] -- XFixes events, commands --> W[SelectionWatcher<br/>X thread]
     W -- changes, in order --> M[ClipboardManager<br/>worker]
     M -- targets, owner --> P[X11SelectionProbe]
     M -- read, own --> A[AwtClipboards]
@@ -58,7 +58,7 @@ AWT's clipboard can report changes too, through a `FlavorListener`. On X11 it do
 --8<-- "amadeos-system/session/src/main/java/eu/amadeos/system/clipboard/SelectionWatcher.java:watch"
 ```
 
-The extension's events have no fixed number. `XFixesQueryExtension` tells the program its *event base*, and the selection event is that number plus 0. Everything else the watcher hears is core X11: the key press of Ctrl+Alt+V, which it grabs on the root window like the window manager grabs Super+L, a client message with a command, and selection requests.
+The extension's events have no fixed number. `XFixesQueryExtension` tells the program its *event base*, and the selection event is that number plus 0. Everything else the watcher hears is core X11: a client message with a command, and selection requests. Ctrl+Alt+V is not the watcher's own grab any more: it is one of the desktop shortcuts the user can change, so the window manager grabs it and runs `amadeos-clipboard --show`, which sends the *show* command ([chapter 62](62-settings.md#keyboard-shortcuts-keys-the-window-manager-grabs)).
 
 One manager per session is enough. The watcher claims a selection of its own, `_AMADEOS_CLIPBOARD`, and stops with exit code 3 when another program already owns it, which also tells the autostart script not to start it again. That selection's owner is also where commands go: `amadeos-clipboard`, the Front Panel's *Clipboard History* entry, sends a client message to it, and the *Clear History* button of Settings sends another (`ClipboardCommand`). It is the trick the screen lock plays with `_AMADEOS_LOCK`: whoever owns the selection is running, the X server releases it when that program dies, and the owner's window is an address other programs can write to.
 

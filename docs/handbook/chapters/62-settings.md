@@ -16,6 +16,8 @@ Every application of this book follows the desktop theme ([chapter 42](42-look.m
 - Changing accounts and groups through a small root helper behind polkit, with the rules in the helper, not in the window.
 - Default applications in the freedesktop.org `mimeapps.list`, changing only the user's own lines.
 - The computer's clock through `timedatectl`, and formats of dates and numbers apart from the language.
+- Desktop shortcuts the window manager grabs from a file, and reading a key combination that another client has grabbed.
+- Accessibility with XKB's AccessX controls, Xcursor themes and a high contrast palette.
 
 ## Pages, a sidebar and a search
 
@@ -106,6 +108,64 @@ The translation from settings to commands is a pure function, so tests check the
 
 !!! tip "Tip: settings that survive a restart of the X server"
     Settings applied with `xset` live in the X server and are gone at the next login. That is why the session runs `amadeos-settings input` at every start: the file is the truth, the X server's state is a copy of it.
+
+## Keyboard Shortcuts: keys the window manager grabs
+
+![Keyboard Shortcuts: the desktop's keys by group, own commands at the end](images/desktop/settings-shortcuts.jpg)
+
+A key that works in every program cannot be read by a program: the X server sends key events to the window with the focus. The window manager takes the keys it wants beforehand with a **passive grab**, `XGrabKey` on the root window ([chapter 66](66-window-switcher.md#a-key-for-the-whole-desktop)). Until now each key was a field and a grab of its own in the window manager. The Keyboard Shortcuts page turns them into data: an enum of actions in `base`, with the keys out of the box,
+
+```java title="amadeos-system · base/shortcuts/ShortcutAction.java"
+--8<-- "amadeos-system/base/src/main/java/eu/amadeos/system/base/shortcuts/ShortcutAction.java:actions"
+```
+
+and a file, `~/.config/amadeos/shortcuts.conf`, that holds only what the user changed: `terminal=Super+Return`, `search=none` for a shortcut that is off, and the user's own commands as `custom.1.name`, `custom.1.command`, `custom.1.keys`. A file of differences lets a later release change a default for everyone who kept it. A `KeyCombo` is X's modifier mask (Shift, Control, Mod1 for Alt, Mod4 for Super) and a keysym name, written `Ctrl+Alt+T`; the page shows it in the user's language, `Strg+Alt+T` in German.
+
+The window manager turns the file into grabs. The mapping from key names to key codes is a function argument, so a test needs no X server:
+
+```java title="amadeos-system · wm/x11/ShortcutKeys.java"
+--8<-- "amadeos-system/wm/src/main/java/eu/amadeos/system/wm/x11/ShortcutKeys.java:shortcut-keys"
+```
+
+A `ConfigWatcher` on `shortcuts.conf` hands a change to the event thread, which lets go of the old grabs and takes the new ones, each with Num Lock and Caps Lock in the four combinations:
+
+```java title="amadeos-system · wm/x11/X11WindowManagerService.java"
+--8<-- "amadeos-system/wm/src/main/java/eu/amadeos/system/wm/x11/X11WindowManagerService.java:grab-shortcuts"
+```
+
+Ctrl+Alt+V used to be the clipboard manager's own grab. Two clients cannot grab the same key (the second gets `BadAccess`), so a shortcut that the user can move has to live in one place: the window manager now runs `amadeos-clipboard --show`, which reaches the running clipboard manager as a command. Three keys stay fixed in the window manager and appear greyed in the list: Alt+Tab and Alt+Shift+Tab, which need the release of Alt, and Ctrl+Alt+Delete for the Task Manager, the way out for a user who has changed every other key.
+
+### Reading keys that someone else has grabbed
+
+The dialog that asks for new keys has a problem: the keys the user wants to press are likely grabbed already. Press Super+L in a Swing window and the screen locks; the window never hears of it. A passive grab loses against an **active grab**, though: while a client holds the whole keyboard with `XGrabKeyboard`, every key goes to that client. AWT does not offer that, so the capture opens an X connection of its own, grabs the keyboard there and reads the key presses until a key that is not a modifier comes:
+
+```java title="amadeos-system · settings/KeyCapture.java"
+--8<-- "amadeos-system/settings/src/main/java/eu/amadeos/system/settings/KeyCapture.java:capture"
+```
+
+`XkbKeycodeToKeysym` with level 0 gives the key without Shift, so Shift+1 is stored as `Shift+1`, not `!`, the same keysym the window manager looks up with `XStringToKeysym`. When the keyboard cannot be grabbed (another program holds it), the dialog falls back to its own AWT key events, which then miss the grabbed keys.
+
+!!! warning "Pitfall: a modal dialog and a keyboard grab"
+    Always let go of the grab, also when the dialog is closed with the mouse: the capture polls `XPending` and checks for an interrupt instead of blocking in `XNextEvent`, and ungrabs in `finally`. A program that dies with the keyboard grabbed takes the keyboard with it until the X server notices the closed connection.
+
+Before the keys are taken, the page checks them: a key without Ctrl, Alt or Super must be a function key, Print or a multimedia key, because a grabbed plain letter would never reach a program again; keys another shortcut has are taken from it after asking.
+
+## Accessibility: AccessX, Xcursor and a palette
+
+![Accessibility with the high contrast palette, white on black](images/desktop/settings-high-contrast.jpg)
+
+The keyboard aids are part of the X server's keyboard extension, XKB: *AccessX* has sticky keys, slow keys, bounce keys and mouse keys built in. The page switches them with `xkbset`, the command-line front end of `XkbSetControls`, and the pointer through Xcursor resources:
+
+```java title="amadeos-system · settings/input/XCommands.java"
+--8<-- "amadeos-system/settings/src/main/java/eu/amadeos/system/input/XCommands.java:accessibility"
+```
+
+Three details matter. AccessX switches its features off again after two idle minutes, a protection for shared computers; `xkbset exp =sticky …` keeps them. The pointer is not a setting of the X server but of `libXcursor` in every client: a program reads `Xcursor.theme` and `Xcursor.size` from the resource database when it connects, which is why programs that are already open keep their old pointer, and why `xsetroot -cursor_name left_ptr` sets the root window's at once. And the classic X pointer has no theme: installing `dmz-cursor-theme` makes DMZ the system's default cursor theme (`/usr/share/icons/default/index.theme`, the `x-cursor-theme` alternative). `amadeos-settings` registers an empty theme, `amadeos-classic`, with a higher priority, so `libXcursor` finds no cursor and falls back to X's own.
+
+High contrast is a palette like the others: `high-contrast-dark` and `high-contrast-light` in `/etc/amadeos/themes`, applied with `ThemeManager.applyTheme`, so the window manager, the panel and every application follow it as in [Writing the theme](#writing-the-theme). The page remembers the palette from before in `accessibility.conf` and goes back to it on *Off*. Whether high contrast is on is read from the current palette, not from the file, so choosing another palette on the Color page simply switches it off.
+
+!!! note "A high contrast palette tests the look"
+    Black as the base colour showed a bug that no other palette had: Swing's basic look etches the text of a disabled check box in a brighter and a darker shade of the background, and black has neither. `AmadeUI` now draws it in the palette's inactive text colour ([chapter 42](42-look.md#the-cde-look-for-swing-amadeui)). Try a new component in both high contrast palettes.
 
 ## Backdrop and screen
 
@@ -398,7 +458,8 @@ Everything with a name asks it: `SettingsCategory.label()` reads `category.keybo
 3. **One monitor at a time.** With two monitors a maximized window covers both. Let the window manager ask RandR for the monitors (`XRRGetMonitors`, or `xrandr --listmonitors` at each root `ConfigureNotify`) and maximize a window on the monitor that holds its centre. Where should the Front Panel go, and what does `_NET_WORKAREA` have to say then?
 4. **Fixed addresses.** Add a *Settings…* button to the wired connection of the Network page: IPv4 automatic or manual, address with prefix, gateway and DNS, written with `nmcli connection modify <name> ipv4.method manual ipv4.addresses … ipv4.gateway … ipv4.dns …`. How do you test the command without NetworkManager, and what has to happen to the active connection afterwards?
 5. **A picture for each user.** Let *Add User…* and the details offer a picture, kept as `/var/lib/AccountsService/icons/<login>` like other desktops, and let the login greeter show a list of users with their pictures. Which part runs as root, and how does the greeter read the pictures before anyone is logged in?
-6. **A theme editor.** Add *New…* to the Color page: pick a base colour, derive the rest with `DesktopTheme.fromBase`, show the palette and write `~/.config/amadeos/themes/<id>/theme.properties`.
+6. **Moving a window to another workspace.** Add shortcuts *Move the window to workspace 1* to *4* (Super+Shift+1 to 4): a new `ShortcutAction` with its texts, and in the window manager the window's `_NET_WM_DESKTOP` changed and the window unmapped. What should happen to the focus?
+7. **A theme editor.** Add *New…* to the Color page: pick a base colour, derive the rest with `DesktopTheme.fromBase`, show the palette and write `~/.config/amadeos/themes/<id>/theme.properties`.
 
 ## Summary
 
@@ -413,5 +474,7 @@ Everything with a name asks it: `SettingsCategory.label()` reads `category.keybo
 - *Sound*, *Bluetooth* and *Printers* act at once and have no *Apply*; their backends are interfaces in `SystemAccess`, over `pactl`, BlueZ on D-Bus with an agent of their own, and CUPS with `lpadmin -m everywhere`.
 - The Network page edits the proxy that amade-commons keeps for every program; the session exports it at login, the launcher at every start, and the package helper writes apt's copy from standard input.
 - Settings of the X server are files first and commands second, so the session can apply them again at every login.
+- Desktop shortcuts are data: an enum of actions, a file of differences, and grabs the window manager takes anew when the file changes; a dialog reads grabbed keys through an active keyboard grab on its own X connection.
+- Accessibility uses what X already has: AccessX through `xkbset`, the pointer through Xcursor resources, high contrast as a palette.
 - The Display page sets all monitors in one `xrandr` call, saves only a layout the user kept within 15 seconds, one per set of monitors; the window manager and the panel follow the new root size themselves.
 - Without Guice, a small class resolves the language from `locale.conf` and loads the texts; status lines are built from translated parts.
