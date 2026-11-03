@@ -114,7 +114,11 @@ The keys are the method names of `DesktopTheme`: `highlight`, `shadow`, `activeT
 
 *Package `swing` · introduced in [10. Pad](10-pad.md#following-the-desktop-theme) · source: [`AmadeUI`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/swing/AmadeUI.java)*
 
-**What it is for.** The look of every amadeOS program: Swing's cross-platform look and feel with its colour table filled from the theme, Motif bevels around fields, scroll panes and menus, and button UIs of its own: bold labels, lighter while the mouse is over them, sunken and shifted by a pixel while pressed. Check boxes and radio buttons are the Motif ones, drawn in the theme's colours.
+**What it is for.** The look of every amadeOS program: Swing's cross-platform look and feel with its colour table filled from the theme, Motif bevels around fields, scroll panes and menus, and button UIs of its own: bold labels, lighter while the mouse is over them, sunken and shifted by a pixel while pressed. Check boxes and radio buttons are the Motif ones, drawn in the theme's colours; switched off, their text is drawn in the theme's inactive text colour instead of Swing's etched text, which vanished on the black of the high contrast palette ([chapter 62](62-settings.md#accessibility-accessx-xcursor-and-a-palette)):
+
+```java title="amade-commons · swing/AmadeUI.java"
+--8<-- "amade-commons/src/main/java/eu/amadeos/commons/swing/AmadeUI.java:check-box-ui"
+```
 
 **When to choose it.** `launch` installs it. A program calls it directly only for the helpers below, or in a test that draws a component in a given theme.
 
