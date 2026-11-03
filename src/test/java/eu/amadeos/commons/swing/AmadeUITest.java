@@ -24,6 +24,24 @@ class AmadeUITest {
         AmadeUI.install(DesktopTheme.WARM_MOTIF);
     }
 
+    @Test
+    void slidersAndProgressBarsTakeTheThemeColours() {
+        AmadeUI.install(DesktopTheme.CDE_BROCADE);
+        javax.swing.JSlider slider = new javax.swing.JSlider();
+        assertInstanceOf(AmadeUI.AmadeSliderUI.class, slider.getUI());
+        assertEquals(DesktopTheme.CDE_BROCADE.base(), slider.getBackground());
+        assertEquals(DesktopTheme.CDE_BROCADE.textActive(), slider.getForeground());
+        javax.swing.JProgressBar bar = new javax.swing.JProgressBar();
+        assertEquals(DesktopTheme.CDE_BROCADE.sunkenBg(), bar.getBackground());
+        assertEquals(AmadeUI.fillColor(DesktopTheme.CDE_BROCADE), bar.getForeground());
+
+        // Where the selection colour is the base colour, the fill falls back to a tone that stands out
+        Color fill = AmadeUI.fillColor(DesktopTheme.CLASSIC_GRAY);
+        assertNotEquals(DesktopTheme.CLASSIC_GRAY.selectionBackground(), fill);
+        assertEquals(DesktopTheme.WARM_MOTIF.selectionBackground(), AmadeUI.fillColor(DesktopTheme.WARM_MOTIF));
+        AmadeUI.install(DesktopTheme.WARM_MOTIF);
+    }
+
     // --8<-- [start:stylers]
     @Test
     void stylersRunAgainAfterAThemeChange() {

@@ -197,6 +197,20 @@ public final class AmadeUI {
         put("ScrollBar.thumbDarkShadow", darkShadow);
         put("ScrollBar.track", sunken);
 
+        // Sliders and progress bars: Metal paints them in its own blue and grey, whatever the theme says
+        put("SliderUI", AmadeSliderUI.class.getName());
+        put("Slider.background", base);
+        put("Slider.foreground", text);
+        put("Slider.tickColor", text);
+        put("Slider.focus", shadow);
+        put("ProgressBarUI", "javax.swing.plaf.basic.BasicProgressBarUI");
+        put("ProgressBar.background", sunken);
+        ColorUIResource fill = res(fillColor(t));
+        put("ProgressBar.foreground", fill);
+        put("ProgressBar.selectionForeground", res(DesktopTheme.isDark(fill) ? Color.WHITE : Color.BLACK));
+        put("ProgressBar.selectionBackground", text);
+        put("ProgressBar.border", new MotifBevelBorder(false, 2));
+
         put("SplitPane.background", base);
         put("SplitPane.dividerSize", 8);
         put("TabbedPane.background", base);
@@ -351,6 +365,23 @@ public final class AmadeUI {
             g.drawLine(x + i, y + height - 1 - i, x + width - 1 - i, y + height - 1 - i);
             g.drawLine(x + width - 1 - i, y + i, x + width - 1 - i, y + height - 1 - i);
         }
+    }
+
+    // --8<-- [start:fill]
+    /**
+     * The filled part of sliders and progress bars: the selection colour, or where that hardly stands out from the
+     * sunken groove (themes whose active title bar is the base colour, e.g. Classic Gray) a shadow tone.
+     */
+    public static Color fillColor(DesktopTheme t) {
+        Color fill = t.selectionBackground();
+        if (distance(fill, t.sunkenBg()) >= 150) return fill;
+        return DesktopTheme.isDark(t.sunkenBg()) ? t.highlight() : t.darkShadow();
+    }
+    // --8<-- [end:fill]
+
+    private static int distance(Color a, Color b) {
+        return Math.abs(a.getRed() - b.getRed()) + Math.abs(a.getGreen() - b.getGreen())
+                + Math.abs(a.getBlue() - b.getBlue());
     }
 
     private static ColorUIResource res(Color color) {
@@ -578,6 +609,81 @@ public final class AmadeUI {
             if (down) g2.translate(1, 1);
             super.paint(g2, c);
             if (down) g2.translate(-1, -1);
+        }
+    }
+
+    // ---- sliders ---------------------------------------------------------------------------------
+
+    /**
+     * The slider as in CDE: a sunken groove, filled from the minimum up to the value in the selection colour, and
+     * a raised thumb with a notch, all in the colours of the current theme.
+     */
+    public static class AmadeSliderUI extends javax.swing.plaf.basic.BasicSliderUI {
+        private static final int GROOVE = 8;
+
+        public static ComponentUI createUI(JComponent c) {
+            return new AmadeSliderUI((JSlider) c);
+        }
+
+        public AmadeSliderUI(JSlider slider) {
+            super(slider);
+        }
+
+        @Override
+        protected Dimension getThumbSize() {
+            return slider.getOrientation() == JSlider.HORIZONTAL ? new Dimension(12, 18) : new Dimension(18, 12);
+        }
+
+        @Override
+        public void paintTrack(Graphics g) {
+            DesktopTheme t = theme;
+            Rectangle r = trackRect;
+            boolean horizontal = slider.getOrientation() == JSlider.HORIZONTAL;
+            int x = horizontal ? r.x : r.x + (r.width - GROOVE) / 2;
+            int y = horizontal ? r.y + (r.height - GROOVE) / 2 : r.y;
+            int w = horizontal ? r.width : GROOVE;
+            int h = horizontal ? GROOVE : r.height;
+            g.setColor(t.sunkenBg());
+            g.fillRect(x, y, w, h);
+            // The part from the minimum to the thumb; the minimum is left (right to left: right) or at the bottom,
+            // and on the other side when the slider is inverted.
+            g.setColor(slider.isEnabled() ? fillColor(t) : t.shadow());
+            if (horizontal) {
+                int mid = thumbRect.x + thumbRect.width / 2;
+                boolean fromLeft = slider.getComponentOrientation().isLeftToRight() != slider.getInverted();
+                int from = fromLeft ? x + 2 : mid;
+                int to = fromLeft ? mid : x + w - 2;
+                g.fillRect(from, y + 2, Math.max(0, to - from), h - 4);
+            } else {
+                int mid = thumbRect.y + thumbRect.height / 2;
+                boolean fromBottom = !slider.getInverted();
+                int from = fromBottom ? mid : y + 2;
+                int to = fromBottom ? y + h - 2 : mid;
+                g.fillRect(x + 2, from, w - 4, Math.max(0, to - from));
+            }
+            paintBevel(g, x, y, w, h, false, 2);
+        }
+
+        @Override
+        public void paintThumb(Graphics g) {
+            DesktopTheme t = theme;
+            Rectangle r = thumbRect;
+            g.setColor(t.base());
+            g.fillRect(r.x, r.y, r.width, r.height);
+            paintBevel(g, r.x, r.y, r.width, r.height, true, 2);
+            if (slider.getOrientation() == JSlider.HORIZONTAL) {
+                int cx = r.x + r.width / 2;
+                g.setColor(t.shadow());
+                g.drawLine(cx - 1, r.y + 4, cx - 1, r.y + r.height - 5);
+                g.setColor(t.highlight());
+                g.drawLine(cx, r.y + 4, cx, r.y + r.height - 5);
+            } else {
+                int cy = r.y + r.height / 2;
+                g.setColor(t.shadow());
+                g.drawLine(r.x + 4, cy - 1, r.x + r.width - 5, cy - 1);
+                g.setColor(t.highlight());
+                g.drawLine(r.x + 4, cy, r.x + r.width - 5, cy);
+            }
         }
     }
 
