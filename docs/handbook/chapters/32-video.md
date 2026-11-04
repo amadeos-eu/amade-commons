@@ -183,6 +183,8 @@ A command-line argument, a file from the dialog, a URL or a DVD drive becomes a 
 
 DVDs have one surprise: mpv numbers their titles from 0, while people and the `dvd://` addresses they type count from 1, so `Dvd.target()` converts. Encrypted DVDs need libdvdcss, which libdvdnav loads by itself when it is installed. amade-video neither ships nor installs it, because whether its use is allowed depends on the country.
 
+Debian has no libdvdcss package either; its helper package libdvd-pkg downloads the source from VideoLAN and builds the library on the user's computer (`sudo apt install libdvd-pkg`, then `sudo dpkg-reconfigure libdvd-pkg`). So that nobody is left with a bare "loading failed", the Video Player later got a small class `DvdDecryption` that looks for `libdvdcss.so*` in the library folders. libdvdread loads the library by name at run time, so the file being there is all that counts. When a DVD fails and the file is missing, `MainPresenter` shows a dialog once per DVD that explains why amadeOS doesn't ship libdvdcss and gives the two commands, with a button that copies them; *Help → Encrypted DVDs…* shows the same dialog together with whether libdvdcss is installed. The commands are a constant in the code, not a translated text, because a translator must not be able to change what the user types into a root shell.
+
 ## What amade-commons gives Video
 
 | Part | Since | Video uses it for |
