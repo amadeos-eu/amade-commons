@@ -48,6 +48,28 @@ The test is the one that would have caught the bug, a program that prints one li
 
 `exec` makes the shell become `sleep`, so stopping the program stops the sleep too. Otherwise the shell may run `sleep` as a child that keeps the output open after its parent is gone, which is the next exercise.
 
+### Which threads read
+
+The first version started both readers with `CompletableFuture.supplyAsync`, which runs them in the common fork-join pool. That pool has one worker fewer than the computer has processors, and at least one. In a virtual machine with one or two processors, which is what QEMU gives by default, there is a single worker. The reader of the standard error took it and waited for apt-cache to end; the reader of the standard output waited in the queue for the worker. apt-cache filled the pipe (64 KB) and waited for someone to read it. Nobody did, until the time limit of two minutes ended it, and Software showed no packages at all. On a computer with more processors the bug did not show.
+
+A read that blocks until a program ends does not belong in a shared pool. `onOwnThread` (at the end of the code above) starts a daemon thread for each reader instead, and the helper's messages are read the same way. The test fills every worker of the common pool first, so it fails with the old code on any computer:
+
+```java title="amadeos-system · test/packages/AptPackageServiceTest.java"
+--8<-- "amadeos-system/packages/src/test/java/eu/amadeos/system/packages/AptPackageServiceTest.java:busy-pool"
+```
+
+### The catalog is kept between starts
+
+Even without the bug, reading the catalog takes seconds: `apt-cache dumpavail` prints every package of Debian with its fields, some 100 MB, `dpkg-query -S` finds out which packages bring a menu entry or a program, and AppStream adds tens of megabytes of YAML. Most of the time none of it has changed since the last start. So `catalog()` keeps its result in `~/.cache/amadeos-packages/catalog`, together with a *stamp*: the modification times of what it was read from. Those are apt's lists directory (apt moves every new list into it), dpkg's `status` file (rewritten by every installation and removal), apt's `extended_states`, the sources, `/usr/share/applications` and the program's own jar, so a new version of Software reads anew. While the stamp is the same, the file is the answer:
+
+```java title="amadeos-system · packages/AptPackageService.java"
+--8<-- "amadeos-system/packages/src/main/java/eu/amadeos/system/packages/AptPackageService.java:catalog"
+```
+
+`StampedCache` takes the stamp *before* reading, so a list that apt fetches while the catalog is being read makes the next start read again. A file that cannot be read, from an older format or cut short, only means reading the system again. When the cache does not help, the three parts are read at the same time. The window keeps the AppStream data in `~/.cache/amadeos-software/appstream-<language>` the same way, since the texts are picked for one language.
+
+One more second went into `apt-mark showauto`, which loads apt's whole package cache to list the packages installed as dependencies. That list is a small file of apt's own, `/var/lib/apt/extended_states`, which the library now reads itself; `apt-mark` is only asked when the file is missing.
+
 ## Changing needs root: the helper
 
 Installing, upgrading and removing need root. The obvious ways are the wrong ones: running the whole Java program as root puts a Swing program with a web renderer and a YAML parser under root, and `sudo` in a terminal leaves the desktop out. amadeOS does it the way most Linux desktops do: a small program that only root may run does the change, and polkit decides who may start it.
@@ -195,3 +217,5 @@ Packages that the repositories do not describe, such as the amade applications o
 - apt's status lines and the helper's own `@@` lines become progress and a `Result` through one pure parser and a `switch` over a sealed type.
 - The tests run the real helper with a fake `apt-get`, so the root part is tested without root.
 - A watcher on dpkg's and apt's directories notices changes made by any program, and calls back once they have settled.
+- A read that blocks until a program ends gets a thread of its own, never a worker of the common pool, which may be the only one.
+- What takes seconds to read is kept in the user's cache with a stamp of its sources and read again only when they change.
