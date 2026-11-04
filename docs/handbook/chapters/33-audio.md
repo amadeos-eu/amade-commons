@@ -205,7 +205,15 @@ An audio CD has no files. It has a table of contents with the start sector of ea
 --8<-- "amade-audio/src/main/java/eu/amadeos/apps/audio/service/cd/CdPcmSource.java:read"
 ```
 
-The reader behind it is either plain libcdio or libcdio-paranoia, which reads sectors several times and corrects scratches when it is installed. On Windows, `WindowsCdDrive` sends the same requests to the system's CD driver with `DeviceIoControl`, again through JNA, so Audio needs no extra library there.
+The engine's playback thread must never wait for the drive. A drive that spins up, retries a sector or is passed through to a virtual machine can take a second or more for one read, while the sound card's buffer holds a fifth of a second. So `CdPcmSource` has a reader thread of its own that stays about five seconds ahead, and `read` only takes chunks from a queue:
+
+```java title="amade-audio · service/cd/CdPcmSource.java"
+--8<-- "amade-audio/src/main/java/eu/amadeos/apps/audio/service/cd/CdPcmSource.java:read-ahead"
+```
+
+That thread is also the only one that touches the drive. Stop arrives on another thread while a read may still be running in native code; if `close` freed the libcdio handle right then, the read would write into freed memory and take the whole program down. So `close` only sets a flag, and the reader thread closes the drive itself after its current read.
+
+The reader behind it reads sectors directly with libcdio, as a CD player does. Only a chunk the drive cannot read that way goes to libcdio-paranoia, when it is installed, with three retries per sector before it plays as silence. Paranoia on every sector is meant for ripping, not for listening: it reads overlapping blocks and compares them, which is too slow to keep up in real time, and on copy-protected discs, whose damaged sectors are there on purpose, it retries for minutes. On Windows, `WindowsCdDrive` sends the same requests to the system's CD driver with `DeviceIoControl`, again through JNA, so Audio needs no extra library there.
 
 ### A checksum, tested against the reference
 
