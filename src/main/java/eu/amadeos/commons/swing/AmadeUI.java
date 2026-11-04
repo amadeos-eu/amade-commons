@@ -109,6 +109,12 @@ public final class AmadeUI {
         // basic look etches it in shades of the background, which vanish on black (high contrast).
         put("CheckBox.disabledText", inactive);
         put("RadioButton.disabledText", inactive);
+        // The same for push and toggle buttons, and a switched-off combo box keeps the palette's background
+        // instead of Metal's light grey, so that toolbars stay readable on dark palettes.
+        put("Button.disabledText", inactive);
+        put("ToggleButton.disabledText", inactive);
+        put("ComboBox.disabledBackground", base);
+        put("ComboBox.disabledForeground", inactive);
 
         // Flat Metal gradients: no Ocean blue, and two ratios + three colours as Metal's painter expects.
         java.util.List<?> flat = java.util.Arrays.asList(0.0f, 0.0f, base, base, base);
@@ -519,6 +525,15 @@ public final class AmadeUI {
             super.paint(g2, c);
             if (pressed) g2.translate(-1, -1);
         }
+
+        @Override
+        protected void paintText(Graphics g, AbstractButton b, java.awt.Rectangle textRect, String text) {
+            if (b.getModel().isEnabled()) {
+                super.paintText(g, b, textRect, text);
+            } else {
+                paintDisabledText(g, b, textRect, text, getPropertyPrefix());
+            }
+        }
     }
 
     /** Motif toggle button: sunken while selected. */
@@ -609,6 +624,15 @@ public final class AmadeUI {
             if (down) g2.translate(1, 1);
             super.paint(g2, c);
             if (down) g2.translate(-1, -1);
+        }
+
+        @Override
+        protected void paintText(Graphics g, AbstractButton b, java.awt.Rectangle textRect, String text) {
+            if (b.getModel().isEnabled()) {
+                super.paintText(g, b, textRect, text);
+            } else {
+                paintDisabledText(g, b, textRect, text, getPropertyPrefix());
+            }
         }
     }
 

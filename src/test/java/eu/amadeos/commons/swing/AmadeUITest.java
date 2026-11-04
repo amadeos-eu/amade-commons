@@ -42,6 +42,40 @@ class AmadeUITest {
         AmadeUI.install(DesktopTheme.WARM_MOTIF);
     }
 
+    @Test
+    void switchedOffButtonsAndComboBoxesStayReadableOnADarkPalette() {
+        DesktopTheme dark = eu.amadeos.commons.theme.HorizonThemes.find("horizon-dark-teal").orElseThrow();
+        AmadeUI.install(dark);
+        try {
+            javax.swing.JButton button = new javax.swing.JButton("Picture");
+            javax.swing.JToggleButton toggle = new javax.swing.JToggleButton("B");
+            javax.swing.JComboBox<String> combo = new javax.swing.JComboBox<>(new String[]{"Text"});
+            for (javax.swing.JComponent c : new javax.swing.JComponent[]{button, toggle, combo}) {
+                c.setEnabled(false);
+                c.setSize(c.getPreferredSize());
+                c.doLayout();
+                java.awt.image.BufferedImage img = new java.awt.image.BufferedImage(c.getWidth(), c.getHeight(),
+                        java.awt.image.BufferedImage.TYPE_INT_RGB);
+                java.awt.Graphics2D g = img.createGraphics();
+                c.printAll(g);
+                g.dispose();
+                int brightest = 0;
+                for (int y = 3; y < img.getHeight() - 3; y++) {
+                    for (int x = 3; x < img.getWidth() - 3; x++) {
+                        Color px = new Color(img.getRGB(x, y));
+                        brightest = Math.max(brightest, (px.getRed() + px.getGreen() + px.getBlue()) / 3);
+                    }
+                }
+                // The label is drawn in the inactive text colour, well apart from the dark face
+                int face = (dark.base().getRed() + dark.base().getGreen() + dark.base().getBlue()) / 3;
+                assertTrue(brightest - face > 60, c.getClass().getSimpleName() + " text hardly differs: " + brightest);
+            }
+            assertEquals(dark.base(), UIManager.getColor("ComboBox.disabledBackground"));
+        } finally {
+            AmadeUI.install(DesktopTheme.WARM_MOTIF);
+        }
+    }
+
     // --8<-- [start:stylers]
     @Test
     void stylersRunAgainAfterAThemeChange() {

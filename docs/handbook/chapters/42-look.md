@@ -120,6 +120,8 @@ The keys are the method names of `DesktopTheme`: `highlight`, `shadow`, `activeT
 --8<-- "amade-commons/src/main/java/eu/amadeos/commons/swing/AmadeUI.java:check-box-ui"
 ```
 
+Push buttons and toggle buttons do the same, and a switched-off combo box keeps the theme's background and draws its text in the inactive colour. Before, Swing drew a switched-off toolbar button's label in shades of the dark background and a switched-off combo box in its own light grey, so on dark palettes, such as Horizon Dark, the Book Editor's toolbar could not be read while no chapter was open.
+
 Sliders and progress bars are drawn by AmadeUI too. Swing's cross-platform look paints them in its own blue and grey whatever the colour table says, so in every theme they looked like a foreign program. `AmadeSliderUI` draws the CDE slider instead: a sunken groove, filled from the minimum up to the value, and a raised thumb with a notch; progress bars get the same sunken trough and fill. The fill is the selection colour, unless that hardly differs from the groove, as in Classic Gray, whose active title bar is the base colour; then it is the dark shadow (or, on a dark groove, the highlight):
 
 ```java title="amade-commons · swing/AmadeUI.java"
