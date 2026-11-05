@@ -255,7 +255,7 @@ The window asks the writer many things: a file, a picture, the details, a link, 
 ## What amade-commons gives Book Editor
 
 - `AmadeApplication`, `Messages`, `Mnemonics`, `LocaleSettings` and the language menu, as everywhere.
-- `ToolButtons` and `StandardGlyph` for New, Open, Save, Undo and Redo.
+- `ToolButtons` and `ToolIcon` for the whole toolbar: `StandardGlyph` for New, Open, Save, Undo and Redo, and the editor's own `BookGlyph` for bold, italic, picture, footnote, link, scene break, preview and Check Book, drawn like WritePad's. The tooltips name what the buttons did when they still showed words.
 - `SpecialCharacters` for Ctrl+Shift+U.
 - `CommandRunner` and `FinishedProcess` for EPUBCheck.
 - `AppDirectories` and `PropertiesFile` for `book-editor.properties` and the backups.
