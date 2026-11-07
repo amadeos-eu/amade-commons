@@ -2,7 +2,7 @@
 
 Webcam showed one camera on one screen. Calls ([amade-call](https://github.com/amadeos-eu/amade-call)) sends that picture to another computer, with sound, and shows the other person in return. It is the first amade application that two computers run together. Neither of them is a server: they find each other in the local network, check who is on the other end, and then let picture and sound flow straight between them, encrypted.
 
-The program has about 6,000 lines of Java and 1,900 lines of tests. It brings nothing new to amade-commons. What it needs that no other program needed, a WebRTC stack, comes from GStreamer.
+The program has about 7,500 lines of Java and 2,600 lines of tests. It brings nothing new to amade-commons. What it needs that no other program needed, a WebRTC stack, comes from GStreamer.
 
 ## What you build
 
@@ -11,6 +11,8 @@ The program has about 6,000 lines of Java and 1,900 lines of tests. It brings no
 - **A list of people**: the computers in the network that run Calls (with a green dot), then the people called before, each with the recent calls.
 - **Video and audio calls**, by a click on a person or by typing an address. During a call the microphone and camera are switched off and on, the screen is shared instead of the camera, and short messages go through a chat beside the picture.
 - **A ringing window** for incoming calls, with *Accept*, *Sound Only* and *Decline*, and a notification with *Call Back* for a call nobody answered.
+- **A text chat** without picture and sound, kept encrypted per person, with pictures and files up to 2 GB, and a way from the chat into a call.
+- **Calls from Contacts**: *Add to Contacts* stores the person's key in their vCard, and the card in amade-contacts gets buttons for a video call, an audio call and a chat.
 - **A safety code** that two people read out to each other to be sure that nobody sits between their computers.
 - **Waiting for calls after login**: the program starts in the background, and a second start only shows the window.
 
@@ -116,10 +118,11 @@ A frame larger than 256 KB ends the connection: a session description is a few k
 
 | Signal | From | Meaning |
 |---|---|---|
-| `hello` | caller | my name, video or audio, whether my camera is on, protocol version |
+| `hello` | caller | my name, video, audio or chat, whether my camera is on, protocol version |
 | `accept` / `decline` | callee | the answer, with the callee's own name; `decline` says *declined* or *busy* |
 | `offer`, `answer`, `ice` | both | the WebRTC session descriptions and the network candidates |
 | `chat`, `camera`, `screen`, `microphone` | both | a chat line and the state of the switches |
+| `file`, `file_data`, `file_end`, `file_cancel` | both | a picture or file: name and size, pieces of 48 kB in Base64, the SHA-256 at the end, or giving up |
 | `bye` | either | hang up |
 
 On the callee's side, `Phone` reads the hello first. While another call runs, the answer is *busy*, and the second caller hears exactly that:
@@ -180,12 +183,34 @@ The **ringing window** is a `JFrame`, not a dialog, and always on top: it must a
 
 Picture frames arrive on GStreamer's threads at 30 per second. The presenter does not queue them for the EDT: it keeps only the newest frame in an `AtomicReference` and schedules a repaint only when none is pending. The window may skip frames, but it never falls behind.
 
+## Chat, pictures and files
+
+A **text chat** is a third kind of call, `CallKind.CHAT`. The hello says `"kind": "chat"`, the callee accepts as usual, and `Call` skips the media: no pipeline, no offer, the call is active as soon as it is accepted. The chat window has the same buttons as a call plus *Video Call* and *Audio Call*. They end the chat and call the same person, and the presenter carries the lines of the chat into the new call window.
+
+![A chat with a picture](images/call/amade-call-chat.png)
+
+**Pictures and files** answered a question that the first version of this chapter left as an exercise: a separate connection, a WebRTC data channel, or the signal connection? Calls sends them over the TLS connection that already exists, in pieces of 48 kB, Base64 inside the usual JSON frames (64 kB each, well below the 256 kB limit). The writer locks per frame, so a chat line slips in between two pieces and arrives at once, even during a 2 GB transfer. Picture and sound do not notice: they have their own stream. `ChatFiles` does both sides:
+
+- The sender announces `file` (a random id, the name, the size), sends the pieces, and ends with `file_end` and the SHA-256 of the whole file.
+- The receiver cleans the name (no folders, no control characters, no leading dot), asks the presenter for a free path in `~/Downloads/amade-call/`, and writes into `<name>.part`. Only when size and hash match does the file get its name, with an atomic move.
+- `file_cancel` from either side, or the end of the call, deletes the `.part` file.
+
+The presenter decides where a file goes and what a click does. A received program or script is never started:
+
+```java
+--8<-- "amade-call/src/main/java/eu/amadeos/apps/call/ui/main/MainPresenter.java:files"
+```
+
+**Kept chats.** `ChatHistory` keeps the lines with each person in `~/.local/share/amadeos/call/chats/<key>.chat`, encrypted with AES-256-GCM: a magic header (also the additional authenticated data), a 12-byte IV and the sealed text, one line per message, with a picture's path after it. The key is 32 random bytes in the login keyring, through `SecretToolPasswordStore` from chapter 22. `ChatKey` reads the key back from the keyring before it uses a new one, so a keyring that does not keep secrets means no history, not a history nobody can read after the next login.
+
+**From Contacts.** The identity of a person is their key, so the link to them is the key too: `amadeos-call:<fingerprint>?kind=video`. *Add to Contacts* writes `IMPP:amadeos-call:<fingerprint>` into a vCard of the amadeOS address book and leaves everything else in the file alone. amade-contacts shows a line with three buttons for such an IMPP entry, and each opens the link with `DesktopLauncher`. The desktop file of Calls registers `x-scheme-handler/amadeos-call`, and `SingleInstance` hands a link to the running program.
+
 ## Testing two computers in one program
 
 A call needs two ends. The tests start two whole programs in one JVM, each with its own key in a temporary folder, and let them call each other over `127.0.0.1`:
 
 - **`PhoneCallTest`** runs two `Phone`s with the real `GstMedia` on test sources (`videotestsrc`, `audiotestsrc`, `fakesink`): real TLS, real WebRTC, real VP8 and Opus. It checks pictures in both directions, chat, camera off, screen sharing (under Xvfb) and hang-up.
-- **`MainPresenterTest`** runs two presenters with fake views and a fake media factory that connects at once: declined, missed and busy calls, unreachable addresses, the safety code, the settings, closing the window while waiting for calls.
+- **`MainPresenterTest`** runs two presenters with fake views and a fake media factory that connects at once: declined, missed and busy calls, unreachable addresses, the safety code, the settings, closing the window while waiting for calls, a chat that turns into a video call, kept chats, a link from Contacts, and a picture and a 1.3 MB file sent over real TLS and compared byte by byte.
 - **`MainWindowTest`** gives one of the two programs the real Swing windows: it clicks *Video Call* in the details, answers a ringing window, writes in the chat and hangs up.
 - **`SignalChannelTest`** checks the TLS layer alone: both sides see the other's key, a frame larger than allowed ends the connection, unknown messages are skipped.
 
@@ -203,6 +228,8 @@ The same setup makes the screenshots of this chapter: `xvfb-run -a ./gradlew scr
 | `CommandRunner` | chapter 31 | `pactl` for microphones and speakers |
 | `Json` | chapter 33 | the signals and the device lists |
 | `Notification`, `Notifications` | chapter 67 | the missed call with *Call Back* |
+| `SecretToolPasswordStore` | chapter 22 | the key of the kept chats |
+| `DesktopLauncher` | chapter 11 | opening pictures and files from the chat; its list of risky extensions |
 
 ### And what stays in Calls
 
@@ -211,7 +238,7 @@ The same setup makes the screenshots of this chapter: `xvfb-run -a ./gradlew scr
 
 ## Exercises
 
-1. **Send a file.** Add *Send File…* to the chat. Would you send the file over the TLS connection of the signals, or open a WebRTC data channel in `webrtcbin`? What does each mean for a 2 GB video and for a chat line that arrives meanwhile?
+1. **Resume a file.** A 2 GB video breaks off at 80 % when the call ends. What would `file` need to carry so that the next call continues from the `.part` file instead of starting again, and how does the receiver prove it has the right first 80 %?
 2. **Group calls.** Three people call each other as a mesh: everyone sends to everyone. How many encoders does each computer run, and why does a mesh stop working at about five people?
 3. **A call server.** For calls over the internet, both computers connect to a server that only passes on the signals, and a TURN relay carries the media when no direct way exists. Which classes change, and which stay exactly as they are?
 4. **A safety code in words.** Some people find words easier to read than digits. Map 15 digits to words from a fixed list. How long does the list have to be, and what happens with two people who speak different languages?
