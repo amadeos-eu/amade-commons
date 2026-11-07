@@ -2,7 +2,7 @@
 
 A keyboard has room for the letters of one language. Everything else, the € on an English keyboard, the „German quotes“ on a French one, the en dash, the °, the ½, the é in a name, has to come from somewhere. Every program that takes text therefore offers the same window: *Special Characters*, in the package `chars`. WritePad has it in its Insert menu, Pad in its Edit menu, Mail's compose window in its Format menu, and all three open it with **Ctrl+Shift+U**. Right below sits *Smileys and Emoji…* (**Ctrl+.**), the same window opened on the emoji.
 
-![The Special Characters window in the classic look: categories on the left, a grid of accented letters, a large à with its name and code on the right](images/chars/special-characters.png)
+![The Special Characters window: categories on the left, a grid of accented letters, a large à with its name and code on the right](images/chars/special-characters.png)
 
 This chapter is a little different from the others in Part IV. The other parts of the library came from a program that needed them first. This one went straight into amade-commons, because three programs wanted it on the same day, and a window that looks different in every program is no help to anyone.
 
@@ -17,7 +17,7 @@ The window does four things.
 
 A double-click, Enter or *Insert* puts the character at the cursor of the program, replacing a selection. The window stays open, because one special character rarely comes alone. *Copy* puts the character on the clipboard instead, and Escape closes the window.
 
-![The same window in Horizon: Currency selected, the euro sign in the preview](images/chars/special-characters-horizon.png)
+![The same window with Currency selected, the euro sign in the preview](images/chars/special-characters-horizon.png)
 
 The window follows the desktop's look like every other part of the library, because it is made of standard Swing components plus a grid that paints with `UIManager` colours. In Horizon the grid drops its lines and gets the rounded selection of the flat look (`HorizonUI.active()`, [chapter 42](42-look.md#the-flat-look-of-horizon-horizonui)).
 

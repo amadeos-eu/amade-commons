@@ -189,7 +189,7 @@ Each strip gets a region of its own, with the same pixel size and its own centre
 
 ## The toolbar moves into amade-commons
 
-Fractals has a toolbar of raised Motif buttons with icons drawn in Java2D, so that it needs no icon theme and every icon takes the colours of the desktop theme. WritePad has the same. When Fractals was written, its `ToolIcon`, `ToolButtons` and `@Ui` were copies of WritePad's, with other glyphs. Imagescan has a third copy.
+Fractals has a toolbar of buttons with icons drawn in Java2D, so that it needs no icon theme and every icon takes the colours of the desktop theme. WritePad has the same. When Fractals was written, its `ToolIcon`, `ToolButtons` and `@Ui` were copies of WritePad's, with other glyphs. Imagescan has a third copy.
 
 ![The Fractals toolbar at twice its size: open, save, picture, export; back, forward, home; zoom in, zoom out, full screen; Julia set, colour cycling; refresh, stop](images/fractals/toolbar.png)
 
