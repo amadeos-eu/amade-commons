@@ -187,7 +187,19 @@ As in CDE, each workspace can have a backdrop of its own. The page opens on the 
 
 The `Backdrop` record is the key of the cache: when the user picks another picture, scaling or colour for a workspace, its record changes, the next switch renders the new one and the pixmap nobody uses any more is freed. *Refresh Desktop* in the root menu empties the cache, for a picture that changed on disk under the same name.
 
-The **Screen** page sets the screen saver of the session module: which saver (Qix, Swarm, Starfield, Floating Logo, Blank), after how many minutes it starts and whether it locks. The page previews the chosen saver while it is shown, and *Test* runs it on the whole screen. The **Power** page next to it, for screen off, suspend, lid, power button and battery, has a chapter of its own ([chapter 68](68-power.md)).
+The **Screen** page sets the screen saver of the session module: which saver (Qix, Swarm, Starfield, Floating Logo, Lava Lamp, Blank), after how many minutes it starts and whether it locks. The page previews the chosen saver while it is shown, and *Test* runs it on the whole screen. The **Power** page next to it, for screen off, suspend, lid, power button and battery, has a chapter of its own ([chapter 68](68-power.md)).
+
+### A saver module: the lava lamp
+
+Each saver is a `SaverModule` in the session module's `screen.modules` package; `SaverModules.ALL` lists them for the page and the daemon. The same `SaverCanvas` runs a module full screen and in the page's preview, with a Swing `Timer` at about 30 frames per second, so a module has to cope with any size, down to one pixel:
+
+```java title="amadeos-system · session/screen/modules/SaverModule.java"
+--8<-- "amadeos-system/session/src/main/java/eu/amadeos/system/screen/modules/SaverModule.java"
+```
+
+`LavaLampModule` shows what to do when every pixel counts. Its wax is a field of metaballs: each blob adds `(1 - d²/R²)²` within its reach, the pool at the bottom adds a band with a slowly moving surface, and wax is wherever the sum passes 0.5. Blobs carry a temperature: the bottom warms them, the top cools them, and the temperature sets the speed, so they rise and sink at their own pace. Computing the field for every screen pixel would cost too much in QEMU, so the module computes it on a grid of at most 320 columns into the `int[]` of a `BufferedImage` and draws that image once, scaled with bilinear interpolation. Wax has soft edges anyway; the field costs about a millisecond per frame, whatever the screen size. For the same reason it does not ask for `halfSize()`: it already draws small.
+
+The lava lamp is the first module with a setting of its own, its colours (`LavaColors`: Classic, Ocean, Lime, Rose, Amber and Changing, which turns round the colour wheel). `ScreenSettings` carries the id as `lavaColors` (`saver.lava.colors` in `screen.conf`), `SaverModules.create(id, lavaColors, random)` hands it to the module, and the page shows the *Colours* list under the preview only while *Lava Lamp* or *Random* is chosen. A module with more settings than that would get a settings record of its own rather than more fields in `ScreenSettings`.
 
 ## Font: one number for every program
 
