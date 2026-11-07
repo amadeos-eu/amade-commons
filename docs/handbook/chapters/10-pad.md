@@ -300,17 +300,17 @@ The choice is stored, and takes effect at the next start. Changing the language 
 
 ## Following the desktop theme
 
-The user picks a colour theme in Settings, and the desktop changes at once: window frames, Front Panel, backdrop. So does Pad, while it runs. Here is the same window after switching to *Dark Slate*:
+The user picks a desktop look and its colours in Settings (Horizon with its Dark and Light schemes, or the classic look with its palettes), and the desktop changes at once: window frames, top bar or Front Panel, backdrop. So does Pad, while it runs. Here is the same window after switching Horizon to *Light*:
 
-![amade-pad on the Dark Slate theme](images/pad/dark-slate.png)
+![amade-pad in Horizon's Light scheme](images/pad/light.png)
 
-Pad has not a single line of code for this. When the application starts, `AmadeApplication` installs the CDE look with the current theme's colours and then follows the theme:
+Pad has not a single line of code for this. When the application starts, `AmadeApplication` installs the desktop's look (Horizon's flat look or the classic CDE look) with the current theme's colours and then follows the theme:
 
 ```java title="amade-commons · swing/AmadeUI.java"
 --8<-- "amade-commons/src/main/java/eu/amadeos/commons/swing/AmadeUI.java:follow"
 ```
 
-`ThemeStore` watches `~/.config/amadeos/theme.conf`. When the file changes, the new theme is applied on the EDT: Swing's colour table is filled with the new colours, and every open window is updated.
+`ThemeStore` watches `~/.config/amadeos/look.conf` and `theme.conf`. When one of them changes, the new theme is applied on the EDT: Swing's colour table is filled with the new colours, and every open window is updated.
 
 That works for every colour that comes from Swing's colour table: panels, menus, text areas, lists, the status bar. It does **not** work for colours a program sets itself:
 
@@ -318,7 +318,7 @@ That works for every colour that comes from Swing's colour table: panels, menus,
 statusBar.setBackground(AmadeUI.theme().softHighlight());   // wrong: stays after a theme change
 ```
 
-The component keeps that colour forever, and after switching to Dark Slate one bright bar remains. For colours beyond the standard ones, amade-commons has `AmadeUI.style`:
+The component keeps that colour forever, and after switching from Light to Dark one bright bar remains. For colours beyond the standard ones, amade-commons has `AmadeUI.style`:
 
 ```java title="amade-commons · swing/AmadeUI.java"
 --8<-- "amade-commons/src/main/java/eu/amadeos/commons/swing/AmadeUI.java:style"
