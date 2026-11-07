@@ -42,6 +42,8 @@ env:
   WEBCAM_COMMIT: 8beed5bb6d52ee8124a9c3a7811f9c683e61c8f6
   TERMINAL_COMMIT: bf595b4a4111e8da64dc9620b08fe3b2f7c34179
   FONTVIEWER_COMMIT: 84c36222d042d36f117c4719aa2e2261ee959439
+  # Part VIII.
+  CALL_COMMIT: 917732f629694c23d9f0e5f3a701e845d85f4327
   # Part VI: the desktop modules.
   AMADEOS_SYSTEM_COMMIT: d3abb7bc2f6103a118adcf5e76fc3f098238c0c7
   # Chapter 51: the version and release scripts.
@@ -174,6 +176,11 @@ jobs:
           repository: amadeos-eu/amade-fontviewer
           ref: ${{ env.FONTVIEWER_COMMIT }}
           path: amade-fontviewer
+      - uses: actions/checkout@v7
+        with:
+          repository: amadeos-eu/amade-call
+          ref: ${{ env.CALL_COMMIT }}
+          path: amade-call
       - uses: actions/checkout@v7
         with:
           repository: amadeos-eu/amadeos-system
