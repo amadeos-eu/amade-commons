@@ -290,7 +290,7 @@ A backup program that reports every success teaches the user to click its window
 --8<-- "amade-backup/src/main/java/eu/amadeos/apps/backup/agent/BackupAgent.java:remind"
 ```
 
-![The helper's reminder](images/backup/reminder.png)
+The reminder is a notification of normal urgency with the title *Backup Reminder*, a text such as *The backup "Documents" was last made on 2 November, 5 days ago. Connect the disk Backup to back up.* and the actions *Open Backup & Sync* and *Later*. A failed run uses the critical urgency, the title *Backup Problem* and *Close* in place of *Later*. Where no notification service answers, `NoticeWindows` shows the same title, text and buttons in a small window of its own.
 
 `overdue` is the same rule as the yellow dot in the window, now in `Schedule`, so the two never disagree. The time of the last reminder is kept in `~/.local/state/amadeos/backup/agent.json`, together with `knownSince` and the last weekly check, so a new login does not bring the same reminder again. Once a week, after a backup, the helper runs `restic check --read-data-subset=5%`.
 
