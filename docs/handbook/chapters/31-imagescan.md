@@ -6,7 +6,7 @@ amade-imagescan is a scanning program in the spirit of the classic preview-and-f
 
 ## What you build
 
-![amade-imagescan with a preview and a frame around the part to scan](images/imagescan/window.png)
+![amade-imagescan with a scanned page](images/imagescan/window.png)
 
 - **Preview, frame, scan**: *Preview* scans the whole glass at 75 dpi, you drag a frame with eight handles, and *Scan* scans only that part. The label at the frame says how large the result will be.
 - **Scanner, mode and resolution** as the scanner offers them, with the area and the size of the result in the panel. Scans that would need more than 512 MB of memory are confirmed first.
