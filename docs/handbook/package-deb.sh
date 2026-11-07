@@ -25,13 +25,14 @@ package=amade-app-handbook
 mkdocs=mkdocs
 # The mkdocs on the PATH only counts when python3 also has the theme and extensions of mkdocs.yml: the
 # plain Debian package mkdocs comes without them.
-if ! command -v mkdocs >/dev/null 2>&1 || ! python3 -c 'import material, pymdownx' 2>/dev/null; then
+if ! command -v mkdocs >/dev/null 2>&1 || ! python3 -c 'import material, pymdownx, mkdocs_glightbox' 2>/dev/null; then
     # A .venv that no longer runs (the repository moved, or python3 was upgraded) is made again:
     # its scripts point to the python3 of the folder where it was created.
     if ! "$handbook_dir/.venv/bin/mkdocs" --version >/dev/null 2>&1; then
         python3 -m venv --clear "$handbook_dir/.venv"
-        "$handbook_dir/.venv/bin/pip" install --quiet -r "$handbook_dir/requirements.txt"
     fi
+    # Also for an older .venv: brings in what requirements.txt gained since (such as the glightbox plugin).
+    "$handbook_dir/.venv/bin/pip" install --quiet -r "$handbook_dir/requirements.txt"
     mkdocs="$handbook_dir/.venv/bin/mkdocs"
 fi
 

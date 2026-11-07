@@ -33,6 +33,11 @@ theme:
         icon: material/weather-sunny
         name: Light mode
 
+# Click a picture to see it at full size (glightbox ships its script and style with the pages).
+plugins:
+  - search
+  - glightbox
+
 markdown_extensions:
   - admonition
   - attr_list
