@@ -78,7 +78,7 @@ The keys are the method names of `DesktopTheme`: `highlight`, `shadow`, `activeT
 
 *Package `theme` · introduced in [10. Pad](10-pad.md#following-the-desktop-theme) · source: [`ThemeStore`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/theme/ThemeStore.java)*
 
-**What it is for.** The theme the user chose in Settings, and news when they choose another. Settings writes the desktop look into `~/.config/amadeos/look.conf` (`look=classic` or `look=horizon`, and Horizon's scheme and accent), the classic palette's id into `theme.conf`, the icon theme into `icon_theme.conf` (classic) or the `icons` line of `look.conf` (Horizon) and the text size, 1 to 7, into `font.conf`; `ThemeStore` reads them into one `DesktopTheme` and, once `watch()` was called, follows them. The text size is part of the theme value (`fontSize()`, `withFontSize(int)`), so a new size reaches a program the same way a new palette does.
+**What it is for.** The theme the user chose in Settings, and news when they choose another. Settings writes the desktop look into `~/.config/amadeos/look.conf` (`look=classic` or `look=horizon`, and Horizon's scheme, palette and accent), the classic palette's id into `theme.conf`, the icon theme into `icon_theme.conf` (classic) or the `icons` line of `look.conf` (Horizon) and the text size, 1 to 7, into `font.conf`; `ThemeStore` reads them into one `DesktopTheme` and, once `watch()` was called, follows them. The text size is part of the theme value (`fontSize()`, `withFontSize(int)`), so a new size reaches a program the same way a new palette does.
 
 **When to choose it.** `AmadeApplication.launch` creates it and passes it to `AmadeUI.follow`, and `CommonsModule` binds it. A program asks for it only to react to a theme change beyond colours, for example to load other icons when `iconTheme()` changes.
 
@@ -156,14 +156,20 @@ Sliders and progress bars are drawn by AmadeUI too. Swing's cross-platform look 
 
 *Package `swing` · introduced in this chapter, for the Horizon desktop look · source: [`HorizonUI`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/swing/HorizonUI.java), [`HorizonThemes`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/theme/HorizonThemes.java)*
 
-**What it is for.** amadeOS has two desktop looks (Settings > Desktop look). The classic one is CDE, as above. Horizon has a top bar, a dock and flat windows with rounded corners, in a dark or a light scheme with one of six accent colours. In Horizon every program is flat too: rounded buttons without bevels, the default button filled with the accent, text fields with a thin line that turns into an accent ring when focused, slim scroll bars without arrows, tabs underlined in the accent, check boxes and radio buttons filled with the accent when ticked, plain (not bold) fonts. Toolbar buttons stay flat until the mouse is over them.
+**What it is for.** amadeOS has two desktop looks (Settings > Desktop look). The classic one is CDE, as above. Horizon has a top bar, a dock and flat windows with rounded corners, in a dark or a light scheme, each with a few palettes, and one of six accent colours. In Horizon every program is flat too: rounded buttons without bevels, the default button filled with the accent, text fields with a thin line that turns into an accent ring when focused, slim scroll bars without arrows, tabs underlined in the accent, check boxes and radio buttons filled with the accent when ticked, plain (not bold) fonts. Toolbar buttons stay flat until the mouse is over them.
 
 **When to choose it.** Never directly. A program that starts with `AmadeApplication.launch` gets it for free: a Horizon theme in the `ThemeStore` installs it, a classic one takes it away again, while the program runs. The rules of this chapter stay the same: colours come from `AmadeUI.theme()` or a [styler](#colours-of-your-own-style), and both work in Horizon, where `base()` is the window background, `activeTitleBg()` the accent and `fieldBackground()` the background of fields and lists.
 
-**How it works.** A Horizon theme is an ordinary `DesktopTheme` with the id `horizon-<scheme>-<accent>` and `look()` = `HORIZON`, so the desktop processes exchange it like a classic palette:
+**How it works.** A Horizon theme is an ordinary `DesktopTheme` with the id `horizon-<scheme>-<accent>` (or `horizon-<scheme>-<accent>-<palette>`, see below) and `look()` = `HORIZON`, so the desktop processes exchange it like a classic palette:
 
 ```java title="amade-commons · theme/HorizonThemes.java"
 --8<-- "amade-commons/src/main/java/eu/amadeos/commons/theme/HorizonThemes.java:theme"
+```
+
+Each scheme has palettes, the colours of windows, fields and bars, which the user picks in Settings like the classic palettes: *Paper*, *Mist*, *Sand*, *Sage* and *Stone* for the light scheme, *Night*, *Graphite* and *Ocean* for the dark one. The first of each scheme is its default and keeps the short id that older amadeOS versions know (`horizon-light-teal`); the others add their name (`horizon-light-teal-mist`), and `look.conf` gets a `palette=` line. A program built against an older amade-commons ignores the `palette=` line and shows the scheme's default palette with the right accent.
+
+```java title="amade-commons · theme/HorizonThemes.java"
+--8<-- "amade-commons/src/main/java/eu/amadeos/commons/theme/HorizonThemes.java:palette"
 ```
 
 `AmadeUI.install` first installs the classic look as always, then calls `HorizonUI.reset()`, which removes every key Horizon may have set before, and, for a Horizon theme, `HorizonUI.install(theme)`, which replaces the borders, icons and UI classes of the controls:
@@ -186,7 +192,8 @@ A button is a toolbar button when it carries the client property `HorizonUI.TOOL
 | `HorizonUI.Palette.of(theme)` | The colours of the controls: face, hover, pressed, line, accent, text on the accent, scroll thumb |
 | `HorizonUI.TOOL_BUTTON` | Client property for a flat toolbar button |
 | `HorizonUI.ARC` | The corner radius of controls, 8 pixels |
-| `HorizonThemes.theme(scheme, accent)`, `find(id)` | The twelve Horizon themes |
+| `HorizonThemes.theme(scheme, accent, palette)`, `theme(scheme, accent)`, `find(id)` | The Horizon themes: 2 schemes, 8 palettes, 6 accents |
+| `HorizonThemes.Palette.of(scheme)`, `palette(id)`, `id(lookProperties)` | The palettes of a scheme, the palette of a theme id, the theme id `look.conf` names |
 
 !!! warning "Pitfall: a colour from the classic palettes"
     A colour written into the code, a CDE grey for a header or a dark blue for a selection, looks wrong in Horizon's dark scheme. Take it from the theme (`base()`, `fieldBackground()`, `selectionBackground()`, `activeTitleBg()`), and the program fits both looks.
