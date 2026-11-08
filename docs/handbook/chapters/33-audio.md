@@ -11,7 +11,7 @@ Two parts move into amade-commons. `Json` gets its second user, Mail. The transp
 ![amade-audio playing a FLAC album, with the spectrum, the cover and the playlist](images/audio/window.jpg)
 
 - **Four racks**: the *Mixer* with a fader per device, bass and treble, output device and master volume; the *CD* player; the file *Player*; and *Web Radio*. The header rack shows or hides them, and pressing Play on one device stops the others.
-- **Files**: MP3, Ogg Vorbis, AAC, FLAC, WAV and AIFF, and MIDI rendered with Java's software synthesiser. Playlists with shuffle and repeat, M3U files, tags and the cover embedded in a file or found in its folder.
+- **Files**: MP3, Ogg Vorbis, AAC, FLAC, WAV and AIFF, MIDI rendered with Java's software synthesiser, and tracker modules (MOD, XM, S3M, IT) rendered with libopenmpt. Playlists with shuffle and repeat, M3U files, tags and the cover embedded in a file or found in its folder.
 - **CDs** through libcdio on Linux and the system's CD driver on Windows, with titles from CD-Text or MusicBrainz and covers from the Cover Art Archive.
 - **Internet radio**: favourites, search, genres and countries from radio-browser.info, the title that is playing, level meters, and recording to disk.
 - **LCDs** with seven-segment digits, a 16-band spectrum and a scrolling dot-matrix line, in a glow that follows the desktop theme.
@@ -37,7 +37,7 @@ Every device of the rack plays the same way. Something delivers decoded samples,
 --8<-- "amade-audio/src/main/java/eu/amadeos/apps/audio/service/engine/PcmSource.java:source"
 ```
 
-One format for the whole engine, signed 16-bit little-endian PCM, keeps everything after the decoder simple. A file, a CD track and a radio stream are all `PcmSource`s: `AudioInputStreamSource` wraps what Java Sound decoded, `CdPcmSource` reads sectors from the disc, `MidiRenderer` renders a MIDI file. The output is an interface too, `PcmOutput`, with `JavaSoundOutput` as the real one.
+One format for the whole engine, signed 16-bit little-endian PCM, keeps everything after the decoder simple. A file, a CD track and a radio stream are all `PcmSource`s: `AudioInputStreamSource` wraps what Java Sound decoded, `CdPcmSource` reads sectors from the disc, `MidiRenderer` renders a MIDI file, `ModuleRenderer` a tracker module. The output is an interface too, `PcmOutput`, with `JavaSoundOutput` as the real one.
 
 `AudioEngine` holds one `AudioChannel` per device. Playing replaces whatever played before and starts a thread:
 
@@ -214,6 +214,34 @@ The engine's playback thread must never wait for the drive. A drive that spins u
 That thread is also the only one that touches the drive. Stop arrives on another thread while a read may still be running in native code; if `close` freed the libcdio handle right then, the read would write into freed memory and take the whole program down. So `close` only sets a flag, and the reader thread closes the drive itself after its current read.
 
 The reader behind it reads sectors directly with libcdio, as a CD player does. Only a chunk the drive cannot read that way goes to libcdio-paranoia, when it is installed, with three retries per sector before it plays as silence. Paranoia on every sector is meant for ripping, not for listening: it reads overlapping blocks and compares them, which is too slow to keep up in real time, and on copy-protected discs, whose damaged sectors are there on purpose, it retries for minutes. On Windows, `WindowsCdDrive` sends the same requests to the system's CD driver with `DeviceIoControl`, again through JNA, so Audio needs no extra library there.
+
+### Tracker modules: a library that renders
+
+Tracker modules, the music of Amiga and DOS games, are not recordings. A MOD, XM, S3M or IT file holds short sound samples and a score of notes and effects, and a player computes the music from them, much as Gervill does for MIDI. Writing such a player is a project of its own; libopenmpt, the library of the OpenMPT tracker, already reads dozens of these formats and is in Debian as `libopenmpt0t64`. Audio maps the seven functions it needs, again with JNA:
+
+```java title="amade-audio · service/decode/LibOpenMpt.java"
+--8<-- "amade-audio/src/main/java/eu/amadeos/apps/audio/service/decode/LibOpenMpt.java:functions"
+```
+
+`size_t` needs a type of its own, `SizeT`: it is 64 bits on 64-bit Linux and Windows alike, while C's `long`, which JNA's `NativeLong` follows, is only 32 bits on Windows. The module comes from memory, not from a path, so the file name never has to cross into C. libopenmpt's own silent log function goes in as `logfunc`; without it, every odd file prints warnings to the terminal:
+
+```java title="amade-audio · service/decode/ModuleRenderer.java"
+--8<-- "amade-audio/src/main/java/eu/amadeos/apps/audio/service/decode/ModuleRenderer.java:load"
+```
+
+The source asks libopenmpt for as many stereo frames as the engine wants, in the engine's own format. Two methods differ from a decoded file. `skipFrames` jumps to a time instead of rendering everything before it, so the position slider is instant. And `read` and `close` are `synchronized`: this is the CD's lesson again, a Stop on the event thread must not free the module while the playback thread is inside libopenmpt. A render call takes a millisecond or two, so here the lock is simpler than a reader thread of its own:
+
+```java title="amade-audio · service/decode/ModuleRenderer.java"
+--8<-- "amade-audio/src/main/java/eu/amadeos/apps/audio/service/decode/ModuleRenderer.java:source"
+```
+
+`DecoderFactory` picks the renderer by the file name, the same way as for MIDI. Without libopenmpt installed, opening a module fails with a message that names the package, and every other format still plays:
+
+```java title="amade-audio · service/decode/DecoderFactory.java"
+--8<-- "amade-audio/src/main/java/eu/amadeos/apps/audio/service/decode/DecoderFactory.java:open-file"
+```
+
+The test needs a module, but none can be shipped without asking its author. So the test writes one: a ProTracker file is 1,084 bytes of header and order list, a pattern of 64 rows, and the samples. One looped square wave played once at row 0 is enough to check the title, the length (64 rows at speed 6 and 125 BPM, 7.68 seconds), that something audible comes out, and that seeking skips the right number of frames.
 
 ### A checksum, tested against the reference
 
@@ -412,7 +440,8 @@ ALSA's own `null` device works too, but it swallows the samples as fast as they 
 2. **Replay gain.** Many files carry a `REPLAYGAIN_TRACK_GAIN` tag, e.g. `-6.5 dB`. Read it with `TagReader` and apply it with `applyGain`, before the fader. What must happen to a track with a positive gain that would clip?
 3. **Dither.** The 24-bit FLAC files lose their lowest 8 bits in the JDK's converter. Write your own converter that adds triangular noise of one 16-bit step before rounding. Compare the spectrum of a very quiet sine with and without it.
 4. **A new character.** Add the euro sign to `LcdCharacter` and a test to `DotMatrixGlyphTest`. Where does the display fall back when a character is unknown?
-5. **A volume glyph.** Video's planned volume slider (exercise 1 of chapter 32) wants a speaker symbol. Write it as a glyph in Video, not in `TransportGlyph`. When would it move into amade-commons?
+5. **Loop a module.** Many modules are written to loop forever, and `ModuleRenderer` plays them once. libopenmpt's `openmpt_module_set_repeat_count` takes -1 for endless. Add it to `LibOpenMpt` and use it when the player's repeat mode is "one track". What should the seek bar show for a song without an end?
+6. **A volume glyph.** Video's planned volume slider (exercise 1 of chapter 32) wants a speaker symbol. Write it as a glyph in Video, not in `TransportGlyph`. When would it move into amade-commons?
 
 ## Summary
 
