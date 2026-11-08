@@ -97,8 +97,7 @@ public final class ThemeStore implements AutoCloseable {
     private DesktopTheme read() {
         Properties look = readLook(configDirectory);
         DesktopTheme theme = DesktopLook.of(look.getProperty("look")) == DesktopLook.HORIZON
-                ? HorizonThemes.theme(HorizonThemes.Scheme.of(look.getProperty("scheme")),
-                        HorizonThemes.Accent.of(look.getProperty("accent")))
+                ? HorizonThemes.find(HorizonThemes.id(look)).orElseThrow()
                 : readLine(THEME_FILE).flatMap(registry::find).filter(t -> t.look() == DesktopLook.CLASSIC)
                         .orElse(DesktopTheme.WARM_MOTIF);
         theme = theme.withIconTheme(iconTheme(configDirectory, theme));
@@ -108,7 +107,7 @@ public final class ThemeStore implements AutoCloseable {
 
     /**
      * The contents of {@code look.conf} in a configuration directory ({@code look}, {@code scheme},
-     * {@code accent}); empty if there is no such file, which means the classic look.
+     * {@code accent}, {@code palette}); empty if there is no such file, which means the classic look.
      */
     public static Properties readLook(Path configDirectory) {
         Properties p = new Properties();
@@ -146,19 +145,22 @@ public final class ThemeStore implements AutoCloseable {
     }
 
     /**
-     * The text of {@code look.conf} for a theme: its look and, for a Horizon theme, its scheme and accent; the
-     * icon theme chosen for Horizon ({@code icons}) is kept.
+     * The text of {@code look.conf} for a theme: its look and, for a Horizon theme, its scheme, accent and
+     * palette; the icon theme chosen for Horizon ({@code icons}) is kept.
      */
     public static String lookFile(DesktopTheme theme, Properties previous) {
         String scheme = previous.getProperty("scheme", HorizonThemes.DEFAULT_SCHEME.id());
         String accent = previous.getProperty("accent", HorizonThemes.DEFAULT_ACCENT.id());
+        String palette = previous.getProperty("palette", "").strip();
         if (theme.look() == DesktopLook.HORIZON) {
             scheme = HorizonThemes.scheme(theme.id()).id();
             accent = HorizonThemes.accent(theme.id()).id();
+            palette = HorizonThemes.palette(theme.id()).id();
         }
         String icons = previous.getProperty("icons", "").strip();
         return "# The desktop look (Settings > Appearance): classic or horizon, and Horizon's colours\n"
                 + "look=" + theme.look().id() + "\nscheme=" + scheme + "\naccent=" + accent + "\n"
+                + (palette.isEmpty() ? "" : "palette=" + palette + "\n")
                 + (icons.isEmpty() ? "" : "icons=" + icons + "\n");
     }
 
