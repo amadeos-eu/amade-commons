@@ -45,7 +45,7 @@ env:
   # Part VIII.
   CALL_COMMIT: 945ddede7b0b3676eba1f6f23fe853544393f0a4
   # Part VI: the desktop modules.
-  AMADEOS_SYSTEM_COMMIT: d3abb7bc2f6103a118adcf5e76fc3f098238c0c7
+  AMADEOS_SYSTEM_COMMIT: ce102ef356e0aef9d6d38866025f43a9d2090b37
   # Chapter 51: the version and release scripts.
   AMADEOS_CI_COMMIT: c5d64042b79c899bb73df6034dbe366bc06e782a
 
