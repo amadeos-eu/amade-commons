@@ -1,6 +1,6 @@
 # 63. The Front Panel
 
-The Front Panel is the bar at the bottom of the screen, built after CDE's: the clock and calendar on the left, then the drawers of applications, the workspace switch in the middle, and on the right the printers, tools, help, trash and the status cells. It is a desktop module, a single Swing window with no Guice and no presenter, and it is the program users touch most. This chapter shows how a Swing window becomes a dock, how the drawers fill themselves from the installed applications, and how the status cells show what the system is doing.
+The Front Panel is the bar at the bottom of the screen, built after CDE's: the clock and calendar on the left, then the drawers of applications, the workspace switch in the middle, and on the right the printers, Settings, tools, help, trash and the status cells. It is a desktop module, a single Swing window with no Guice and no presenter, and it is the program users touch most. This chapter shows how a Swing window becomes a dock, how the drawers fill themselves from the installed applications, and how the status cells show what the system is doing.
 
 ![The Front Panel: clock, calendar, six drawers, the workspace switch, printers, tools, help, trash and the status cells](images/desktop/front-panel.jpg)
 
@@ -79,6 +79,14 @@ Some drawers mix both kinds. Tools has fixed entries for the desktop's own progr
 ```
 
 `startsOnly` decides what a duplicate is: an entry whose `Exec` is just one of the fixed programs, with or without its directory and field codes such as `%U`, and without `Terminal=true`. So Debian's `xterm.desktop` (`Exec=xterm`) stays out next to *Terminal*, but a user's entry `Exec=xterm -title Backup -e backup.sh` is shown. Leaving out every entry of a fixed program would hide exactly the entries users write for their own scripts.
+
+Settings has a slot of its own besides its entry in Tools, where CDE had its Style Manager. A slot without a drawer is a `DrawerDockWidget` with no tools and `false` for the arrow, the same as the Trash Can:
+
+```java title="amadeos-system · panel-cde/AmadeDesktopPanel.java"
+--8<-- "amadeos-system/panel-cde/src/main/java/eu/amadeos/system/panel/cde/AmadeDesktopPanel.java:settings"
+```
+
+Horizon's dock does the same with a list of fixed programs (`HorizonDock.FIXED`, today only `amadeos-settings.desktop`): they come after the favourites and the running programs, open the dock's system group before the drawers, have no *Remove from dock*, and a favourite with the same id is shown only once, in the fixed place. Their windows are matched to them like any program's, so the running dot works.
 
 That is how *amadeOS Software* and the installer of the live image appear in the screenshot: nobody wrote them into the panel. Software's desktop entry says `Categories=System;Settings;PackageManager;`, and the panel did the rest. For the applications of this book, the desktop entry is part of the package ([chapter 50](50-packaging.md#categories-and-the-front-panel-drawers)); the right `Categories` line is all it takes to get into the right drawer.
 
