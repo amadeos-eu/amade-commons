@@ -113,4 +113,68 @@ class HorizonThemesTest {
         assertEquals("light", ThemeStore.readLook(dir).getProperty("scheme"));
     }
     // --8<-- [end:icons]
+
+    @Test
+    void palettesAddTheirIdOnlyWhenTheyAreNotTheDefault() {
+        HorizonThemes.Scheme light = HorizonThemes.Scheme.LIGHT;
+        assertEquals("horizon-light-teal",
+                HorizonThemes.id(light, HorizonThemes.Accent.TEAL, HorizonThemes.Palette.PAPER));
+        assertEquals("horizon-light-amber-mist",
+                HorizonThemes.id(light, HorizonThemes.Accent.AMBER, HorizonThemes.Palette.MIST));
+        // A palette of the other scheme falls back to the scheme's default
+        assertEquals("horizon-light-teal",
+                HorizonThemes.id(light, HorizonThemes.Accent.TEAL, HorizonThemes.Palette.OCEAN));
+        assertEquals(HorizonThemes.Palette.MIST, HorizonThemes.palette("horizon-light-amber-mist"));
+        assertEquals(HorizonThemes.Accent.AMBER, HorizonThemes.accent("horizon-light-amber-mist"));
+        assertEquals(light, HorizonThemes.scheme("horizon-light-amber-mist"));
+        assertEquals(HorizonThemes.Palette.PAPER, HorizonThemes.palette("horizon-light-amber"));
+        assertEquals(HorizonThemes.Palette.NIGHT, HorizonThemes.palette("horizon-dark-amber-unknown"));
+        assertEquals(HorizonThemes.Palette.PAPER, HorizonThemes.Palette.of(light).get(0));
+        assertEquals(HorizonThemes.Palette.NIGHT, HorizonThemes.Palette.of(HorizonThemes.Scheme.DARK).get(0));
+        assertEquals("Horizon Light (Sand)", HorizonThemes.theme(light, HorizonThemes.Accent.RED,
+                HorizonThemes.Palette.SAND).name());
+    }
+
+    @Test
+    void everyPaletteKeepsItsSchemeAndReadableText() {
+        for (HorizonThemes.Palette p : HorizonThemes.Palette.values()) {
+            for (HorizonThemes.Accent accent : HorizonThemes.Accent.values()) {
+                DesktopTheme t = HorizonThemes.theme(p.scheme(), accent, p);
+                assertEquals(p.scheme() == HorizonThemes.Scheme.DARK, t.isDark(), p.id());
+                assertEquals(t, HorizonThemes.find(t.id()).orElseThrow(), t.id());
+                assertTrue(contrast(t.textActive(), t.base()) >= 7, p.id() + " text");
+                assertTrue(contrast(t.textActive(), t.sunkenBg()) >= 7, p.id() + " field text");
+                assertTrue(contrast(t.textInactive(), t.base()) >= 3, p.id() + " inactive text");
+            }
+        }
+        // The light palettes other than Paper are less bright than Paper
+        for (HorizonThemes.Palette p : HorizonThemes.Palette.of(HorizonThemes.Scheme.LIGHT)) {
+            if (p.isStandard()) continue;
+            assertTrue(luminance(p.base()) < luminance(HorizonThemes.Palette.PAPER.base()), p.id());
+            assertTrue(luminance(p.fields()) < luminance(HorizonThemes.Palette.PAPER.fields()), p.id());
+        }
+    }
+
+    @Test
+    void storeReadsAndWritesThePalette() throws Exception {
+        Files.writeString(dir.resolve(ThemeStore.LOOK_FILE), "look=horizon\nscheme=light\naccent=green\npalette=sage\n");
+        assertEquals("horizon-light-green-sage", new ThemeStore(dir, new ThemeRegistry()).current().id());
+        String text = ThemeStore.lookFile(HorizonThemes.theme(HorizonThemes.Scheme.LIGHT, HorizonThemes.Accent.RED,
+                HorizonThemes.Palette.STONE), new Properties());
+        assertTrue(text.contains("palette=stone"), text);
+        Properties previous = new Properties();
+        previous.setProperty("palette", "stone");
+        assertTrue(ThemeStore.lookFile(DesktopTheme.WARM_MOTIF, previous).contains("palette=stone"));
+    }
+
+    private static double contrast(Color a, Color b) {
+        double la = luminance(a), lb = luminance(b);
+        return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+    }
+
+    private static double luminance(Color c) {
+        double[] v = {c.getRed() / 255.0, c.getGreen() / 255.0, c.getBlue() / 255.0};
+        for (int i = 0; i < 3; i++) v[i] = v[i] <= 0.03928 ? v[i] / 12.92 : Math.pow((v[i] + 0.055) / 1.055, 2.4);
+        return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2];
+    }
 }
