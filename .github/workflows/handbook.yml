@@ -18,7 +18,7 @@ permissions:
 
 env:
   # Full hashes: actions/checkout does not take short ones.
-  PAD_COMMIT: 910e537d05103d68eeadf49beeac54d1a43045bc
+  PAD_COMMIT: 11b786e478d0f945eb5f702d40785d7fbfbda056
   WEB_COMMIT: d43fbd11e15f1b9ca7af854502ff101b7d5d332c
   FILES_COMMIT: 7cfa055206a184eee62126356ba3876af6e6c208
   CALENDAR_COMMIT: 0bb08379e4b9681638e67568738335c7dee14434

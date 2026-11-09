@@ -20,11 +20,11 @@ All code of the editor is under `eu.amadeos.apps.pad`:
 | Package | Job | Classes in Pad |
 |---|---|---|
 | `bootstrap` | Start-up and wiring | `AmadePadApplication`, `PadModule` |
-| `domain` | What the program is about, no user interface | `TextDocument`, `TextFormat`, `DocumentState` |
-| `repository` | Files on disk | `DocumentRepository`, `FileSystemDocumentRepository`, `TextCodec` |
-| `service` | Work that is neither rules nor storage | `DocumentService`, `SearchService` |
+| `domain` | What the program is about, no user interface | `TextDocument`, `TextFormat`, `DocumentState`, `SyntaxLanguage`, `Indentation` |
+| `repository` | Files on disk | `DocumentRepository`, `FileSystemDocumentRepository`, `TextCodec`, `EditorSettings` |
+| `service` | Work that is neither rules nor storage | `DocumentService`, `SearchService`, `format.DocumentFormatter` |
 | `ui.main` | The main window and its presenter | `MainView`, `MainPresenter`, `MainWindow`, `MainMenuBar` |
-| `ui.editor`, `ui.search` | Components and dialogs | `EditorTab`, `LineNumberMargin`, `FindReplaceDialog` |
+| `ui.editor`, `ui.search` | Components and dialogs | `EditorTab`, `SyntaxColors`, `FindReplaceDialog` |
 
 Each package has one job:
 

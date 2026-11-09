@@ -244,7 +244,7 @@ A *popup* reminder is a desktop notification ([chapter 67](67-notifications.md))
 
 The four views are components that paint themselves. There are no `JLabel`s per day: Month view paints a grid with `drawString` and `fillRect`, Week view paints columns and shaded hours. Painting is faster than hundreds of components, and the layout is exactly the one dtcm had.
 
-The colours come from the theme at the moment of painting, as Pad's line number margin does (chapter 10): each `paintComponent` starts with `AmadeUI.theme()` and uses `fieldBackground()`, `selectionBackground()` and the other colours of the palette. When the user picks another theme, amade-commons repaints all windows, and the views are in the new colours without any code of their own.
+The colours come from the theme at the moment of painting, as Audio's racks and faders do (chapter 33): each `paintComponent` starts with `AmadeUI.theme()` and uses `fieldBackground()`, `selectionBackground()` and the other colours of the palette. When the user picks another theme, amade-commons repaints all windows, and the views are in the new colours without any code of their own.
 
 ## Typing and picking dates
 
