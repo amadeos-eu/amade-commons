@@ -266,7 +266,7 @@ It always starts from `UIManager.getLookAndFeelDefaults()`, never from the fonts
 AmadeUI.style(scroll.getViewport(), (viewport, theme) -> viewport.setBackground(theme.fieldBackground()));
 ```
 
-**When to choose it.** For a component whose colours you set with `setBackground`, `setForeground` or a border. A component that paints its own pixels needs no styler: it reads `AmadeUI.theme()` in `paintComponent`, and the repaint after a theme change does the rest. Pad's line number margin and Audio's racks and faders work that way.
+**When to choose it.** For a component whose colours you set with `setBackground`, `setForeground` or a border. A component that paints its own pixels needs no styler: it reads `AmadeUI.theme()` in `paintComponent`, and the repaint after a theme change does the rest. Calendar's views and Audio's racks and faders work that way; Pad's editor, whose colours are set, uses a styler.
 
 **How it works.** The styler is kept in a client property of the component. `apply` walks every window and runs the stylers it finds, menus' pop-ups included.
 

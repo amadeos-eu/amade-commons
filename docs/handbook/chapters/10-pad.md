@@ -165,7 +165,7 @@ An error message should say what happened in the user's language. Java's excepti
 
 ## The window
 
-`MainWindow` implements `MainView`: tabs in the middle, a status bar at the bottom, the menu bar on top. Each tab is an `EditorTab`, a `JTextArea` in a scroll pane with a `LineNumberMargin` as its row header. Every change of the text counts as a revision:
+`MainWindow` implements `MainView`: tabs in the middle, a status bar at the bottom, the menu bar on top. Each tab is an `EditorTab`, a text area in a scroll pane whose gutter shows the line numbers (the text area colours syntax, see below). Every change of the text counts as a revision:
 
 ```java title="amade-pad · ui/editor/EditorTab.java"
 --8<-- "amade-pad/src/main/java/eu/amadeos/apps/pad/ui/editor/EditorTab.java:changes"
@@ -203,6 +203,81 @@ The find dialog is not modal: it stays open while you edit, like in every good e
 ```
 
 The obvious way to search without case is `text.toLowerCase().indexOf(query.toLowerCase())`. But changing the case can change the length of a string: the German `ß` becomes `SS` in upper case, and `İ` (Turkish capital I with dot) becomes two characters in lower case. The position found in the converted text is then not the position in the editor, and Pad would select the wrong letters. `regionMatches(true, ...)` compares character by character without converting the string.
+
+## Colours and indentation for source code
+
+People open more than notes in a text editor: a shell script, a `build.gradle`, the JSON file of a web service. For these Pad colours the syntax, keeps the indentation and can re-indent JSON and XML.
+
+![A Java file in Horizon Dark: syntax colours, fold markers, language and indentation in the status bar](images/pad/syntax.png)
+
+### Choosing a library
+
+Colouring needs a *tokenizer* per language, which knows that `"` starts a string in Java but `#` starts a comment in a shell script. Writing one for 34 languages would be more work than all of Pad so far. [RSyntaxTextArea](https://github.com/bobbylight/RSyntaxTextArea) has them, and it is a subclass of `JTextArea`: find and replace, word wrap and the document listener keep working, and it adds automatic indentation, code folding, bracket matching and its own undo. Before you take a library, check three things: its licence (BSD 3-Clause, which asks for its notice in every copy, so Pad ships it in the jar and in the Debian `copyright` file), whether it is maintained, and whether it fits the toolkit you already use.
+
+```groovy title="amade-pad · build.gradle"
+implementation 'com.fifesoft:rsyntaxtextarea:3.6.0'
+```
+
+### Which language?
+
+The language is a domain question, so it lives in `domain`, without Swing. Each language knows the highlighter's media type, its file name extensions and file names:
+
+```java title="amade-pad · domain/SyntaxLanguage.java"
+--8<-- "amade-pad/src/main/java/eu/amadeos/apps/pad/domain/SyntaxLanguage.java:detect"
+```
+
+The file name is asked first, then the content: a script called `backup` without an extension still says `#!/bin/bash` in its first line. *View → Syntax* lets the user overrule the guess; from then on `languageChosen()` is true and a *Save As* under a new name does not change the colouring back.
+
+### Which indentation?
+
+A file that is already indented with four spaces must not get two-space lines added to it. So Pad looks at the file first:
+
+```java title="amade-pad · domain/Indentation.java"
+--8<-- "amade-pad/src/main/java/eu/amadeos/apps/pad/domain/Indentation.java:detect"
+```
+
+Counting the *steps* between lines, not the indentation itself, gives the width: a line at eight spaces under one at four is one level of four. The ` * ` lines of a Javadoc comment are one column off and are skipped. If the file says nothing, the language decides (a Makefile needs tabs, YAML forbids them), and last the user's default, two spaces, kept in `editor.properties`. The presenter puts it together when a file is opened:
+
+```java title="amade-pad · ui/main/MainPresenter.java"
+--8<-- "amade-pad/src/main/java/eu/amadeos/apps/pad/ui/main/MainPresenter.java:recognise"
+```
+
+The text area only needs to know the width and whether to emulate tabs with spaces; RSyntaxTextArea then indents after Enter, and Tab and Shift+Tab indent selected lines:
+
+```java title="amade-pad · ui/editor/EditorTab.java"
+--8<-- "amade-pad/src/main/java/eu/amadeos/apps/pad/ui/editor/EditorTab.java:indentation"
+```
+
+One thing it does not do: with spaces, Backspace removes one space, so leaving a level of four means four presses. Pad replaces the Backspace action of the text area and keeps the original for everything else:
+
+```java title="amade-pad · ui/editor/EditorTab.java"
+--8<-- "amade-pad/src/main/java/eu/amadeos/apps/pad/ui/editor/EditorTab.java:backspace"
+```
+
+### Colours from the theme
+
+RSyntaxTextArea comes with its own colour themes, but they would ignore the desktop. Pad gives each kind of token a colour from one palette for light and one for dark themes, and takes background, text and selection from `DesktopTheme`, registered with `AmadeUI.style` so a theme change applies at once:
+
+```java title="amade-pad · ui/editor/SyntaxColors.java"
+--8<-- "amade-pad/src/main/java/eu/amadeos/apps/pad/ui/editor/SyntaxColors.java:palette"
+```
+
+### Formatting without changing data
+
+*Edit → Format Document* re-indents JSON and XML. The obvious way, parse the text and write it out again, changes data: a JSON parser turns `1.50e3` into a `double` and writes `1500`, an XML parser resolves entities and drops the DOCTYPE. Pad's formatters work on the *tokens* of the text instead and copy each one as it was; they only decide where lines break and how deep they are indented. They check the grammar on the way and refuse a broken file with its line number, so the user's text is never half-formatted:
+
+```java title="amade-pad · service/format/DocumentFormatter.java"
+--8<-- "amade-pad/src/main/java/eu/amadeos/apps/pad/service/format/DocumentFormatter.java:format"
+```
+
+```java title="amade-pad · ui/main/MainPresenter.java"
+--8<-- "amade-pad/src/main/java/eu/amadeos/apps/pad/ui/main/MainPresenter.java:format"
+```
+
+`replaceText` replaces the text inside one *atomic edit*, so a single Undo brings the old text back.
+
+!!! warning "Pitfall: XML can read files"
+    An XML document may declare `<!ENTITY x SYSTEM "file:///etc/passwd">` and use `&x;`. A parser with default settings reads that file, or fetches a URL. Pad's check switches off external entities and DTDs before it parses anything a user opened.
 
 ## Testing the presenter
 
@@ -324,7 +399,7 @@ The component keeps that colour forever, and after switching from Light to Dark 
 --8<-- "amade-commons/src/main/java/eu/amadeos/commons/swing/AmadeUI.java:style"
 ```
 
-The *styler* is a function from theme to colours; it runs now and again after every theme change. Pad does not need one: its text area takes `TextArea.background` from the theme. The line number margin paints itself and simply asks for `AmadeUI.theme()` each time it paints, which is the other correct way: a component that draws its own pixels reads the theme while drawing, and the repaint after a theme change does the rest. Files, Calendar, Mail and WritePad use `style`, and you will see them in their chapters.
+The *styler* is a function from theme to colours; it runs now and again after every theme change. Pad uses one for its editor: RSyntaxTextArea gets its text, selection, gutter and syntax colours set by `SyntaxColors` (see *Colours and indentation for source code* above), so `EditorTab` registers it with `style` and the colours come back after every theme change. The other correct way is for a component that draws its own pixels: it reads `AmadeUI.theme()` in `paintComponent`, and the repaint after a theme change does the rest. Files, Calendar, Mail and WritePad use `style`, and you will see them in their chapters.
 
 ## Starting it
 
@@ -377,7 +452,7 @@ Pad is the first application of this book, but not the first program on amadeOS:
 | `LocaleSettings`, `LocaleResolution`, `Language` | `i18n` | Which language; *Options → Language* |
 | `XdgDirectories` | `config` | Where settings live |
 
-And what stays in Pad? Everything about text files: `TextCodec`, the atomic writing of documents, the line number margin, find and replace. No other application of the book reads plain text files with unknown encodings, so these stay where they are, until one does.
+And what stays in Pad? Everything about text files: `TextCodec`, the atomic writing of documents, syntax colours and indentation, find and replace. No other application of the book reads plain text files with unknown encodings, so these stay where they are, until one does.
 
 !!! tip "Tip: resist the shared library"
     It is tempting to put `TextCodec` into amade-commons right away, "because it is useful". Wait. When the second program needs it, you will know which parts of it are general and which are Pad's. A library that only contains what two programs really share stays small enough to understand.
