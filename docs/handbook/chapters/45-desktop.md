@@ -152,6 +152,7 @@ The command gets the password on its standard input and has 30 seconds to finish
 | `complete(typed, limit)` | `Recipient`s for an address field: people whose name, nickname or address has a word starting with `typed`, then groups |
 | `birthdays(from, to)` | The birthdays in a range of days, as `BirthdayOn` with the date and the age |
 | `refresh()` | Looks at the folder again on the next call |
+| `ContactDirectory.readFile(file)` | The cards of any `.vcf` file, such as a phone's export with many cards in one file |
 | `Recipient.mailbox(name, address)` | `Anna Berger <anna@example.org>`, quoted where RFC 5322 needs it |
 
 **When to choose it.** Whenever a program needs a person's e-mail or postal address, phone number or birthday. Ask for it in a constructor; do not read the vCard files yourself, and do not change them: amade-contacts is the program that writes contacts, and it keeps what it does not understand.

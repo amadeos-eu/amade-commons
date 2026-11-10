@@ -104,6 +104,17 @@ class ContactDirectoryTest {
     }
 
     @Test
+    void readsAFileWithSeveralCardsOutsideTheAddressBooks(@TempDir Path downloads) throws IOException {
+        Path export = downloads.resolve("export.vcf");
+        Files.writeString(export, card("e1", "FN:Eva Roth", "ADR:;;Mühlweg 2;Wendlingen;;73240;")
+                + card("e2", "FN:Max Neumann"));
+        List<ContactCard> cards = ContactDirectory.readFile(export);
+        assertEquals(List.of("Eva Roth", "Max Neumann"), cards.stream().map(ContactCard::name).toList());
+        assertEquals("Mühlweg 2", cards.getFirst().address().orElseThrow().street());
+        assertEquals("", cards.getFirst().book());
+    }
+
+    @Test
     void cardsWithoutNamePartsOrAddressesHaveEmptyValues() {
         ContactCard c = new ContactCard("x", "", "Anna", "", "", List.of(), null, List.of());
         assertEquals(ContactCard.NameParts.EMPTY, c.parts());

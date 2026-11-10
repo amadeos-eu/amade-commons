@@ -132,16 +132,29 @@ public final class ContactDirectory {
 
     private static List<ContactCard> read(Path file) throws IOException {
         if (Files.size(file) > MAX_FILE_SIZE) return List.of();
-        byte[] bytes = Files.readAllBytes(file);
-        String text;
+        String name = file.getFileName().toString();
+        return VCardReader.read(decode(Files.readAllBytes(file)), file.getParent().getFileName().toString(),
+                name.substring(0, name.length() - 4));
+    }
+
+    /**
+     * Every card of a vCard file anywhere, such as an export of a phone's address book with many cards in one
+     * file; for programs that take a {@code .vcf} file as a list of people. The cards have no address book.
+     */
+    public static List<ContactCard> readFile(Path file) throws IOException {
+        String name = file.getFileName().toString();
+        int dot = name.lastIndexOf('.');
+        return VCardReader.read(decode(Files.readAllBytes(file)), "", dot > 0 ? name.substring(0, dot) : name);
+    }
+
+    /** UTF-8, or Latin-1 for old vCard 2.1 files that are not valid UTF-8. */
+    private static String decode(byte[] bytes) {
         try {
-            text = StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT)
+            return StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT)
                     .decode(java.nio.ByteBuffer.wrap(bytes)).toString();
         } catch (CharacterCodingException e) {
-            text = new String(bytes, StandardCharsets.ISO_8859_1); // old vCard 2.1 files
+            return new String(bytes, StandardCharsets.ISO_8859_1);
         }
-        String name = file.getFileName().toString();
-        return VCardReader.read(text, file.getParent().getFileName().toString(), name.substring(0, name.length() - 4));
     }
 
     // ---- address completion ---------------------------------------------------------------------
