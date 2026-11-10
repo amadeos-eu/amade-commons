@@ -76,6 +76,54 @@ class ContactDirectoryTest {
     }
 
     @Test
+    void readsNamePartsTitlePhonesAndPostalAddresses() throws IOException {
+        write("personal", "d.vcf", card("d4", "FN:Dr. Paul Engel", "N:Engel;Paul;Maria;Dr.;jun.", "TITLE:Zahnarzt",
+                "TEL;TYPE=work,voice:+49 7071 555 01", "TEL;TYPE=cell;PREF=1:tel:+49 170 555 0199",
+                "ADR;TYPE=work:;;Bahnhofstraße 1;Tübingen;;72072;Deutschland",
+                "ADR;TYPE=home;PREF=1:;c/o Familie Engel;Am Hang 7\\, Hinterhaus;Tübingen;BW;72070;",
+                "ADR:;;;;;;"));
+
+        ContactCard paul = new ContactDirectory(root, new TestClock()).contacts().getFirst();
+
+        assertEquals(new ContactCard.NameParts("Dr.", "Paul", "Maria", "Engel", "jun."), paul.parts());
+        assertEquals("Zahnarzt", paul.title());
+        assertEquals(List.of("+49 170 555 0199", "+49 7071 555 01"),
+                paul.phones().stream().map(ContactCard.Phone::number).toList());
+        assertEquals(List.of("work"), paul.phones().get(1).types());
+        assertEquals(2, paul.addresses().size());
+        ContactCard.Address home = paul.address().orElseThrow();
+        assertEquals("c/o Familie Engel", home.extended());
+        assertEquals("Am Hang 7, Hinterhaus", home.street());
+        assertEquals("72070", home.postalCode());
+        assertEquals("Tübingen", home.locality());
+        assertEquals("BW", home.region());
+        assertEquals("", home.country());
+        assertEquals(List.of("home"), home.types());
+        assertEquals("Deutschland", paul.addresses().get(1).country());
+        assertEquals("+49 170 555 0199", paul.phone().orElseThrow());
+    }
+
+    @Test
+    void readsAFileWithSeveralCardsOutsideTheAddressBooks(@TempDir Path downloads) throws IOException {
+        Path export = downloads.resolve("export.vcf");
+        Files.writeString(export, card("e1", "FN:Eva Roth", "ADR:;;Mühlweg 2;Wendlingen;;73240;")
+                + card("e2", "FN:Max Neumann"));
+        List<ContactCard> cards = ContactDirectory.readFile(export);
+        assertEquals(List.of("Eva Roth", "Max Neumann"), cards.stream().map(ContactCard::name).toList());
+        assertEquals("Mühlweg 2", cards.getFirst().address().orElseThrow().street());
+        assertEquals("", cards.getFirst().book());
+    }
+
+    @Test
+    void cardsWithoutNamePartsOrAddressesHaveEmptyValues() {
+        ContactCard c = new ContactCard("x", "", "Anna", "", "", List.of(), null, List.of());
+        assertEquals(ContactCard.NameParts.EMPTY, c.parts());
+        assertEquals("", c.title());
+        assertTrue(c.address().isEmpty());
+        assertTrue(c.phone().isEmpty());
+    }
+
+    @Test
     void readsOlderVCardVersions() {
         String v21 = """
                 BEGIN:VCARD

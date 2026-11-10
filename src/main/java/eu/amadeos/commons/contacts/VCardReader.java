@@ -18,7 +18,8 @@ import java.util.regex.Pattern;
 
 /**
  * Reads the few vCard properties other programs need, without a vCard library: {@code UID}, {@code FN}, {@code N},
- * {@code ORG}, {@code NICKNAME}, {@code EMAIL}, {@code BDAY} and {@code CATEGORIES}, from vCard 2.1, 3.0 and 4.0.
+ * {@code ORG}, {@code NICKNAME}, {@code EMAIL}, {@code BDAY}, {@code CATEGORIES}, {@code TITLE}, {@code TEL} and
+ * {@code ADR}, from vCard 2.1, 3.0 and 4.0.
  * It unfolds lines, drops group prefixes ({@code item1.EMAIL}), unescapes values and decodes vCard 2.1's
  * {@code QUOTED-PRINTABLE}. Everything else in a card is skipped.
  */
@@ -59,6 +60,10 @@ final class VCardReader {
         String uid = "";
         String fn = "";
         String n = "";
+        ContactCard.NameParts parts = null;
+        String title = "";
+        List<ContactCard.Phone> phones = new ArrayList<>();
+        List<ContactCard.Address> addresses = new ArrayList<>();
         String org = "";
         String nickname = "";
         ContactCard.Birthday birthday = null;
@@ -68,7 +73,14 @@ final class VCardReader {
             switch (p.name()) {
                 case "UID" -> uid = text(p).replaceFirst("(?i)^urn:uuid:", "");
                 case "FN" -> fn = text(p);
-                case "N" -> n = name(components(p, ';'));
+                case "N" -> {
+                    List<String> c = components(p, ';');
+                    n = name(c);
+                    parts = new ContactCard.NameParts(part(c, 3), part(c, 1), part(c, 2), part(c, 0), part(c, 4));
+                }
+                case "TITLE" -> title = text(p);
+                case "TEL" -> phone(p).ifPresent(phones::add);
+                case "ADR" -> address(p).ifPresent(addresses::add);
                 case "ORG" -> org = String.join(", ", components(p, ';').stream().filter(s -> !s.isBlank()).toList());
                 case "NICKNAME" -> nickname = components(p, ',').stream().findFirst().orElse("");
                 case "EMAIL" -> email(p).ifPresent(emails::add);
@@ -80,9 +92,15 @@ final class VCardReader {
         }
         // Preferred addresses first, the order of the file otherwise (List.sort is stable).
         emails.sort(java.util.Comparator.comparingInt(ContactCard.Email::preference));
+        phones.sort(java.util.Comparator.comparingInt(ContactCard.Phone::preference));
+        addresses.sort(java.util.Comparator.comparingInt(ContactCard.Address::preference));
         String label = !fn.isBlank() ? fn : !n.isBlank() ? n : !org.isBlank() ? org : !nickname.isBlank() ? nickname : "";
         return new ContactCard(uid.isBlank() ? fallbackUid : uid, book, label, nickname, org, emails, birthday,
-                List.copyOf(groups));
+                List.copyOf(groups), parts, title, phones, addresses);
+    }
+
+    private static String part(List<String> parts, int i) {
+        return i < parts.size() ? parts.get(i) : "";
     }
 
     /** "Dr. Anna Maria Berger" from {@code N:Berger;Anna;Maria;Dr.;}. */
@@ -96,6 +114,30 @@ final class VCardReader {
     private static Optional<ContactCard.Email> email(Property p) {
         String address = text(p).replaceFirst("(?i)^mailto:", "").strip();
         if (address.isEmpty() || !address.contains("@")) return Optional.empty();
+        Set<String> types = new LinkedHashSet<>();
+        int preference = preference(p, types);
+        return Optional.of(new ContactCard.Email(address, preference, List.copyOf(types)));
+    }
+
+    private static Optional<ContactCard.Phone> phone(Property p) {
+        String number = text(p).replaceFirst("(?i)^tel:", "").strip();
+        if (number.isEmpty()) return Optional.empty();
+        Set<String> types = new LinkedHashSet<>();
+        int preference = preference(p, types);
+        return Optional.of(new ContactCard.Phone(number, preference, List.copyOf(types)));
+    }
+
+    private static Optional<ContactCard.Address> address(Property p) {
+        List<String> c = components(p, ';');
+        Set<String> types = new LinkedHashSet<>();
+        int preference = preference(p, types);
+        ContactCard.Address a = new ContactCard.Address(part(c, 0), part(c, 1), part(c, 2), part(c, 3), part(c, 4),
+                part(c, 5), part(c, 6), preference, List.copyOf(types));
+        return a.isEmpty() ? Optional.empty() : Optional.of(a);
+    }
+
+    /** The {@code PREF} of a property (100 if none); its {@code TYPE}s go in lower case into {@code types}. */
+    private static int preference(Property p, Set<String> types) {
         int preference = 100;
         for (String pref : p.parameter("PREF")) {
             try {
@@ -104,15 +146,14 @@ final class VCardReader {
                 preference = Math.min(preference, 1);
             }
         }
-        Set<String> types = new LinkedHashSet<>();
         for (String type : p.parameter("TYPE")) {
             for (String t : type.split(",")) {
                 String lower = t.strip().toLowerCase(Locale.ROOT);
                 if (lower.equals("pref")) preference = Math.min(preference, 1);
-                else if (!lower.isEmpty() && !lower.equals("internet")) types.add(lower);
+                else if (!lower.isEmpty() && !lower.equals("internet") && !lower.equals("voice")) types.add(lower);
             }
         }
-        return Optional.of(new ContactCard.Email(address, preference, List.copyOf(types)));
+        return preference;
     }
 
     /**

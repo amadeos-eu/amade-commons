@@ -141,20 +141,21 @@ The command gets the password on its standard input and has 30 seconds to finish
 
 ## The address books: ContactDirectory
 
-*Package `contacts` · introduced in [25. Contacts](25-contacts.md#contacts-in-other-programs), used by Mail and Calendar · source: [`ContactDirectory`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/contacts/ContactDirectory.java)*
+*Package `contacts` · introduced in [25. Contacts](25-contacts.md#contacts-in-other-programs), used by Mail, Calendar and the Label Printer · source: [`ContactDirectory`](https://github.com/amadeos-eu/amade-commons/blob/main/src/main/java/eu/amadeos/commons/contacts/ContactDirectory.java)*
 
 **What it is for.** Reading the contacts that amade-contacts keeps in `~/.local/share/amadeos/contacts`, one folder per address book and one vCard file per contact, from any program. It reads; it never writes.
 
 | Method | What it does |
 |---|---|
 | `ContactDirectory.of(xdg)` | The directory of the running user (`CommonsModule` binds one) |
-| `contacts()` | Every contact as a `ContactCard`: name, nickname, organization, e-mail addresses (preferred first), birthday, groups |
+| `contacts()` | Every contact as a `ContactCard`: name, nickname, organization, e-mail addresses (preferred first), birthday, groups, and for labels and letters the name parts (`NameParts`), job title, phone numbers and postal addresses (`Address`, preferred first) |
 | `complete(typed, limit)` | `Recipient`s for an address field: people whose name, nickname or address has a word starting with `typed`, then groups |
 | `birthdays(from, to)` | The birthdays in a range of days, as `BirthdayOn` with the date and the age |
 | `refresh()` | Looks at the folder again on the next call |
+| `ContactDirectory.readFile(file)` | The cards of any `.vcf` file, such as a phone's export with many cards in one file |
 | `Recipient.mailbox(name, address)` | `Anna Berger <anna@example.org>`, quoted where RFC 5322 needs it |
 
-**When to choose it.** Whenever a program needs a person's address or birthday. Ask for it in a constructor; do not read the vCard files yourself, and do not change them: amade-contacts is the program that writes contacts, and it keeps what it does not understand.
+**When to choose it.** Whenever a program needs a person's e-mail or postal address, phone number or birthday. Ask for it in a constructor; do not read the vCard files yourself, and do not change them: amade-contacts is the program that writes contacts, and it keeps what it does not understand.
 
 **How it works.** A small reader of its own takes the few properties it needs from vCard 2.1, 3.0 and 4.0 and skips the rest, so the programs do not carry a vCard library. The folder is looked at again at most every two seconds, and only changed files are read again, so calling it on every key press is cheap:
 
