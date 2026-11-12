@@ -216,12 +216,22 @@ The amadeOS image installs every package in its folder `config/packages.chroot/`
 
 It expects a checkout of the amadeos repository next to the program's (`../amadeos`). You rarely call it yourself: `buildDistribution.sh` in the amadeos repository builds the whole distribution:
 
-1. It clones every repository of `repositories.list` that is not checked out yet, and pulls `main` of all of them.
+1. It clones every repository of `repositories.list` that is not checked out yet, and pulls `main` of all of them. Repositories marked `# optional` are left out (see below).
 2. It builds amade-commons, then every repository whose `build.gradle` has an `installToAmadeOs` task, against that checkout of amade-commons (the composite build of chapter 2), and removes the packages of an earlier build first.
 3. It builds the handbooks' packages.
 4. It runs `build.sh`, which makes the ISO image with live-build.
 
 So a new program needs two things to be in the image: the `installToAmadeOs` task, and its repository name in `amadeos/repositories.list`. `./buildDistribution.sh --apps amade-fractals --quick` builds only one program and repacks the previous image, which is much faster while you try a package.
+
+Not every program belongs in the image. The image brings only two games, Mines and Solitaire; the other games are marked as optional:
+
+```text title="amadeos · repositories.list"
+amade-mines-game
+amade-solitaire-game
+amade-artillery-game    # optional
+```
+
+An optional program is released and published on apt.amadeos.eu like every other one ([chapter 51](51-releases.md)), so Software offers it, but the image and the meta package `amadeos-desktop` leave it out (`amadeos-desktop` only *suggests* it). The meta package `amadeos-games` recommends every game, optional or not. `./buildDistribution.sh --all-games` builds the optional ones into the image after all, to try them there; `scripts/list-repositories.sh --image` and `--optional` print the two lists.
 
 ## The Windows installer
 
@@ -305,7 +315,7 @@ An MSI under 30 MB has no Java runtime inside and would not run on a machine wit
 5. `docs/screenshots/<name>.png`, taken on amadeOS with the program in use.
 6. The tasks `deb` (with the right `Section` and `Depends`), `installToAmadeOs` and, if the program runs on Windows, `windowsInstaller` with a new upgrade UUID. Otherwise a *Platforms* section in the README says that it is Linux only, and why.
 7. The CI jobs for both packages, with the file list of the package check, and the version, release and commit jobs of [chapter 51](51-releases.md).
-8. The repository name in `amadeos/repositories.list`.
+8. The repository name in `amadeos/repositories.list`, with `# optional` after it if the program should not be in the image (a new game, for example).
 9. Install the package on amadeOS: the program is in its drawer with its icon, starts, and Software shows its description and screenshot.
 
 ## Exercises
@@ -322,6 +332,6 @@ An MSI under 30 MB has no Java runtime inside and would not run on a machine wit
 - A Debian package is the installed files plus `DEBIAN/control`. The amade programs put the jar into `/opt/<name>`, a start script into `/usr/bin` that passes the shared Java options (`/etc/amadeos/java/app.options`) first, and the desktop entry, the 48-pixel icon, the AppStream metadata and the licence into `/usr/share`. `dpkg-deb --root-owner-group --build` packs it. CI sets the version ([chapter 51](51-releases.md)).
 - The desktop entry's `Categories` decide the Front Panel drawer; its `Icon` is a name looked up in the `hicolor` icon theme.
 - AppStream metadata gives Software the name, summary, description and screenshot in five languages. The same files will feed the catalogue of an amadeOS package repository.
-- `installToAmadeOs` and a line in `repositories.list` put a program into the amadeOS image; `buildDistribution.sh` builds them all.
+- `installToAmadeOs` and a line in `repositories.list` put a program into the amadeOS image; `buildDistribution.sh` builds them all. A line marked `# optional` publishes the program on apt.amadeos.eu only.
 - jpackage with WiX builds a Windows MSI with its own Java runtime; the upgrade UUID never changes. Only programs that run on Windows get one; the others say *Linux only* in their README.
 - CI builds both packages on every change, checks their contents, and keeps them for download.
