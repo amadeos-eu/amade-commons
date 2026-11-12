@@ -73,7 +73,9 @@ A Debian package (`.deb`) is an archive of files in the places where they will b
 --8<-- "amade-fractals/build.gradle:deb-files"
 ```
 
-The start script is two lines. `exec` replaces the shell with Java, so the process the desktop started is the program itself, and `"$@"` hands over the arguments unchanged: `amade-fractals ~/Pictures/seahorse.fractal` opens that file. It is made executable for everyone (`setExecutable(true, false)`); `dpkg-deb` keeps the file modes.
+The start script is three lines. `exec` replaces the shell with Java, so the process the desktop started is the program itself, and `"$@"` hands over the arguments unchanged: `amade-fractals ~/Pictures/seahorse.fractal` opens that file. It is made executable for everyone (`setExecutable(true, false)`); `dpkg-deb` keeps the file modes.
+
+`"@$OPTIONS"` hands Java an *argument file*: the options in `/etc/amadeos/java/app.options`, one per line, as if they were written on the command line. amadeos-session installs it together with `game.options` for the games. They hold what every amadeOS program should get: a heap cap with a collector that gives unused memory back, and fork/exec for child processes so that a Java upgrade does not break running programs. Without these settings Java reserves a quarter of the RAM for each program and keeps what it once used. Options after the file win over it, so Fractals asks for more room with its own `-Xmx512m`; a program that needs nothing special writes nothing between the file and `-jar`. On a system without amadeos-session the file is missing, `OPTIONS` becomes `/dev/null`, and Java runs with its defaults.
 
 The desktop entry and the metainfo are files in `packaging/`, copied unchanged. Pad generates its desktop entry inside `build.gradle` (chapter 10), which is fine for a few lines; with names in five languages a file of its own is easier to read and to check.
 
@@ -317,7 +319,7 @@ An MSI under 30 MB has no Java runtime inside and would not run on a machine wit
 ## Summary
 
 - One fat jar holds the program and its libraries; leave the signatures of signed libraries out.
-- A Debian package is the installed files plus `DEBIAN/control`. The amade programs put the jar into `/opt/<name>`, a two-line start script into `/usr/bin`, and the desktop entry, the 48-pixel icon, the AppStream metadata and the licence into `/usr/share`. `dpkg-deb --root-owner-group --build` packs it. CI sets the version ([chapter 51](51-releases.md)).
+- A Debian package is the installed files plus `DEBIAN/control`. The amade programs put the jar into `/opt/<name>`, a start script into `/usr/bin` that passes the shared Java options (`/etc/amadeos/java/app.options`) first, and the desktop entry, the 48-pixel icon, the AppStream metadata and the licence into `/usr/share`. `dpkg-deb --root-owner-group --build` packs it. CI sets the version ([chapter 51](51-releases.md)).
 - The desktop entry's `Categories` decide the Front Panel drawer; its `Icon` is a name looked up in the `hicolor` icon theme.
 - AppStream metadata gives Software the name, summary, description and screenshot in five languages. The same files will feed the catalogue of an amadeOS package repository.
 - `installToAmadeOs` and a line in `repositories.list` put a program into the amadeOS image; `buildDistribution.sh` builds them all.
