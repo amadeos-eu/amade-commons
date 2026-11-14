@@ -47,6 +47,7 @@ The handbook grows with the applications: a chapter is written for an applicatio
 | [69. The Task Manager](69-task-manager.md) | amadeos-taskmanager, amadeos-wm | Processes and rates from `/proc` with a fake `/proc` for the tests, the process behind a window, `kill`, `renice` and `pkexec`, hanging windows found with `_NET_WM_PING` |
 | [70. Desktop Widgets](70-widgets.md) | amadeos-widgets, amadeos-wm, Calendar | Show desktop with `_NET_SHOWING_DESKTOP`, a window property that keeps windows below, plugins with `ServiceLoader` and a class loader per jar, the widget API in commons, the Calendar's month widget |
 | [71. Disks](71-disks.md) | amadeos-disks, Files | udisks2 over D-Bus: the object tree, interfaces and structs for dbus-java, long calls, formatting options, fstab through udisks, a file descriptor over the bus with junixsocket, protecting the running system |
+| [72. Interfaces to the Native Environment](72-native-environment.md) | amadeos-session, every JNA program | Commands, D-Bus, JNA or the foreign function API; the JNA rules of the book; what native GTK programs expect from the session: the D-Bus activation environment, the portals, a 25-second timeout |
 | [79. A Module of Your Own](79-own-module.md) | | The checklist for a new module of amadeos-system |
 
 ## Planned
