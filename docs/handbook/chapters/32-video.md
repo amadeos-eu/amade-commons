@@ -25,7 +25,7 @@ The picture in the screenshot is a video FFmpeg made by itself, with a test sour
 
 ## A C library as a Java interface
 
-JNA (Java Native Access) calls functions in shared libraries without a line of C. You describe the functions as a Java interface, JNA loads the library and implements the interface at run time. The part of libmpv's client API (`mpv/client.h`) that Video needs is a dozen functions:
+JNA (Java Native Access) calls functions in shared libraries without a line of C. You describe the functions as a Java interface, JNA loads the library and implements the interface at run time. The rules all JNA programs of the book follow are collected in [chapter 72](72-native-environment.md#jna-the-rules-of-the-book). The part of libmpv's client API (`mpv/client.h`) that Video needs is a dozen functions:
 
 ```java title="amade-video · service/mpv/LibMpv.java"
 --8<-- "amade-video/src/main/java/eu/amadeos/apps/video/service/mpv/LibMpv.java:functions"
