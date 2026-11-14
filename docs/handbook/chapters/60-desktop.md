@@ -54,7 +54,7 @@ Look at the `build.gradle` of the repository, and you find the modules split in 
 --8<-- "amadeos-system/build.gradle:desktop-modules"
 ```
 
-**Desktop modules** (`wm`, `panel-cde`, `dm`, `session`, `style`, `logviewer`, `taskmanager`) are the desktop itself. They run before or around everything else, talk to the X server directly through JNA, and log through `java.util.logging`, so that their logs end up in the session log the log viewer shows. They do not use amade-commons' Guice start-up, and the build removes Guice from them altogether:
+**Desktop modules** (`wm`, `panel-cde`, `dm`, `session`, `style`, `logviewer`, `taskmanager`) are the desktop itself. They run before or around everything else, talk to the X server directly through JNA, and log through `java.util.logging`, so that their logs end up in the session log the log viewer shows. How they and the native programs of the session reach the system is summed up in [chapter 72](72-native-environment.md). They do not use amade-commons' Guice start-up, and the build removes Guice from them altogether:
 
 ```groovy title="amadeos-system · build.gradle"
 --8<-- "amadeos-system/build.gradle:desktop-config"
