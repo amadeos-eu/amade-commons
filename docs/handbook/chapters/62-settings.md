@@ -232,8 +232,8 @@ The *Display* page sets the resolution, refresh rate and rotation of each monito
 - `Xrandr.parse` reads the text of `xrandr --query` into `Output` records: the connector, whether a monitor is connected and on, its place, its current mode and rotation, its size in millimetres and the `DisplayMode`s it offers with their refresh rates (`*` marks the current one, `+` the one the monitor asks for, sometimes separated by a space). The geometry in the header line is after rotation, so a monitor turned left reports `1080x1920`; the record keeps the mode before rotation and `OutputSetting.screenWidth()` turns it again.
 - `Xrandr.command` writes the opposite direction, one call for all monitors:
 
-```java title="amadeos-system · settings/display/Xrandr.java"
---8<-- "amadeos-system/settings/src/main/java/eu/amadeos/system/display/Xrandr.java:command"
+```java title="amadeos-system · base/display/Xrandr.java"
+--8<-- "amadeos-system/base/src/main/java/eu/amadeos/system/display/Xrandr.java:command"
 ```
 
 One call matters: two monitors that change places in two calls would overlap in between, and X refuses a layout in which two CRTCs need more screen than it has. The positions are moved so the leftmost and topmost monitor start at 0,0, whatever the user dragged.
