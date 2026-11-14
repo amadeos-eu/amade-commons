@@ -73,18 +73,10 @@ Services that are started *on demand* (D-Bus activation) are not children of the
 
 ### The activation environment
 
-Every display manager runs `/etc/X11/Xsession`, and Debian's `Xsession.d/95dbus_update-activation-environment` hands the session's environment to D-Bus and systemd there. `amadeos-dm` starts `amadeos-session` directly, and so did not get this step until amadeos-system #125: the session now does it itself, before the window manager and the autostart scripts:
+Every display manager runs `/etc/X11/Xsession`, and Debian's `Xsession.d/95dbus_update-activation-environment` hands the session's environment to D-Bus and systemd there. `amadeos-dm` starts `amadeos-session` directly, and so did not get this step before amadeOS 1.3.0 was out: since then the session now does it itself, before the window manager and the autostart scripts:
 
-```sh title="amadeos-system · session/packaging/root/usr/bin/amadeos-session (excerpt)"
-if [ -n "${DBUS_SESSION_BUS_ADDRESS:-}" ] || [ -S "${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/bus" ]; then
-    if command -v dbus-update-activation-environment >/dev/null 2>&1; then
-        dbus-update-activation-environment --systemd --all
-    fi
-    # A portal started before with the old environment keeps it: stop it,
-    # D-Bus starts it again with this one when a program asks for it.
-    systemctl --user stop xdg-desktop-portal.service xdg-desktop-portal-gtk.service \
-        xdg-desktop-portal-gnome.service 2>/dev/null || true
-fi
+```sh title="amadeos-system · session/packaging/root/usr/bin/amadeos-session"
+--8<-- "amadeos-system/session/packaging/root/usr/bin/amadeos-session:dbus-activation"
 ```
 
 `--all` hands over everything, as Xsession does: the display, the language, the proxy of Settings > Network, `XDG_DATA_DIRS` with the Snap and Flatpak folders. The package depends on `dbus-bin`, which holds the command.
@@ -94,9 +86,7 @@ fi
 `xdg-desktop-portal` picks its backend from `XDG_CURRENT_DESKTOP` and a file named after the desktop. The session names itself `amadeOS:GNOME`: GNOME second, so that Electron and Chromium programs keep their passwords in gnome-keyring. The portal reads `/usr/share/xdg-desktop-portal/amadeos-portals.conf` first, because amadeOS comes first:
 
 ```ini title="amadeos-system · session/packaging/root/usr/share/xdg-desktop-portal/amadeos-portals.conf"
-[preferred]
-default=gtk
-org.freedesktop.impl.portal.Secret=gnome-keyring
+--8<-- "amadeos-system/session/packaging/root/usr/share/xdg-desktop-portal/amadeos-portals.conf:preferred"
 ```
 
 Only the GTK portal, and no fallback. With `default=gtk;*`, the portal took any backend it found where the GTK one failed; on Ubuntu that is GNOME's portal, which waits for GNOME Shell. Without any portal, programs get an error from D-Bus at once and show their own dialogs, which is fast.
